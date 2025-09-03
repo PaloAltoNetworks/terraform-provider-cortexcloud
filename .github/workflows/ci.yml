@@ -1,0 +1,149 @@
+#name: CI
+#run-name: 'Triggered on ${{ github.ref_name }} by ${{ github.actor }}'
+#
+#on:
+#  pull_request:
+#    branches:
+#      - main
+#      - dev
+#  push:
+#    branches:
+#      - main
+#      - dev
+#
+#jobs:
+#  lint:
+#    name: Lint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout Provider
+#        uses: actions/checkout@v4
+#        with:
+#          path: terraform-provider-cortexcloud
+#
+#      - name: Checkout SDK
+#        uses: actions/checkout@v4
+#        with:
+#          repository: PaloAltoNetworks/cortex-cloud-go
+#          path: cortex-cloud-go
+#          token: ${{ secrets.GH_PAT_CC_SDK_TF_PROVIDER }}
+#
+#      - name: Setup Go
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version: '1.24.3'
+#          cache: true
+#          cache-dependency-path: terraform-provider-cortexcloud/go.sum
+#
+#      - name: Tidy and Vendor Dependencies
+#        working-directory: terraform-provider-cortexcloud
+#        run: |
+#          go mod tidy -e
+#          go mod vendor -e
+#
+#      - name: Run Go Linter
+#        uses: golangci/golangci-lint-action@v6
+#        with:
+#          working-directory: terraform-provider-cortexcloud
+#          version: v1.59
+#          args: --timeout=5m ./...
+#
+#  copyright:
+#    name: Copyright
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Go
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version: '1.24.3'
+#          cache: true
+#          cache-dependency-path: './go.sum'
+#
+#      - name: Setup Copywrite
+#        uses: hashicorp/setup-copywrite@v1.1.2
+#
+#      - name: Check Header Compliance
+#        run: copywrite headers --config .copywrite.hcl --plan
+#
+#      - name: Notify On Failure
+#        if: failure()
+#        run: |
+#          echo "Detected files with missing copyright headers."
+#          echo ""
+#          echo "To resolve this error, install the copywrite utility by following the instructions at: https://github.com/hashicorp/copywrite"
+#          echo ""
+#          echo "Then, run the following command from the root project directory to generate missing headers:"
+#          echo ""
+#          echo "    copywrite headers --config .copywrite.hcl"
+#          echo ""
+#          echo "Finally, commit the changes and review the result of this job to confirm that the error has been resolved."
+#
+#  unit-tests:
+#    name: Unit Tests
+#    runs-on: ubuntu-latest
+#    needs: [lint, copyright]
+#    steps:
+#      - name: Checkout Provider
+#        uses: actions/checkout@v4
+#        with:
+#          path: terraform-provider-cortexcloud
+#
+#      #- name: Checkout SDK
+#      #  uses: actions/checkout@v4
+#      #  with:
+#      #    repository: PaloAltoNetworks/cortex-cloud-go
+#      #    path: cortex-cloud-go
+#      #    token: ${{ secrets.GH_PAT_CC_SDK_TF_PROVIDER }}
+#
+#      - name: Setup Go
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version: '1.24.3'
+#          cache: true
+#          cache-dependency-path: terraform-provider-cortexcloud/go.sum
+#
+#      - name: Run Unit Tests
+#        working-directory: terraform-provider-cortexcloud
+#        run: go test -v -cover -race -mod=vendor $(go list ./... | grep -v /vendor/ | grep -v /acceptance/)
+#
+#  acceptance-tests:
+#    name: Acceptance Tests
+#    runs-on: ubuntu-latest
+#    needs: [unit-tests]
+#    environment: susanpolgar
+#    steps:
+#      - name: Checkout Provider
+#        uses: actions/checkout@v4
+#        with:
+#          path: terraform-provider-cortexcloud
+#
+#      #- name: Checkout SDK
+#      #  uses: actions/checkout@v4
+#      #  with:
+#      #    repository: PaloAltoNetworks/cortex-cloud-go
+#      #    path: cortex-cloud-go
+#      #    token: ${{ secrets.GH_PAT_CC_SDK_TF_PROVIDER }}
+#
+#      - name: Setup Go
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version: '1.24.3'
+#          cache: true
+#          cache-dependency-path: terraform-provider-cortexcloud/go.sum
+#
+#      - name: Set up Terraform
+#        uses: hashicorp/setup-terraform@v3
+#        with:
+#          terraform_version: '1.12.1'
+#
+#      - name: Run Acceptance Tests
+#        working-directory: terraform-provider-cortexcloud
+#        env:
+#          TF_ACC: 1
+#          CORTEX_API_URL: ${{ vars.CORTEX_API_URL }}
+#          CORTEX_API_KEY: ${{ secrets.CORTEX_API_KEY }}
+#          CORTEX_API_KEY_ID: ${{ secrets.CORTEX_API_KEY_ID }}
+#        run: go test -v -cover -race -mod=vendor $(go list ./... | grep /acceptance/)
