@@ -1,84 +1,75 @@
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+
+# CI execution flag
+IS_CI_EXECUTION 	?= 0
+
+# Terraform plugins directory
+TF_PLUGINS_DIR 		?= "${HOME}/.terraform.d/plugins"
+
 # Provider values
-CC_PROVIDER_HOSTNAME = registry.terraform.io
-CC_PROVIDER_NAMESPACE = PaloAltoNetworks
-CC_PROVIDER_NAME = cortexcloud
-CC_PROVIDER_BINARY = terraform-provider-${CC_PROVIDER_NAME}
-CC_PROVIDER_VERSION = 0.0.1
+PROVIDER_HOSTNAME 	?= registry.terraform.io
+PROVIDER_NAMESPACE 	?= PaloAltoNetworks
+PROVIDER_NAME 		?= cortexcloud
+PROVIDER_BINARY 	?= terraform-provider-${PROVIDER_NAME}
+PROVIDER_VERSION 	?= 0.0.1
 
-# OS and architecture of the system that will run the provider
-# Must follow the schema "os_architecture"
-TARGET_OS_ARCH ?= darwin_arm64
+# Build flags
+BUILD_VERSION 		?= ${PROVIDER_VERSION}
+BUILD_TIME 			?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-plugin_directory_no_arch="${HOME}/.terraform.d/plugins/${CC_PROVIDER_HOSTNAME}/${CC_PROVIDER_NAMESPACE}/${CC_PROVIDER_NAME}/${CC_PROVIDER_VERSION}"
-plugin_directory="${plugin_directory_no_arch}/${TARGET_OS_ARCH}"
+# Target OS and architecture the provider binary will be built for.
+# Must follow the format "os_architecture".
+TARGET_OS_ARCH 		?= darwin_arm64
 
-IS_CI_EXECUTION=0
 
-# Populate build flags
-BUILD_VERSION := ${CC_PROVIDER_VERSION}
-BUILD_TIME := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-BUILD_FLAGS := "-X main.buildVersion=${BUILD_VERSION} -X main.buildTime=${BUILD_TIME}"
+# -----------------------------------------------------------------------------
+# System Values
+# -----------------------------------------------------------------------------
 
-# Retrieve operating system name and architecture 
-os := $(shell uname -s | awk '{print tolower($0)}')
-arch := $(shell uname -m)
+# Target path for provider binary (without target OS/arch)
+PROVIDER_PATH 	:= "${TF_PLUGINS_DIR}/${PROVIDER_HOSTNAME}/" \
+				   + "${PROVIDER_NAMESPACE}/${PROVIDER_HOSTNAME}" \
+				   + "${PROVIDER_VERSION}"
 
-# Strip whitespace from TARGET_OS_ARCH value
-target_os_arch_stripped=$(shell echo "$(TARGET_OS_ARCH)" | xargs)
+# Local operating system/architecture
+OS 				:= $(shell uname -s | awk '{print tolower($0)}')
+ARCH 			:= $(shell uname -m)
+
+
+# -----------------------------------------------------------------------------
+# Main Recipes
+# -----------------------------------------------------------------------------
 
 default: install
 
 .PHONY: format
 format:
-	gofmt -l -w .
-
-# Print warning message if target operating system architecture does not
-# match the values returned by the system, or error message if this is
-# being executed in a CI pipeline (dictated by the IS_CI_EXECTION value)
-.PHONY: checkos
-checkos:
-ifneq ($(os)_$(arch), $(target_os_arch_stripped))
-ifeq ($(IS_CI_EXECUTION), 0)
-	$(info WARNING: Provided TARGET_OS_ARCH value "$(target_os_arch_stripped)" does not match the expected value for the detected operating system and architecture "$(os)_$(arch)". This may result in Terraform being unable to find the provider binary.)
-else ifeq ($(IS_CI_EXECUTION), 1)
-	$(error Provided OS_ARCH value "$(target_os_arch_stripped)" does not match the expected value for the detected operating system and architecture "$(os)_$(arch)".)
-endif
-endif
+	@echo "Running gofmt..."
+	@gofmt -l -w .
+	@echo ""
+	@echo "Done!"
 
 # Build provider binary
 .PHONY: build
-.ONESHELL:
-build: checkos
-	@echo "Build flags: ${BUILD_FLAGS}"
-	@echo "Building provider ${CC_PROVIDER_BINARY}"
-	@go build -mod=readonly -ldflags=${BUILD_FLAGS} -o ${CC_PROVIDER_BINARY}
-
-# Build provider binary (skip checkos)
-.PHONY: build-only
-build-only:
-	@go build -mod=readonly -ldflags=${BUILD_FLAGS} -o ${CC_PROVIDER_BINARY}
-	@echo $?
-
-# Build provider binary (skip checkos)
-.PHONY: build-only-test
-build-only-test:
-	go build -mod=readonly -ldflags=${BUILD_FLAGS} -o ${HOME}/terraform-provider-mirror/providers/registry.terraform.io/PaloAltoNetworks/cortexcloud/0.0.0/darwin_arm64/terraform-provider-cortexcloud
-	@echo $?
+build:
+	@echo "Building provider ${PROVIDER_BINARY}"
+	@echo "  - Version: ${PROVIDER_VERSION}"
+	@echo "  - Build Time: ${BUILD_TIME}"
+	@go build -ldflags="-X main.buildVersion=${PROVIDER_VERSION} -X main.buildTime=${BUILD_TIME}" -o ${PROVIDER_BINARY}
+	@echo ""
+	@echo "Done!"
 
 # Create plugin directory and move binary
 .PHONY: install
 install: build
-	@echo "Creating plugin directory ${plugin_directory}"
-	@mkdir -p ${plugin_directory}
+	@TARGET_DIR="${PROVIDER_PATH}/${TARGET_OS_ARCH}"
+	@echo "Creating plugin directory ${TARGET_DIR}"
+	@mkdir -p ${TARGET_DIR}
 	@echo "Moving binary to plugin directory..."
-	@mv ${CC_PROVIDER_BINARY} ${plugin_directory}
-	@echo "Done!"
-
-# Delete provider binary from plugin directory
-.PHONY: clean
-clean:
-	@echo "Deleting directory ${plugin_directory_no_arch}"
-	@rm -rf ${plugin_directory_no_arch}
+	@mv ${PROVIDER_BINARY} ${TARGET_DIR}
+	@echo ""
 	@echo "Done!"
 
 # Generate provider documentation
@@ -88,6 +79,7 @@ docs:
 	@copywrite headers --config .copywrite.hcl
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
+	@echo ""
 	@echo "Done!"
 
 # Run all tests
@@ -98,16 +90,13 @@ test: test-unit test-acc
 .PHONY: test-unit
 test-unit:
 	@echo "Running unit tests..."
-	@TF_LOG=DEBUG go test -v -race -mod=readonly $$(go list -mod=readonly ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
-#@go test -v -cover -race -mod=readonly $$(go list -mod=readonly ./... | grep -v /vendor/ | grep -v /acceptance/)
-#@go test -v -cover -race -mod=vendor $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/)
+	@TF_LOG=DEBUG go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
 
 # Run acceptance tests
 .PHONY: test-acc
 test-acc: build
 	@echo "Running acceptance tests..."
-	@TF_ACC=1 go test -v -cover -race -mod=readonly $$(go list -mod=readonly ./... | grep /acceptance)
-#@go test -v -cover -race -mod=vendor $$(go list ./... | grep /acceptance/)
+	@TF_ACC=1 go test -v -cover -race $$(go list ./... | grep /acceptance)
 
 # Run linter
 .PHONY: lint
@@ -124,3 +113,31 @@ copyright-check:
 # Run all CI checks
 .PHONY: ci
 ci: lint copyright-check test-unit
+
+# -----------------------------------------------------------------------------
+# Helper recipes
+# -----------------------------------------------------------------------------
+
+# Delete provider binary from plugin directory
+.PHONY: clean
+clean:
+	@echo "Deleting directory ${PROVIDER_PATH}"
+	@rm -rf ${PROVIDER_PATH}
+	@echo "Done!"
+
+
+# Print warning message if target operating system architecture does not
+# match the values returned by the system, or error message if this is
+# being executed in a CI pipeline (dictated by the IS_CI_EXECTION value)
+.PHONY: checkos
+checkos:
+	@true
+ifneq ("${OS}_${ARCH}", "${TARGET_OS_ARCH}")
+ifeq ($(IS_CI_EXECUTION), 0)
+	$(info WARNING: Configured TARGET_OS_ARCH value "$(TARGET_OS_ARCH)" does not match the expected value for the detected operating system and architecture "$(OS)_$(ARCH)". This may result in Terraform being unable to find the provider binary.)
+else ifeq ($(IS_CI_EXECUTION), 1)
+	$(error Configured TARGET_OS_ARCH value "$(TARGET_OS_ARCH)" does not match the expected value for the detected operating system and architecture "$(OS)_$(ARCH)")
+endif
+else
+	$(info Configured TARGET_OS_ARCH value "$(TARGET_OS_ARCH)" matches detected operating system and architecture.)
+endif
