@@ -59,6 +59,17 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				Description: "TODO",
 				Optional:    true,
 				Computed:    true,
+				//Validators: []validator.String{
+				//	stringvalidator.OneOf(
+				//		enums.AllRegistryScanningTypes()...,
+				//	),
+				//	validators.AlsoRequiresOnStringValues(
+				//		[]string{
+				//			enums.RegistryScanningTypeTagsModifiedDays.String(),
+				//		},
+				//		path.MatchRelative().AtParent().AtName("last_days"),
+				//	),
+				//},
 				Attributes: map[string]schema.Attribute{
 					"organization_id": schema.StringAttribute{
 						// TODO: validation
@@ -166,7 +177,24 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 					stringvalidator.OneOf(
 						enums.AllCloudProviders()...,
 					),
+					validators.AlsoRequiresOnStringValues(
+						[]string{
+							enums.CloudProviderAzure.String(),
+						},
+						path.MatchRelative().AtParent().AtName("account_details"),
+					),
 				},
+				//Validators: []validator.String{
+				//	stringvalidator.OneOf(
+				//		enums.AllRegistryScanningTypes()...,
+				//	),
+				//	validators.AlsoRequiresOnStringValues(
+				//		[]string{
+				//			enums.RegistryScanningTypeTagsModifiedDays.String(),
+				//		},
+				//		path.MatchRelative().AtParent().AtName("last_days"),
+				//	),
+				//},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

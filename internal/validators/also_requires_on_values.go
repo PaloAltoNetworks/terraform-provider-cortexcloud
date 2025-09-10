@@ -103,7 +103,7 @@ func (v AlsoRequiresOnValuesValidator) Validate(ctx context.Context, req AlsoReq
 			if mpVal.IsNull() {
 				resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					req.Path,
-					fmt.Sprintf("Attribute %q must be specified when %q is specified with values [ %s ]", mp, req.Path, req.ValuesMessage),
+					fmt.Sprintf("Attribute %q must have a non-null argument when the %q attribute is configured with values [ %s ]", mp, req.Path, req.ValuesMessage),
 				))
 			}
 		}
