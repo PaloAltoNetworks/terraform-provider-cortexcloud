@@ -4,6 +4,12 @@ go 1.25.0
 
 require (
 	dario.cat/mergo v1.0.2
+	github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.5
+	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.5
+	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.6
 	github.com/hashicorp/terraform-plugin-framework v1.15.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.17.0
 	github.com/hashicorp/terraform-plugin-go v0.28.0
@@ -14,23 +20,13 @@ require (
 
 require (
 	github.com/PaloAltoNetworks/cortex-cloud-go v0.0.5 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.5 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.6 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.6 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.6 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/errors v0.0.6 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/app v0.0.4 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.5 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.6 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
-	github.com/go-playground/locales v0.14.1 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.27.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
@@ -52,7 +48,6 @@ require (
 	github.com/hashicorp/terraform-registry-address v0.2.5 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
-	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
