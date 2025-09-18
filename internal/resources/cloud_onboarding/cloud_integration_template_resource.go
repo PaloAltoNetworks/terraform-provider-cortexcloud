@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -52,55 +53,48 @@ func (r *CloudIntegrationTemplateResource) Metadata(ctx context.Context, req res
 // Schema defines the schema for the resource.
 func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		// TODO: when populating the description, make sure to call out that
+		// only AWS and GCP are currently supported.
 		Description: "TODO",
 		Attributes: map[string]schema.Attribute{
-			// TODO: currently can only be specified for Azure integrations
-			"account_details": schema.SingleNestedAttribute{
-				Description: "TODO",
-				Optional:    true,
-				Computed:    true,
-				//Validators: []validator.String{
-				//	stringvalidator.OneOf(
-				//		enums.AllRegistryScanningTypes()...,
-				//	),
-				//	validators.AlsoRequiresOnStringValues(
-				//		[]string{
-				//			enums.RegistryScanningTypeTagsModifiedDays.String(),
-				//		},
-				//		path.MatchRelative().AtParent().AtName("last_days"),
-				//	),
-				//},
-				Attributes: map[string]schema.Attribute{
-					"organization_id": schema.StringAttribute{
-						// TODO: validation
-						Description: "TODO",
-						Optional:    true,
-						Computed:    true,
-					},
-				},
-				Default: objectdefault.StaticValue(types.ObjectNull(map[string]attr.Type{"organization_id": types.StringType})),
-			},
+			//"account_details": schema.SingleNestedAttribute{
+			//	Description: "TODO",
+			//	Optional:    true,
+			//	Computed:    true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"organization_id": schema.StringAttribute{
+			//			Description: "TODO",
+			//			Required: true,
+			//		},
+			//	},
+			//	Default: objectdefault.StaticValue(types.ObjectNull(map[string]attr.Type{"organization_id": types.StringType})),
+			//},
 			"additional_capabilities": schema.SingleNestedAttribute{
 				Description: "Define which additional security capabilities " +
-					"to enable.",
+					"to enable. Note that adding additional capabilities " +
+					"typically requires additional cloud provider " +
+					"permissions. For more information, refer to the official documentation: " +
+					"https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions",
+				MarkdownDescription: "Define which additional security capabilities " +
+					"to enable. Note that adding additional capabilities " +
+					"typically requires additional cloud provider " +
+					"permissions. For more information, refer to the " +
+					"[official documentation](https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions).",
 				Optional: true,
 				Computed: true,
+				// TODO: update all descriptions with more verbosity
 				Attributes: map[string]schema.Attribute{
 					"data_security_posture_management": schema.BoolAttribute{
-						Description: "Whether to enable data security " +
-							"posture management, an agentless data security " +
-							"scanner that discovers, classifies, protects, " +
-							"and governs sensitive data.",
+						Description: "Enable data security posture management.",
 						Optional: true,
 						Computed: true,
+						Default: booldefault.StaticBool(true),
 					},
 					"registry_scanning": schema.BoolAttribute{
-						Description: "Whether to enable registry scanning, " +
-							"a container registry scanner that scans " +
-							"registry images for vulnerabilities, malware, " +
-							"and secrets.",
+						Description: "Enable registry scanning.",
 						Optional: true,
 						Computed: true,
+						Default: booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
 						Description: "TODO",
@@ -153,11 +147,13 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 							//},
 						},
 					},
-					//"serverless_scanning": schema.BoolAttribute{
-					//	Description: "TODO",
-					//	Optional:    true,
-					//	Computed:    true,
-					//},
+					// TODO: is this supposed to be "serverless *functions* scanning"?
+					"serverless_scanning": schema.BoolAttribute{
+						Description: "Enable serverless scanning.",
+						Optional:    true,
+						Computed:    true,
+						Default: booldefault.StaticBool(true),
+					},
 					"xsiam_analytics": schema.BoolAttribute{
 						Description: "Whether to enable XSIAM analytics to " +
 							"analyze your endpoint data to develop a " +
@@ -166,35 +162,35 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 							"behaviors are detected.",
 						Optional: true,
 						Computed: true,
+						Default: booldefault.StaticBool(true),
 					},
 				},
 			},
 			"cloud_provider": schema.StringAttribute{
+				//Description: "The cloud service provider that is being " +
+				//	"integrated. Must be one of `AWS`, `AZURE` or `GCP`.",
 				Description: "The cloud service provider that is being " +
-					"integrated. Must be one of `AWS`, `AZURE` or `GCP`.",
+					"integrated. Must be either `AWS` or `GCP`.",
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						enums.AllCloudProviders()...,
+						"AWS", 
+						"GCP",
 					),
-					validators.AlsoRequiresOnStringValues(
-						[]string{
-							enums.CloudProviderAzure.String(),
-						},
-						path.MatchRelative().AtParent().AtName("account_details"),
-					),
+
+					// TODO: remove the above validator and use these when
+					// Azure template creation is fixed
+
+					//stringvalidator.OneOf(
+					//	enums.AllCloudProviders()...,
+					//),
+					//validators.AlsoRequiresOnStringValues(
+					//	[]string{
+					//		enums.CloudProviderAzure.String(),
+					//	},
+					//	path.MatchRelative().AtParent().AtName("account_details"),
+					//),
 				},
-				//Validators: []validator.String{
-				//	stringvalidator.OneOf(
-				//		enums.AllRegistryScanningTypes()...,
-				//	),
-				//	validators.AlsoRequiresOnStringValues(
-				//		[]string{
-				//			enums.RegistryScanningTypeTagsModifiedDays.String(),
-				//		},
-				//		path.MatchRelative().AtParent().AtName("last_days"),
-				//	),
-				//},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -309,6 +305,9 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			/*
+				If scan scope is "ACCOUNT", 
+			*/
 			"scope_modifications": schema.SingleNestedAttribute{
 				Description: "Define the scope of scans by including/excluding " +
 					"accounts or regions.",
@@ -432,6 +431,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 							"enabled": schema.BoolAttribute{
 								Description: "TODO",
 								Required:    true,
+								// TODO: if this is true, 
 								//Optional:    true,
 								//Computed:    true,
 							},
@@ -537,11 +537,12 @@ func (r *CloudIntegrationTemplateResource) ModifyPlan(ctx context.Context, req r
 	if req.Plan.Raw.IsNull() {
 		resp.Diagnostics.AddWarning(
 			"Resource Destruction Considerations",
-			"Applying this resource destruction will only remove the "+
-				"resource from the Terraform state and will not delete the "+
-				"template due to API limitations. Manually delete the template "+
-				"in the Data Sources section of the Cortex Cloud console to "+
-				"fully destroy this resource.",
+			"Destroying this resource will only remove the "+
+				"resource from the Terraform state. It will not delete the "+
+				"template from your Cortex Cloud tenant due to API limitations. "+
+				"To delete this template, open the Cortex Cloud console and "+
+				"navigate to Settings > Data Sources, find and right-click the " +
+				"template, and select \"Delete\".",
 		)
 	}
 }
