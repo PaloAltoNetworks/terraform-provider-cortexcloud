@@ -72,11 +72,21 @@ install: build
 	@echo ""
 	@echo "Done!"
 
+# Check for missing copyright headers
+.PHONY: copyright-check
+copyright-check:
+	@echo "Checking for missing file headers..."
+	@copywrite headers --config .copywrite.hcl --plan
+
+# Add copywrite headers to all files
+.PHONY: copyright
+copyright:
+	@echo "Adding any missing file headers..."
+	@copywrite headers --config .copywrite.hcl
+
 # Generate provider documentation
 .PHONY: docs
 docs:
-	@echo "Adding any missing file headers..."
-	@copywrite headers --config .copywrite.hcl
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
 	@echo ""
@@ -90,7 +100,7 @@ test: test-unit test-acc
 .PHONY: test-unit
 test-unit:
 	@echo "Running unit tests..."
-	@TF_LOG=DEBUG go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
+	@go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
 
 # Run acceptance tests
 .PHONY: test-acc
@@ -104,13 +114,8 @@ lint:
 	@echo "Running linter..."
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run . ./internal/... ./vendor/github.com/PaloAltoNetworks/cortex-cloud-go/...
 
-# Check for missing copyright headers
-.PHONY: copyright-check
-copyright-check:
-	@echo "Checking for missing file headers..."
-	@copywrite headers --config .copywrite.hcl --plan
-
 # Run all CI checks
+# TODO: add acceptance tests
 .PHONY: ci
 ci: lint copyright-check test-unit
 
