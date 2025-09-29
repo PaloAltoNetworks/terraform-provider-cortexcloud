@@ -5,7 +5,7 @@ package application_security
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/application_security"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 
-	"dario.cat/mergo"
+	//"dario.cat/mergo"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -354,168 +354,168 @@ func (r *ApplicationSecurityRuleResource) ModifyPlan(ctx context.Context, req re
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *ApplicationSecurityRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	defer util.PanicHandler(&resp.Diagnostics)
+	//defer util.PanicHandler(&resp.Diagnostics)
 
-	// Read Terraform plan data into model
-	var plan models.ApplicationSecurityRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Read Terraform plan data into model
+	//var plan models.ApplicationSecurityRuleModel
+	//resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Generate API create request body from plan
-	createRequest := plan.ToCreateOrCloneRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Generate API create request body from plan
+	//createRequest := plan.ToCreateOrCloneRequest(ctx, &resp.Diagnostics)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	validateRequestData := []appsec.ValidateRequest{}
-	for _, framework := range createRequest.Frameworks {
-		validateRequestData = append(validateRequestData, appsec.ValidateRequest{
-			Framework:  framework.Name,
-			Definition: framework.Definition,
-		})
-	}
+	//validateRequestData := []appsec.ValidateRequest{}
+	//for _, framework := range createRequest.Frameworks {
+	//	validateRequestData = append(validateRequestData, appsec.ValidateRequest{
+	//		Framework:  framework.Name,
+	//		Definition: framework.Definition,
+	//	})
+	//}
 
-	validateResponse, err := r.client.Validate(ctx, validateRequestData)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Creating Or Cloning Application Security Rule",
-			err.Error(),
-		)
-		return
-	}
+	//validateResponse, err := r.client.Validate(ctx, validateRequestData)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Creating Or Cloning Application Security Rule",
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 
-	if validateResponse.IsValid == nil || *validateResponse.IsValid == false {
-		resp.Diagnostics.AddError(
-			"Error Creating Or Cloning Application Security Rule",
-			fmt.Sprintf("rule validation failed: %+v", validateResponse),
-		)
-		return
+	//if validateResponse.IsValid == nil || *validateResponse.IsValid == false {
+	//	resp.Diagnostics.AddError(
+	//		"Error Creating Or Cloning Application Security Rule",
+	//		fmt.Sprintf("rule validation failed: %+v", validateResponse),
+	//	)
+	//	return
 
-	}
+	//}
 
-	// Create new resource
-	response, err := r.client.CreateOrClone(ctx, createRequest)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Creating Or Cloning Application Security Rule",
-			err.Error(),
-		)
-		return
-	}
+	//// Create new resource
+	//response, err := r.client.CreateOrClone(ctx, createRequest)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Creating Or Cloning Application Security Rule",
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 
-	// Populate API response values in model
-	plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Populate API response values in model
+	//plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Set state to fully populated data
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	//// Set state to fully populated data
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (r *ApplicationSecurityRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	defer util.PanicHandler(&resp.Diagnostics)
+	//defer util.PanicHandler(&resp.Diagnostics)
 
-	// Get current state
-	var state models.ApplicationSecurityRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Get current state
+	//var state models.ApplicationSecurityRuleModel
+	//resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Retrieve resource from API
-	rule, err := r.client.Get(ctx, state.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Application Security Rule",
-			err.Error(),
-		)
-		return
-	}
+	//// Retrieve resource from API
+	//rule, err := r.client.Get(ctx, state.Id.ValueString())
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Reading Application Security Rule",
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 
-	// Refresh state values
-	state.RefreshPropertyValues(ctx, &resp.Diagnostics, rule)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Refresh state values
+	//state.RefreshPropertyValues(ctx, &resp.Diagnostics, rule)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Set refreshed state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	//// Set refreshed state
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *ApplicationSecurityRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	defer util.PanicHandler(&resp.Diagnostics)
+	//defer util.PanicHandler(&resp.Diagnostics)
 
-	// Get current state
-	var state models.ApplicationSecurityRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Get current state
+	//var state models.ApplicationSecurityRuleModel
+	//resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Read Terraform plan data into model
-	var plan models.ApplicationSecurityRuleModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Read Terraform plan data into model
+	//var plan models.ApplicationSecurityRuleModel
+	//resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	if err := mergo.MergeWithOverwrite(&state, plan); err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Application Security Rule",
-			fmt.Sprintf("Error occurred while merging existing application security rule with planned value: %s", err.Error()),
-		)
-		return
-	}
+	//if err := mergo.MergeWithOverwrite(&state, plan); err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Updating Application Security Rule",
+	//		fmt.Sprintf("Error occurred while merging existing application security rule with planned value: %s", err.Error()),
+	//	)
+	//	return
+	//}
 
-	// Generate API create request body from plan
-	request := plan.ToUpdateRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Generate API create request body from plan
+	//request := plan.ToUpdateRequest(ctx, &resp.Diagnostics)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Update resource
-	response, err := r.client.Update(ctx, plan.Id.ValueString(), request)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Application Security Rule",
-			err.Error(),
-		)
-		return
-	}
+	//// Update resource
+	//response, err := r.client.Update(ctx, plan.Id.ValueString(), request)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Updating Application Security Rule",
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 
-	// Populate new values
-	plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response.Rule)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Populate new values
+	//plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response.Rule)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Set refreshed state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	//// Set refreshed state
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Delete deletes the resource and removes it from the Terraform state on success.
 func (r *ApplicationSecurityRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	defer util.PanicHandler(&resp.Diagnostics)
+	//defer util.PanicHandler(&resp.Diagnostics)
 
-	// Get current state
-	var state models.ApplicationSecurityRuleModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//// Get current state
+	//var state models.ApplicationSecurityRuleModel
+	//resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
 
-	// Delete resource
-	err := r.client.Delete(ctx, state.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting Application Security Rule",
-			err.Error(),
-		)
-		return
-	}
+	//// Delete resource
+	//err := r.client.Delete(ctx, state.Id.ValueString())
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error Deleting Application Security Rule",
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 }

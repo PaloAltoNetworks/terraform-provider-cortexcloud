@@ -6,7 +6,8 @@ package models
 import (
 	"context"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	//"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,34 +36,32 @@ type CloudIntegrationTemplateModel struct {
 	CloudFormationTemplateUrl types.String `tfsdk:"cloud_formation_template_url"`
 }
 
-func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudonboarding.CreateIntegrationTemplateRequest {
-	var additionalCapabilities cloudonboarding.AdditionalCapabilities
+func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.CreateIntegrationTemplateRequest {
+	var additionalCapabilities cortexTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
-	var collectionConfiguration cloudonboarding.CollectionConfiguration
+	var collectionConfiguration cortexTypes.CollectionConfiguration
 	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
 
-	var customResourcesTags []cloudonboarding.Tag
+	var customResourcesTags []cortexTypes.Tag
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
-	var scopeModifications cloudonboarding.ScopeModifications
+	var scopeModifications cortexTypes.ScopeModifications
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
 
 	if diagnostics.HasError() {
-		return cloudonboarding.CreateIntegrationTemplateRequest{}
+		return cortexTypes.CreateIntegrationTemplateRequest{}
 	}
 
-	request := cloudonboarding.CreateIntegrationTemplateRequest{
-		Data: cloudonboarding.CreateIntegrationTemplateRequestData{
-			AdditionalCapabilities:  additionalCapabilities,
-			CloudProvider:           m.CloudProvider.ValueString(),
-			CollectionConfiguration: collectionConfiguration,
-			CustomResourcesTags:     customResourcesTags,
-			InstanceName:            m.InstanceName.ValueString(),
-			ScanMode:                m.ScanMode.ValueString(),
-			Scope:                   m.Scope.ValueString(),
-			ScopeModifications:      scopeModifications,
-		},
+	request := cortexTypes.CreateIntegrationTemplateRequest{
+		AdditionalCapabilities:  additionalCapabilities,
+		CloudProvider:           m.CloudProvider.ValueString(),
+		CollectionConfiguration: collectionConfiguration,
+		CustomResourcesTags:     customResourcesTags,
+		InstanceName:            m.InstanceName.ValueString(),
+		ScanMode:                m.ScanMode.ValueString(),
+		Scope:                   m.Scope.ValueString(),
+		ScopeModifications:      scopeModifications,
 	}
 
 	return request
@@ -72,8 +71,8 @@ func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, dia
 // SDK Request Conversion
 // ----------------------------------------------------------------------------
 
-func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudonboarding.ListIntegrationInstancesRequest {
-	andFilters := []cloudonboarding.Criteria{
+func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
+	andFilters := []cortexTypes.Criteria{
 		{
 			SearchField: "ID",
 			SearchType:  "EQ",
@@ -86,58 +85,52 @@ func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagno
 		},
 	}
 
-	return cloudonboarding.ListIntegrationInstancesRequest{
-		RequestData: cloudonboarding.ListIntegrationInstancesRequestData{
-			FilterData: cloudonboarding.FilterData{
-				Filter: cloudonboarding.CriteriaFilter{
-					And: andFilters,
-				},
-				Paging: cloudonboarding.PagingFilter{
-					From: 0,
-					To:   1000,
-				},
+	return cortexTypes.ListIntegrationInstancesRequest{
+		FilterData: cortexTypes.FilterData{
+			Filter: cortexTypes.CriteriaFilter{
+				And: andFilters,
+			},
+			Paging: cortexTypes.PagingFilter{
+				From: 0,
+				To:   1000,
 			},
 		},
 	}
 }
 
-func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudonboarding.EditIntegrationInstanceRequest {
-	var additionalCapabilities cloudonboarding.AdditionalCapabilities
+func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.EditIntegrationInstanceRequest {
+	var additionalCapabilities cortexTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
-	var collectionConfiguration cloudonboarding.CollectionConfiguration
+	var collectionConfiguration cortexTypes.CollectionConfiguration
 	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
 
-	var customResourcesTags []cloudonboarding.Tag
+	var customResourcesTags []cortexTypes.Tag
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
-	var scopeModifications cloudonboarding.ScopeModifications
+	var scopeModifications cortexTypes.ScopeModifications
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
 
 	if diagnostics.HasError() {
-		return cloudonboarding.EditIntegrationInstanceRequest{}
+		return cortexTypes.EditIntegrationInstanceRequest{}
 	}
 
-	return cloudonboarding.EditIntegrationInstanceRequest{
-		RequestData: cloudonboarding.EditIntegrationInstanceRequestData{
-			AdditionalCapabilities:  additionalCapabilities,
-			CloudProvider:           m.CloudProvider.ValueString(),
-			CollectionConfiguration: collectionConfiguration,
-			CustomResourcesTags:     customResourcesTags,
-			InstanceId:              m.TrackingGuid.ValueString(),
-			InstanceName:            m.InstanceName.ValueString(),
-			ScopeModifications:      scopeModifications,
-			//ScanEnvId:               m.OutpostId.ValueString(),
-			ScanEnvId: "43083abe03a648e7b029b9b1b5403b13",
-		},
+	return cortexTypes.EditIntegrationInstanceRequest{
+		AdditionalCapabilities:  additionalCapabilities,
+		CloudProvider:           m.CloudProvider.ValueString(),
+		CollectionConfiguration: collectionConfiguration,
+		CustomResourcesTags:     customResourcesTags,
+		InstanceID:              m.TrackingGuid.ValueString(),
+		InstanceName:            m.InstanceName.ValueString(),
+		ScopeModifications:      scopeModifications,
+		//ScanEnvId:               m.OutpostId.ValueString(),
+		ScanEnvID: "43083abe03a648e7b029b9b1b5403b13",
 	}
 }
 
-func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudonboarding.DeleteInstanceRequest {
-	return cloudonboarding.DeleteInstanceRequest{
-		Data: cloudonboarding.DeleteInstanceRequestData{
-			Ids: []string{m.TrackingGuid.ValueString()},
-		},
+func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.DeleteIntegrationInstanceRequest {
+	return cortexTypes.DeleteIntegrationInstanceRequest{
+		IDs: []string{m.TrackingGuid.ValueString()},
 	}
 }
 
@@ -145,9 +138,7 @@ func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, dia
 // Refresh Resource Attributes
 // ----------------------------------------------------------------------------
 
-func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostics *diag.Diagnostics, response cloudonboarding.CreateTemplateOrEditIntegrationInstanceResponse) {
-	data := response.Reply
-
+func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostics *diag.Diagnostics, response cortexTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	var (
 		cloudFormationTemplateUrl = ""
 		err                       error
@@ -162,20 +153,20 @@ func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostic
 		}
 	}
 
-	m.TrackingGuid = types.StringValue(data.Automated.TrackingGuid)
-	m.AutomatedDeploymentLink = types.StringValue(data.Automated.Link)
-	m.ManualDeploymentLink = types.StringValue(data.Manual.TF_ARM)
+	m.TrackingGuid = types.StringValue(response.Automated.TrackingGuid)
+	m.AutomatedDeploymentLink = types.StringValue(response.Automated.Link)
+	m.ManualDeploymentLink = types.StringValue(response.Manual.CF)
 	m.CloudFormationTemplateUrl = types.StringValue(cloudFormationTemplateUrl)
 }
 
-func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudonboarding.ListIntegrationInstancesResponse) {
+func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cortexTypes.ListIntegrationInstancesResponseWrapper) {
 	// TODO: move this check outside?
-	if len(response.Reply.Data) == 0 || len(response.Reply.Data) > 1 {
+	if len(response.Data) == 0 || len(response.Data) > 1 {
 		m.Status = types.StringNull()
 		m.InstanceName = types.StringNull()
 		m.OutpostId = types.StringNull()
 
-		if len(response.Reply.Data) == 0 {
+		if len(response.Data) == 0 {
 			diagnostics.AddWarning(
 				"Integration Status Unknown",
 				"Unable to retrieve computed values for the following arguments "+
@@ -184,7 +175,7 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 					"The provider will attempt to populate these arguments during "+
 					"the next terraform apply operation.",
 			)
-		} else if len(response.Reply.Data) > 1 {
+		} else if len(response.Data) > 1 {
 			diagnostics.AddWarning(
 				"Integration Status Unknown",
 				"Multiple values returned for the following arguments: "+
@@ -223,7 +214,7 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 
 	// TODO: remove this conditional when API bug is fixed and CollectionConfiguration
 	// isnt returned as an empty string
-	if response.Reply.Data[0].CollectionConfiguration != "" {
+	if response.Data[0].CollectionConfiguration != "" {
 		collectionConfiguration, diags = types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), data.CollectionConfiguration)
 		diagnostics.Append(diags...)
 		if diagnostics.HasError() {
@@ -252,5 +243,5 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 	m.ScanMode = types.StringValue(data.Scan.ScanMethod)
 	m.Status = types.StringValue(data.Status)
 	// TODO: add OutpostId to IntegrationInstance struct?
-	m.OutpostId = types.StringValue(response.Reply.Data[0].OutpostId)
+	m.OutpostId = types.StringValue(response.Data[0].OutpostID)
 }

@@ -7,12 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/PaloAltoNetworks/cortex-cloud-go/api"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
+	platformDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/platform"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	appSecResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/application_security"
 	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
@@ -65,7 +66,7 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 					"navigating to Settings > Configurations > Integrations > "+
 					"API Keys and clicking the \"Copy API URL\" button. Can "+
 					"also be configured using the `%s` environment "+
-					"variable.", sdk.CORTEXCLOUD_API_URL_ENV_VAR),
+					"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
 			"cortex_cloud_api_port": schema.Int32Attribute{
 				Optional:    true,
@@ -144,6 +145,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
+		platformDataSources.NewUserDataSource,
 	}
 }
 
@@ -173,7 +175,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	(&providerConfig).Validate(ctx, &resp.Diagnostics)
 
 	var (
-		clientConfig *sdk.Config
+		clientConfig *client.Config
 		err          error
 		apiUrl       string
 		apiKey       string
@@ -185,22 +187,23 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	apiKey = providerConfig.ApiKey.ValueString()
 	apiKeyID = int(providerConfig.ApiKeyId.ValueInt32())
 	sdkLogLevel = providerConfig.SdkLogLevel.ValueString()
+	tflog.Debug(ctx, fmt.Sprintf("api url = %s", apiUrl))
 
 	// TODO: Check api key values against /api_keys/validate endpoint
 
 	// Create SDK config from provider values
-	clientConfig = sdk.NewConfig(
+	clientConfig = client.NewConfig(
 		apiUrl,
 		apiKey,
 		apiKeyID,
 		providerConfig.CheckEnvironment.ValueBool(),
-		sdk.WithApiPort(int(providerConfig.ApiPort.ValueInt32())),
-		sdk.WithSkipVerifyCertificate(providerConfig.SkipSslVerify.ValueBool()),
-		sdk.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//sdk.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
-		sdk.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
-		sdk.WithLogger(log.TflogAdapter{}),
-		sdk.WithLogLevel(sdkLogLevel),
+		client.WithApiPort(int(providerConfig.ApiPort.ValueInt32())),
+		client.WithSkipVerifyCertificate(providerConfig.SkipSslVerify.ValueBool()),
+		client.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//client.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		client.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		client.WithLogger(log.TflogAdapter{}),
+		client.WithLogLevel(sdkLogLevel),
 	)
 
 	// Validate SDK client configuration

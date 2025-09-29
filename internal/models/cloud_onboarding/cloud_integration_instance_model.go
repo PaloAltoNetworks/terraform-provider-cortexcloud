@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,15 +29,13 @@ type CloudIntegrationInstanceModel struct {
 	SecurityCapabilities    types.Set    `tfsdk:"security_capabilities"`
 }
 
-func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudonboarding.GetIntegrationInstanceRequest {
-	return cloudonboarding.GetIntegrationInstanceRequest{
-		RequestData: cloudonboarding.GetIntegrationInstanceRequestData{
-			InstanceId: m.Id.ValueString(),
-		},
+func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.GetIntegrationInstanceRequest {
+	return cortexTypes.GetIntegrationInstanceRequest{
+		InstanceID: m.Id.ValueString(),
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) RefreshPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudonboarding.GetIntegrationInstanceResponse) {
+func (m *CloudIntegrationInstanceModel) RefreshPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cortexTypes.GetIntegrationInstanceResponse) {
 	data, err := response.Marshal()
 	if err != nil {
 		diagnostics.AddError(
@@ -77,7 +75,7 @@ func (m *CloudIntegrationInstanceModel) RefreshPropertyValues(ctx context.Contex
 		return
 	}
 
-	m.Id = types.StringValue(data.Id)
+	m.Id = types.StringValue(data.ID)
 	m.AdditionalCapabilities = additionalCapabilities
 	m.CloudProvider = types.StringValue(data.CloudProvider)
 	m.Collector = types.StringValue(data.Collector)

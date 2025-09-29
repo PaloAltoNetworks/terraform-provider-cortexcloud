@@ -565,7 +565,7 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 	}
 
 	// Create new cloud onboarding integration template
-	response, err := r.client.CreateTemplate(ctx, request)
+	response, err := r.client.CreateIntegrationTemplate(ctx, request)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Cloud Integration Template Create Error", // TODO: standardize this
@@ -602,7 +602,7 @@ func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	response, err := r.client.ListInstances(ctx, request)
+	response, err := r.client.ListIntegrationInstances(ctx, request)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Cloud Integration Template Read Error", // TODO: standardize this
@@ -644,7 +644,7 @@ func (r *CloudIntegrationTemplateResource) Update(ctx context.Context, req resou
 	}
 
 	// Update integration
-	response, err := r.client.EditInstance(ctx, request)
+	response, err := r.client.EditIntegrationInstance(ctx, request)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Cloud Integration Template Update Error", // TODO: standardize this

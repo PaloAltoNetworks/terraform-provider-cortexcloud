@@ -105,3 +105,50 @@ func SliceSharesOneOrMoreElements(s1 []string, s2 []string) bool {
 
 	return false
 }
+
+// FindElement searches for an element in a slice and returns it if found,
+// along with a boolean indicating if it was found.
+// The criteria argument can be either a value to compare directly with elements
+// in the slice, or a map[string]any of key-value pairs to match against the
+// fields of a struct element.
+func FindElement[T any](slice []T, criteria any) (T, bool) {
+	if fieldMatcher, ok := criteria.(map[string]any); ok {
+		for _, element := range slice {
+			val := reflect.ValueOf(element)
+			if val.Kind() == reflect.Pointer {
+				val = val.Elem()
+			}
+
+			if val.Kind() != reflect.Struct {
+				continue
+			}
+
+			allFieldsMatch := true
+			for fieldName, expectedValue := range fieldMatcher {
+				field := val.FieldByName(fieldName)
+				if !field.IsValid() || !field.CanInterface() {
+					allFieldsMatch = false
+					break
+				}
+
+				if !reflect.DeepEqual(field.Interface(), expectedValue) {
+					allFieldsMatch = false
+					break
+				}
+			}
+
+			if allFieldsMatch {
+				return element, true
+			}
+		}
+	} else {
+		for _, element := range slice {
+			if reflect.DeepEqual(element, criteria) {
+				return element, true
+			}
+		}
+	}
+
+	var zero T
+	return zero, false
+}

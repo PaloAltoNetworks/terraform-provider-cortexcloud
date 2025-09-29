@@ -12,6 +12,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -230,22 +231,23 @@ func (r *AuthenticationSettingsResource) Configure(ctx context.Context, req reso
 	r.client = client.Platform
 }
 
-func (r *AuthenticationSettingsResource) findAuthSettings(ctx context.Context, name, domain string) (*platform.AuthSettings, error) {
+func (r *AuthenticationSettingsResource) findAuthSettings(ctx context.Context, name, domain string) (*cortexTypes.AuthSettings, error) {
 	allAuthSettings, err := r.client.ListAuthSettings(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, as := range allAuthSettings.Reply {
+	//for i, as := range allAuthSettings.Reply {
+	for i, as := range allAuthSettings {
 		if as.Name == name && as.Domain == domain {
-			return &allAuthSettings.Reply[i], nil
+			return &allAuthSettings[i], nil
 		}
 	}
 
 	return nil, nil
 }
 
-func (r *AuthenticationSettingsResource) refreshModelFromAPI(authSettings *platform.AuthSettings, model *models.AuthenticationSettingsModel) {
+func (r *AuthenticationSettingsResource) refreshModelFromAPI(authSettings *cortexTypes.AuthSettings, model *models.AuthenticationSettingsModel) {
 	model.Name = types.StringValue(authSettings.Name)
 	model.DefaultRole = types.StringValue(authSettings.DefaultRole)
 	model.IsAccountRole = types.BoolValue(authSettings.IsAccountRole)
@@ -291,20 +293,18 @@ func (r *AuthenticationSettingsResource) Create(ctx context.Context, req resourc
 	}
 
 	// Create new resource
-	createRequest := platform.CreateAuthSettingsRequest{
-		Data: platform.CreateAuthSettingsRequestData{
-			Name:               plan.Name.ValueString(),
-			DefaultRole:        plan.DefaultRole.ValueString(),
-			IsAccountRole:      plan.IsAccountRole.ValueBool(),
-			Domain:             plan.Domain.ValueString(),
-			IDPSingleSignOnURL: plan.IdpSsoUrl.ValueString(),
-			IDPCertificate:     plan.IdpCertificate.ValueString(),
-			IDPIssuer:          plan.IdpIssuer.ValueString(),
-			MetadataURL:        plan.MetadataURL.ValueString(),
-		},
+	createRequest := cortexTypes.CreateAuthSettingsRequest{
+		Name:               plan.Name.ValueString(),
+		DefaultRole:        plan.DefaultRole.ValueString(),
+		IsAccountRole:      plan.IsAccountRole.ValueBool(),
+		Domain:             plan.Domain.ValueString(),
+		IDPSingleSignOnURL: plan.IdpSsoUrl.ValueString(),
+		IDPCertificate:     plan.IdpCertificate.ValueString(),
+		IDPIssuer:          plan.IdpIssuer.ValueString(),
+		MetadataURL:        plan.MetadataURL.ValueString(),
 	}
 	if plan.Mappings != nil {
-		createRequest.Data.Mappings = platform.Mappings{
+		createRequest.Mappings = cortexTypes.Mappings{
 			Email:     plan.Mappings.Email.ValueString(),
 			FirstName: plan.Mappings.FirstName.ValueString(),
 			LastName:  plan.Mappings.LastName.ValueString(),
@@ -312,7 +312,7 @@ func (r *AuthenticationSettingsResource) Create(ctx context.Context, req resourc
 		}
 	}
 	if plan.AdvancedSettings != nil {
-		createRequest.Data.AdvancedSettings = platform.AdvancedSettings{
+		createRequest.AdvancedSettings = cortexTypes.AdvancedSettings{
 			RelayState:                plan.AdvancedSettings.RelayState.ValueString(),
 			IDPSingleLogoutURL:        plan.AdvancedSettings.IdpSingleLogoutURL.ValueString(),
 			ServiceProviderPublicCert: plan.AdvancedSettings.ServiceProviderPublicCert.ValueString(),
@@ -411,8 +411,7 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 	}
 
 	// Update resource
-	updateRequest := platform.UpdateAuthSettingsRequest{
-		Data: platform.UpdateAuthSettingsRequestData{
+	updateRequest := cortexTypes.UpdateAuthSettingsRequest{
 			Name:               plan.Name.ValueString(),
 			DefaultRole:        plan.DefaultRole.ValueString(),
 			IsAccountRole:      plan.IsAccountRole.ValueBool(),
@@ -422,10 +421,9 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 			IDPCertificate:     plan.IdpCertificate.ValueString(),
 			IDPIssuer:          plan.IdpIssuer.ValueString(),
 			MetadataURL:        plan.MetadataURL.ValueString(),
-		},
 	}
 	if plan.Mappings != nil {
-		updateRequest.Data.Mappings = platform.Mappings{
+		updateRequest.Mappings = cortexTypes.Mappings{
 			Email:     plan.Mappings.Email.ValueString(),
 			FirstName: plan.Mappings.FirstName.ValueString(),
 			LastName:  plan.Mappings.LastName.ValueString(),
@@ -433,7 +431,7 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 		}
 	}
 	if plan.AdvancedSettings != nil {
-		updateRequest.Data.AdvancedSettings = platform.AdvancedSettings{
+		updateRequest.AdvancedSettings = cortexTypes.AdvancedSettings{
 			RelayState:                plan.AdvancedSettings.RelayState.ValueString(),
 			IDPSingleLogoutURL:        plan.AdvancedSettings.IdpSingleLogoutURL.ValueString(),
 			ServiceProviderPublicCert: plan.AdvancedSettings.ServiceProviderPublicCert.ValueString(),

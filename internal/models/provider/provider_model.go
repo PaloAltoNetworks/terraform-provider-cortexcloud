@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	sdk "github.com/PaloAltoNetworks/cortex-cloud-go/api"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
@@ -84,36 +84,36 @@ var (
 )
 
 type CortexCloudSDKClients struct {
-	Config          sdk.Config
+	Config          client.Config
 	AppSec          *appsec.Client
 	CloudOnboarding *cloudonboarding.Client
 	Platform        *platform.Client
 }
 
 func (m *CortexCloudProviderModel) Validate(ctx context.Context, diagnostics *diag.Diagnostics) {
-	if m.ApiUrl.IsNull() || m.ApiUrl.IsUnknown() || m.ApiUrl.ValueString() == "" {
-		diagnostics.AddAttributeError(
-			path.Root("cortex_cloud_api_url"),
-			"Invalid Provider Configuration",
-			"value cannot be null or empty",
-		)
-	}
+	//if m.ApiUrl.IsNull() || m.ApiUrl.IsUnknown() || m.ApiUrl.ValueString() == "" {
+	//	diagnostics.AddAttributeError(
+	//		path.Root("cortex_cloud_api_url"),
+	//		"Invalid Provider Configuration",
+	//		"value cannot be null or empty",
+	//	)
+	//}
 
-	if m.ApiKey.IsNull() || m.ApiKey.IsUnknown() || m.ApiKey.ValueString() == "" {
-		diagnostics.AddAttributeError(
-			path.Root("cortex_cloud_api_key"),
-			"Invalid Provider Configuration",
-			"value cannot be null or empty",
-		)
-	}
+	//if m.ApiKey.IsNull() || m.ApiKey.IsUnknown() || m.ApiKey.ValueString() == "" {
+	//	diagnostics.AddAttributeError(
+	//		path.Root("cortex_cloud_api_key"),
+	//		"Invalid Provider Configuration",
+	//		"value cannot be null or empty",
+	//	)
+	//}
 
-	if m.ApiKeyId.IsNull() || m.ApiKeyId.IsUnknown() || int(m.ApiKeyId.ValueInt32()) == 0 {
-		diagnostics.AddAttributeError(
-			path.Root("cortex_cloud_api_key_id"),
-			"Invalid Provider Configuration",
-			"value cannot be null or zero",
-		)
-	}
+	//if m.ApiKeyId.IsNull() || m.ApiKeyId.IsUnknown() || int(m.ApiKeyId.ValueInt32()) == 0 {
+	//	diagnostics.AddAttributeError(
+	//		path.Root("cortex_cloud_api_key_id"),
+	//		"Invalid Provider Configuration",
+	//		"value cannot be null or zero",
+	//	)
+	//}
 }
 
 // ParseConfigFile reads the JSON file at the filepath specified in the

@@ -280,7 +280,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	response, err := r.client.GetInstanceDetails(ctx, request)
+	response, err := r.client.GetIntegrationInstanceDetails(ctx, request)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Cloud Integration Data Source Read Error", // TODO: standardize this
