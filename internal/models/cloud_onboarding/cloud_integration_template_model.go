@@ -6,12 +6,12 @@ package models
 import (
 	"context"
 
-	//"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	//"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // ----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, dia
 // ----------------------------------------------------------------------------
 
 func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
-	andFilters := []cortexTypes.Criteria{
+	andFilters := []*cortexTypes.Filter{
 		{
 			SearchField: "ID",
 			SearchType:  "EQ",
@@ -87,7 +87,7 @@ func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagno
 
 	return cortexTypes.ListIntegrationInstancesRequest{
 		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.CriteriaFilter{
+			Filter: cortexTypes.Filter{
 				And: andFilters,
 			},
 			Paging: cortexTypes.PagingFilter{

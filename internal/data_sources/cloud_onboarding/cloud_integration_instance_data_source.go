@@ -9,7 +9,7 @@ import (
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
-	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -52,7 +53,6 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 			"additional_capabilities": schema.SingleNestedAttribute{
 				Description: "Define which additional security capabilities " +
 					"to enable.",
-				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"data_security_posture_management": schema.BoolAttribute{
@@ -60,7 +60,6 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							"posture management, an agentless data security " +
 							"scanner that discovers, classifies, protects, " +
 							"and governs sensitive data.",
-						Optional: true,
 						Computed: true,
 					},
 					"registry_scanning": schema.BoolAttribute{
@@ -68,12 +67,10 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							"a container registry scanner that scans " +
 							"registry images for vulnerabilities, malware, " +
 							"and secrets.",
-						Optional: true,
 						Computed: true,
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
 						Description: "TODO",
-						Optional:    true,
 						Computed:    true,
 						Attributes: map[string]schema.Attribute{
 							"type": schema.StringAttribute{
@@ -82,7 +79,6 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 									"`TAGS_MODIFIED_DAYS`. If set to " +
 									"`TAGS_MODIFIED_DAYS`, `last_days` must " +
 									"be configured.",
-								Optional: true,
 								Computed: true,
 								Validators: []validator.String{
 									stringvalidator.OneOf(
@@ -113,18 +109,16 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							//},
 						},
 					},
-					//"serverless_scanning": schema.BoolAttribute{
-					//	Description: "TODO",
-					//	Optional:    true,
-					//	Computed:    true,
-					//},
+					"agentless_disk_scanning": schema.BoolAttribute{
+						Description: "TODO",
+						Computed:    true,
+					},
 					"xsiam_analytics": schema.BoolAttribute{
 						Description: "Whether to enable XSIAM analytics to " +
 							"analyze your endpoint data to develop a " +
 							"baseline and raise Analytics and Analytics " +
 							"BIOC alerts when anomalies and malicious " +
 							"behaviors are detected.",
-						Optional: true,
 						Computed: true,
 					},
 				},
@@ -151,19 +145,16 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 			},
 			"collection_configuration": schema.SingleNestedAttribute{
 				Description: "Configure the data that will be collected.",
-				Optional:    true,
 				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"audit_logs": schema.SingleNestedAttribute{
 						Description: "Configuration for audit logs " +
 							"collection.",
-						Optional: true,
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
 								Description: "Whether to enable audit log " +
 									"collection.",
-								Optional: true,
 								Computed: true,
 							},
 						},
@@ -176,18 +167,15 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 					"resource created by Cortex in the cloud environment. " +
 					"By default, the `managed_by` tag will always be " +
 					"applied with the value `paloaltonetworks`.",
-				Optional: true,
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"key": schema.StringAttribute{
 							Description: "The key of the custom resource tag.",
-							Optional:    true,
 							Computed:    true,
 						},
 						"value": schema.StringAttribute{
 							Description: "The value of the custom resource tag.",
-							Optional:    true,
 							Computed:    true,
 						},
 					},
@@ -196,7 +184,6 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 			"instance_name": schema.StringAttribute{
 				Description: "Name of the integration instance. If left " +
 					"empty, the name will be auto-populated.",
-				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
 					validators.ValidateCloudIntegrationInstanceName(),
@@ -215,11 +202,27 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							),
 						},
 					},
+					"outpost_id": schema.StringAttribute{
+						Description: "TODO",
+						Computed:    true,
+					},
+					"status_ui": schema.Int32Attribute{
+						Description: "TODO",
+						Computed:    true,
+					},
+				},
+			},
+			"scope": schema.StringAttribute{
+				Description: "",
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						enums.AllScopes()...,
+					),
 				},
 			},
 			"security_capabilities": schema.SetNestedAttribute{
 				Description: "TODO",
-				Optional:    true,
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -231,15 +234,49 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							Description: "TODO",
 							Computed:    true,
 						},
-						"status": schema.Int32Attribute{
+						"status": schema.StringAttribute{
 							Description: "TODO",
 							Computed:    true,
+						},
+						"status_code": schema.Int32Attribute{
+							Description: "TODO",
+							Computed:    true,
+						},
+						"last_scan_coverage": schema.SingleNestedAttribute{
+							Description: "TODO",
+							Computed:    true,
+							Attributes: map[string]schema.Attribute{
+								"excluded": schema.Int32Attribute{
+									Description: "TODO",
+									Computed: true,
+								},
+								"issues": schema.Int32Attribute{
+									Description: "TODO",
+									Computed: true,
+								},
+								"pending": schema.Int32Attribute{
+									Description: "TODO",
+									Computed: true,
+								},
+								"success": schema.Int32Attribute{
+									Description: "TODO",
+									Computed: true,
+								},
+								"unsupported": schema.Int32Attribute{
+									Description: "TODO",
+									Computed: true,
+								},
+							},
 						},
 					},
 				},
 			},
 			"status": schema.StringAttribute{
 				Description: "Status of the integration.",
+				Computed:    true,
+			},
+			"upgrade_available": schema.BoolAttribute{
+				Description: "TODO",
 				Computed:    true,
 			},
 		},
@@ -252,6 +289,9 @@ func (r *CloudIntegrationInstanceDataSource) Configure(ctx context.Context, req 
 	if req.ProviderData == nil {
 		return
 	}
+	
+	ctx = tflog.SetField(ctx, "resource_type", "CloudIntegrationInstanceDataSource")
+	tflog.Debug(ctx, "Configuring SDK client")
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
@@ -267,30 +307,38 @@ func (r *CloudIntegrationInstanceDataSource) Configure(ctx context.Context, req 
 func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	// Populate data source configuration into model
+	ctx = tflog.SetField(ctx, "resource_type", "CloudIntegrationInstanceDataSource")
+	ctx = tflog.SetField(ctx, "resource_id_field", "id")
+
+	// Populate data source configuration into model.
 	var config models.CloudIntegrationInstanceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	
+	ctx = tflog.SetField(ctx, "resource_id_value", config.ID.ValueString())
 
-	// Retrieve integration details from API
-	request := config.ToGetRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	// Retrieve integration details from API.
+	if config.ID.IsNull() || config.ID.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("id"),
+			"Cloud Integration Instance Data Source Configuration Error",
+			"Recieved null or unknown value for `id` attribute. Please report this issue to the developers.",
+		)
 	}
-
-	response, err := r.client.GetIntegrationInstanceDetails(ctx, request)
+	
+	data, err := r.client.GetIntegrationInstanceDetails(ctx, config.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Cloud Integration Data Source Read Error", // TODO: standardize this
+			"Cloud Integration Instance Data Source Read Error",
 			err.Error(),
 		)
 		return
 	}
 
-	// Refresh state values
-	config.RefreshPropertyValues(ctx, &resp.Diagnostics, response)
+	// Refresh attribute values
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, data)
 	if resp.Diagnostics.HasError() {
 		return
 	}

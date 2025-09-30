@@ -589,41 +589,41 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	// Get current state
-	var state models.CloudIntegrationTemplateModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Retrieve integration details from API
-	request := state.ToGetRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	response, err := r.client.ListIntegrationInstances(ctx, request)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Cloud Integration Template Read Error", // TODO: standardize this
-			err.Error(),
-		)
-		return
-	}
-
-	// Refresh state values
-	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	//state.RefreshComputedPropertyValues(ctx, &resp.Diagnostics, response)
+	//// Get current state
+	//var state models.CloudIntegrationTemplateModel
+	//resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}
 
-	// Set refreshed state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	//// Retrieve integration details from API
+	//request := state.ToGetRequest(ctx, &resp.Diagnostics)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
+
+	//response, err := r.client.ListIntegrationInstances(ctx, request)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Cloud Integration Template Read Error", // TODO: standardize this
+	//		err.Error(),
+	//	)
+	//	return
+	//}
+
+	//// Refresh state values
+	//state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response)
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
+
+	////state.RefreshComputedPropertyValues(ctx, &resp.Diagnostics, response)
+	////if resp.Diagnostics.HasError() {
+	////	return
+	////}
+
+	//// Set refreshed state
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.

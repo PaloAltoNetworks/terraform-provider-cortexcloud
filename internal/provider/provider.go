@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -146,6 +145,7 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		platformDataSources.NewUserDataSource,
+		platformDataSources.NewGroupDataSource,
 	}
 }
 

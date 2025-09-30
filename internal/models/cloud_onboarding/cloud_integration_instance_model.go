@@ -8,16 +8,14 @@ import (
 
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// *********************************************************
-// Structs
-// *********************************************************
-
 type CloudIntegrationInstanceModel struct {
-	Id                      types.String `tfsdk:"id"`
+	ID                      types.String `tfsdk:"id"`
 	AdditionalCapabilities  types.Object `tfsdk:"additional_capabilities"`
 	CloudProvider           types.String `tfsdk:"cloud_provider"`
 	Collector               types.String `tfsdk:"collector"`
@@ -25,57 +23,144 @@ type CloudIntegrationInstanceModel struct {
 	CustomResourcesTags     types.Set    `tfsdk:"custom_resources_tags"`
 	InstanceName            types.String `tfsdk:"instance_name"`
 	Scan                    types.Object `tfsdk:"scan"`
+	Scope                    types.String `tfsdk:"scope"`
 	Status                  types.String `tfsdk:"status"`
-	SecurityCapabilities    types.Set    `tfsdk:"security_capabilities"`
+	SecurityCapabilities    []SecurityCapability `tfsdk:"security_capabilities"`
+	UpgradeAvailable types.Bool `tfsdk:"upgrade_available"`
+}
+
+type SecurityCapability struct {
+	Name types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	StatusCode types.Int32 `tfsdk:"status_code"`
+	Status types.String `tfsdk:"status"`
+	LastScanCoverage types.Object `tfsdk:"last_scan_coverage"`
+}
+
+var lastScanCoverageAttrTypes = map[string]attr.Type{
+	"excluded": types.Int32Type,
+	"issues": types.Int32Type,
+	"pending": types.Int32Type,
+	"success": types.Int32Type,
+	"unsupported": types.Int32Type,
+}
+
+func securityCapabilityStatusToString(statusCode int) string {
+	switch statusCode {
+	case 0:
+		return "Connected"
+	case 1:
+		return "Warning"
+	case 2:
+		return "Disabled"
+	case 3:
+		return "Error"
+	case 4:
+		return "Retrieving"
+	default:
+		return "Unknown"
+	}
 }
 
 func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.GetIntegrationInstanceRequest {
+	tflog.Debug(ctx, "Creating GetIntegrationInstanceRequest from CloudIntegrationInstanceModel")
 	return cortexTypes.GetIntegrationInstanceRequest{
-		InstanceID: m.Id.ValueString(),
+		InstanceID: m.ID.ValueString(),
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) RefreshPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cortexTypes.GetIntegrationInstanceResponse) {
-	data, err := response.Marshal()
-	if err != nil {
-		diagnostics.AddError(
-			"Value Conversion Error", // TODO: standardize this
-			err.Error(),
-		)
-		return
+func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
+	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstanceModel")
+	return cortexTypes.ListIntegrationInstancesRequest{
+		FilterData: cortexTypes.FilterData{
+			Filter: cortexTypes.Filter{
+				And: []*cortexTypes.Filter{
+					{
+						SearchField: "ID",
+						SearchType:  "WILDCARD",
+						SearchValue: m.InstanceName.ValueString(),
+					},
+					{
+						SearchField: "STATUS",
+						SearchType:  "NEQ",
+						SearchValue: "PENDING",
+					},
+				},
+			},
+			Paging: cortexTypes.PagingFilter{
+				From: 0,
+				To:   1000,
+			},
+			Sort: []cortexTypes.SortFilter{
+				{
+					Field: "INSTANCE_NAME",	
+					Order: "ASC",
+				},
+			},
+		},
 	}
+}
 
+func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, diagnostics *diag.Diagnostics, data cortexTypes.IntegrationInstance) {
+	tflog.Debug(ctx, "Refreshing attribute values")
+
+
+	tflog.Trace(ctx, "Converting AdditionalCapabilities to Terraform type")
 	additionalCapabilities, diags := types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), data.AdditionalCapabilities)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
+	tflog.Trace(ctx, "Converting CollectionConfiguration to Terraform type")
 	collectionConfiguration, diags := types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), data.CollectionConfiguration)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
+	tflog.Trace(ctx, "Converting CustomResourceTags to Terraform type")
 	tags, diags := types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), data.CustomResourcesTags)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
+	tflog.Trace(ctx, "Converting Scan to Terraform type")
+	// TODO: StatusUI and outpost_id should be null instead of default
+	// empty values if not present in API response
 	scan, diags := types.ObjectValueFrom(ctx, m.Scan.AttributeTypes(ctx), data.Scan)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
-	securityCapabilities, diags := types.SetValueFrom(ctx, m.SecurityCapabilities.ElementType(ctx), data.SecurityCapabilities)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
-		return
+	tflog.Trace(ctx, "Converting SecurityCapabilities to Terraform type")
+	var securityCapabilities []SecurityCapability
+	for _, sc := range data.SecurityCapabilities {
+		securityCapability := SecurityCapability{
+			Name: types.StringValue(sc.Name),
+			Description: types.StringValue(sc.Description),
+			StatusCode: types.Int32Value(int32(sc.Status)),
+			Status: types.StringValue(securityCapabilityStatusToString(sc.Status)),
+		}
+
+		if sc.LastScanCoverage != nil {
+			lastScanCoverage, diags := types.ObjectValueFrom(ctx, lastScanCoverageAttrTypes, sc.LastScanCoverage)
+			diagnostics.Append(diags...)
+			if diagnostics.HasError() {
+				return
+			}
+
+			securityCapability.LastScanCoverage = lastScanCoverage
+		} else {
+			securityCapability.LastScanCoverage = types.ObjectNull(lastScanCoverageAttrTypes)
+		}
+
+		securityCapabilities = append(securityCapabilities, securityCapability)
 	}
 
-	m.Id = types.StringValue(data.ID)
+	m.ID = types.StringValue(data.ID)
 	m.AdditionalCapabilities = additionalCapabilities
 	m.CloudProvider = types.StringValue(data.CloudProvider)
 	m.Collector = types.StringValue(data.Collector)
@@ -83,6 +168,8 @@ func (m *CloudIntegrationInstanceModel) RefreshPropertyValues(ctx context.Contex
 	m.CustomResourcesTags = tags
 	m.InstanceName = types.StringValue(data.InstanceName)
 	m.Scan = scan
+	m.Scope = types.StringValue(data.Scope)
 	m.Status = types.StringValue(data.Status)
 	m.SecurityCapabilities = securityCapabilities
+	m.UpgradeAvailable = types.BoolValue(data.UpgradeAvailable)
 }
