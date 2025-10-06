@@ -1,6 +1,3 @@
-// Copyright (c) Palo Alto Networks, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package platform
 
 import (
@@ -89,28 +86,25 @@ func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	defer util.PanicHandler(&resp.Diagnostics)
 
 	//var config models.GroupModel
-	//resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-
-	//request := config.ToGetRequest(ctx, &resp.Diagnostics)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
+	var config map[string]any
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	//groups, err := r.client.ListGroups(ctx)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Group Data Source Read Error",
-	//		err.Error(),
-	//	)
-	//	return
-	//}
+	_, err := r.client.ListUsers(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Group Data Source Read Error",
+			err.Error(),
+		)
+		return
+	}
 
 	//var foundGroup *platform.Group
 	//for i := range groups {
-	//	if groups[i].Name == request.Name {
+	//	if groups[i].Name == config.Name.ValueString() {
 	//		foundGroup = &groups[i]
 	//		break
 	//	}
@@ -119,12 +113,12 @@ func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	//if foundGroup == nil {
 	//	resp.Diagnostics.AddError(
 	//		"Group Not Found",
-	//		fmt.Sprintf("No group found with name: %s", request.Name),
+	//		fmt.Sprintf("No group found with name: %s", config.Name.ValueString()),
 	//	)
 	//	return
 	//}
 
-	//config.RefreshPropertyValues(ctx, &resp.Diagnostics, foundGroup)
+	//config.RefreshFromRemote(ctx, &resp.Diagnostics, foundGroup)
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}
