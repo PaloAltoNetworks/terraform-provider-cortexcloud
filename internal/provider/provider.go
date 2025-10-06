@@ -138,6 +138,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		cloudOnboardingResources.NewCloudIntegrationTemplateResource,
 		appSecResources.NewApplicationSecurityRuleResource,
 		platformResources.NewAuthenticationSettingsResource,
+		platformResources.NewAssetGroupResource,
 	}
 }
 
@@ -145,6 +146,7 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		platformDataSources.NewUserDataSource,
+		platformDataSources.NewRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 	}
 }
