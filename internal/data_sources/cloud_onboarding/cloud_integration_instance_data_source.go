@@ -214,7 +214,7 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 			},
 			"scope": schema.StringAttribute{
 				Description: "",
-				Computed: true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						enums.AllScopes()...,
@@ -248,23 +248,23 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							Attributes: map[string]schema.Attribute{
 								"excluded": schema.Int32Attribute{
 									Description: "TODO",
-									Computed: true,
+									Computed:    true,
 								},
 								"issues": schema.Int32Attribute{
 									Description: "TODO",
-									Computed: true,
+									Computed:    true,
 								},
 								"pending": schema.Int32Attribute{
 									Description: "TODO",
-									Computed: true,
+									Computed:    true,
 								},
 								"success": schema.Int32Attribute{
 									Description: "TODO",
-									Computed: true,
+									Computed:    true,
 								},
 								"unsupported": schema.Int32Attribute{
 									Description: "TODO",
-									Computed: true,
+									Computed:    true,
 								},
 							},
 						},
@@ -289,7 +289,7 @@ func (r *CloudIntegrationInstanceDataSource) Configure(ctx context.Context, req 
 	if req.ProviderData == nil {
 		return
 	}
-	
+
 	ctx = tflog.SetField(ctx, "resource_type", "CloudIntegrationInstanceDataSource")
 	tflog.Debug(ctx, "Configuring SDK client")
 
@@ -316,7 +316,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	ctx = tflog.SetField(ctx, "resource_id_value", config.ID.ValueString())
 
 	// Retrieve integration details from API.
@@ -327,7 +327,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 			"Recieved null or unknown value for `id` attribute. Please report this issue to the developers.",
 		)
 	}
-	
+
 	data, err := r.client.GetIntegrationInstanceDetails(ctx, config.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(

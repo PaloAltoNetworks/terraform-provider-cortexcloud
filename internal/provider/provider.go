@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"

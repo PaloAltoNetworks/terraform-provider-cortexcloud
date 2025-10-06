@@ -86,15 +86,15 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				Attributes: map[string]schema.Attribute{
 					"data_security_posture_management": schema.BoolAttribute{
 						Description: "Enable data security posture management.",
-						Optional: true,
-						Computed: true,
-						Default: booldefault.StaticBool(true),
+						Optional:    true,
+						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"registry_scanning": schema.BoolAttribute{
 						Description: "Enable registry scanning.",
-						Optional: true,
-						Computed: true,
-						Default: booldefault.StaticBool(true),
+						Optional:    true,
+						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
 						Description: "TODO",
@@ -152,7 +152,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						Description: "Enable serverless scanning.",
 						Optional:    true,
 						Computed:    true,
-						Default: booldefault.StaticBool(true),
+						Default:     booldefault.StaticBool(true),
 					},
 					"xsiam_analytics": schema.BoolAttribute{
 						Description: "Whether to enable XSIAM analytics to " +
@@ -162,7 +162,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 							"behaviors are detected.",
 						Optional: true,
 						Computed: true,
-						Default: booldefault.StaticBool(true),
+						Default:  booldefault.StaticBool(true),
 					},
 				},
 			},
@@ -174,7 +174,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						"AWS", 
+						"AWS",
 						"GCP",
 					),
 
@@ -306,7 +306,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				},
 			},
 			/*
-				If scan scope is "ACCOUNT", 
+				If scan scope is "ACCOUNT",
 			*/
 			"scope_modifications": schema.SingleNestedAttribute{
 				Description: "Define the scope of scans by including/excluding " +
@@ -431,7 +431,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 							"enabled": schema.BoolAttribute{
 								Description: "TODO",
 								Required:    true,
-								// TODO: if this is true, 
+								// TODO: if this is true,
 								//Optional:    true,
 								//Computed:    true,
 							},
@@ -541,7 +541,7 @@ func (r *CloudIntegrationTemplateResource) ModifyPlan(ctx context.Context, req r
 				"resource from the Terraform state. It will not delete the "+
 				"template from your Cortex Cloud tenant due to API limitations. "+
 				"To delete this template, open the Cortex Cloud console and "+
-				"navigate to Settings > Data Sources, find and right-click the " +
+				"navigate to Settings > Data Sources, find and right-click the "+
 				"template, and select \"Delete\".",
 		)
 	}

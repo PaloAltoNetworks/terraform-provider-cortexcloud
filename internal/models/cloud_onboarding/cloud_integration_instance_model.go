@@ -15,33 +15,33 @@ import (
 )
 
 type CloudIntegrationInstanceModel struct {
-	ID                      types.String `tfsdk:"id"`
-	AdditionalCapabilities  types.Object `tfsdk:"additional_capabilities"`
-	CloudProvider           types.String `tfsdk:"cloud_provider"`
-	Collector               types.String `tfsdk:"collector"`
-	CollectionConfiguration types.Object `tfsdk:"collection_configuration"`
-	CustomResourcesTags     types.Set    `tfsdk:"custom_resources_tags"`
-	InstanceName            types.String `tfsdk:"instance_name"`
-	Scan                    types.Object `tfsdk:"scan"`
-	Scope                    types.String `tfsdk:"scope"`
-	Status                  types.String `tfsdk:"status"`
+	ID                      types.String         `tfsdk:"id"`
+	AdditionalCapabilities  types.Object         `tfsdk:"additional_capabilities"`
+	CloudProvider           types.String         `tfsdk:"cloud_provider"`
+	Collector               types.String         `tfsdk:"collector"`
+	CollectionConfiguration types.Object         `tfsdk:"collection_configuration"`
+	CustomResourcesTags     types.Set            `tfsdk:"custom_resources_tags"`
+	InstanceName            types.String         `tfsdk:"instance_name"`
+	Scan                    types.Object         `tfsdk:"scan"`
+	Scope                   types.String         `tfsdk:"scope"`
+	Status                  types.String         `tfsdk:"status"`
 	SecurityCapabilities    []SecurityCapability `tfsdk:"security_capabilities"`
-	UpgradeAvailable types.Bool `tfsdk:"upgrade_available"`
+	UpgradeAvailable        types.Bool           `tfsdk:"upgrade_available"`
 }
 
 type SecurityCapability struct {
-	Name types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	StatusCode types.Int32 `tfsdk:"status_code"`
-	Status types.String `tfsdk:"status"`
+	Name             types.String `tfsdk:"name"`
+	Description      types.String `tfsdk:"description"`
+	StatusCode       types.Int32  `tfsdk:"status_code"`
+	Status           types.String `tfsdk:"status"`
 	LastScanCoverage types.Object `tfsdk:"last_scan_coverage"`
 }
 
 var lastScanCoverageAttrTypes = map[string]attr.Type{
-	"excluded": types.Int32Type,
-	"issues": types.Int32Type,
-	"pending": types.Int32Type,
-	"success": types.Int32Type,
+	"excluded":    types.Int32Type,
+	"issues":      types.Int32Type,
+	"pending":     types.Int32Type,
+	"success":     types.Int32Type,
 	"unsupported": types.Int32Type,
 }
 
@@ -93,7 +93,7 @@ func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags
 			},
 			Sort: []cortexTypes.SortFilter{
 				{
-					Field: "INSTANCE_NAME",	
+					Field: "INSTANCE_NAME",
 					Order: "ASC",
 				},
 			},
@@ -140,10 +140,10 @@ func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, d
 	var securityCapabilities []SecurityCapability
 	for _, sc := range data.SecurityCapabilities {
 		securityCapability := SecurityCapability{
-			Name: types.StringValue(sc.Name),
+			Name:        types.StringValue(sc.Name),
 			Description: types.StringValue(sc.Description),
-			StatusCode: types.Int32Value(int32(sc.Status)),
-			Status: types.StringValue(securityCapabilityStatusToString(sc.Status)),
+			StatusCode:  types.Int32Value(int32(sc.Status)),
+			Status:      types.StringValue(securityCapabilityStatusToString(sc.Status)),
 		}
 
 		if sc.LastScanCoverage != nil {

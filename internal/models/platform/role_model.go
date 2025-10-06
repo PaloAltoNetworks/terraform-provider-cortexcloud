@@ -24,16 +24,15 @@ type RoleModel struct {
 
 func (m *RoleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *cortexTypes.Role) {
 	tflog.Debug(ctx, "Refreshing attribute values")
-	
+
 	var diagsRefresh diag.Diagnostics
-	
+
 	tflog.Trace(ctx, "Converting Permissions to Terraform type")
 	m.Permissions, diagsRefresh = types.ListValueFrom(ctx, types.StringType, remote.Permissions)
 	diags.Append(diagsRefresh...)
 	if diags.HasError() {
 		return
 	}
-
 
 	tflog.Trace(ctx, "Converting Groups to Terraform type")
 	m.Groups, diagsRefresh = types.ListValueFrom(ctx, types.StringType, remote.Groups)
@@ -48,7 +47,7 @@ func (m *RoleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 	if diags.HasError() {
 		return
 	}
-	
+
 	m.PrettyName = types.StringValue(remote.PrettyName)
 	m.InsertTime = types.Int64Value(int64(remote.InsertTime))
 	m.UpdateTime = types.Int64Value(int64(remote.UpdateTime))

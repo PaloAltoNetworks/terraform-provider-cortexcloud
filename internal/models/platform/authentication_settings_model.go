@@ -74,9 +74,9 @@ func (m *AuthenticationSettingsModel) RefreshFromRemote(ctx context.Context, dia
 	}
 	tflog.Trace(ctx, "Setting mappings attributes")
 	m.Mappings.Email = types.StringValue(remote.Mappings.Email)
-		m.Mappings.FirstName = types.StringValue(remote.Mappings.FirstName)
-		m.Mappings.LastName = types.StringValue(remote.Mappings.LastName)
-		m.Mappings.GroupName = types.StringValue(remote.Mappings.GroupName)
+	m.Mappings.FirstName = types.StringValue(remote.Mappings.FirstName)
+	m.Mappings.LastName = types.StringValue(remote.Mappings.LastName)
+	m.Mappings.GroupName = types.StringValue(remote.Mappings.GroupName)
 
 	tflog.Trace(ctx, "Initializing advanced settings model if nil")
 	if m.AdvancedSettings == nil {
@@ -84,8 +84,8 @@ func (m *AuthenticationSettingsModel) RefreshFromRemote(ctx context.Context, dia
 	}
 	tflog.Trace(ctx, "Setting advanced settings attributes")
 	m.AdvancedSettings.RelayState = types.StringValue(remote.AdvancedSettings.RelayState)
-		m.AdvancedSettings.IdpSingleLogoutURL = types.StringValue(remote.AdvancedSettings.IDPSingleLogoutURL)
-		m.AdvancedSettings.ServiceProviderPublicCert = types.StringValue(remote.AdvancedSettings.ServiceProviderPublicCert)
-		m.AdvancedSettings.ServiceProviderPrivateKey = types.StringValue(remote.AdvancedSettings.ServiceProviderPrivateKey)
-		m.AdvancedSettings.AuthnContextEnabled = types.BoolValue(remote.AdvancedSettings.AuthnContextEnabled)
+	m.AdvancedSettings.IdpSingleLogoutURL = types.StringValue(remote.AdvancedSettings.IDPSingleLogoutURL)
+	m.AdvancedSettings.ServiceProviderPublicCert = types.StringValue(remote.AdvancedSettings.ServiceProviderPublicCert)
+	m.AdvancedSettings.ServiceProviderPrivateKey = types.StringValue(remote.AdvancedSettings.ServiceProviderPrivateKey)
+	m.AdvancedSettings.AuthnContextEnabled = types.BoolValue(remote.AdvancedSettings.AuthnContextEnabled)
 }

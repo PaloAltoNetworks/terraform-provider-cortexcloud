@@ -412,15 +412,15 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 
 	// Update resource
 	updateRequest := cortexTypes.UpdateAuthSettingsRequest{
-			Name:               plan.Name.ValueString(),
-			DefaultRole:        plan.DefaultRole.ValueString(),
-			IsAccountRole:      plan.IsAccountRole.ValueBool(),
-			CurrentDomain:      state.Domain.ValueString(),
-			NewDomain:          plan.Domain.ValueString(),
-			IDPSingleSignOnURL: plan.IdpSsoUrl.ValueString(),
-			IDPCertificate:     plan.IdpCertificate.ValueString(),
-			IDPIssuer:          plan.IdpIssuer.ValueString(),
-			MetadataURL:        plan.MetadataURL.ValueString(),
+		Name:               plan.Name.ValueString(),
+		DefaultRole:        plan.DefaultRole.ValueString(),
+		IsAccountRole:      plan.IsAccountRole.ValueBool(),
+		CurrentDomain:      state.Domain.ValueString(),
+		NewDomain:          plan.Domain.ValueString(),
+		IDPSingleSignOnURL: plan.IdpSsoUrl.ValueString(),
+		IDPCertificate:     plan.IdpCertificate.ValueString(),
+		IDPIssuer:          plan.IdpIssuer.ValueString(),
+		MetadataURL:        plan.MetadataURL.ValueString(),
 	}
 	if plan.Mappings != nil {
 		updateRequest.Mappings = cortexTypes.Mappings{
