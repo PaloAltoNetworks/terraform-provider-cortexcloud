@@ -9,6 +9,7 @@ import (
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // UserModel is the model for the User data source.
@@ -61,15 +62,17 @@ func (m *UserModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *
 	}
 }
 
-// RefreshPropertyValues refreshes the UserModel with the response from the API.
-func (m *UserModel) RefreshPropertyValues(ctx context.Context, diags *diag.Diagnostics, resp *cortexTypes.User) {
-	m.Email = types.StringValue(resp.UserEmail)
-	m.FirstName = types.StringValue(resp.UserFirstName)
-	m.LastName = types.StringValue(resp.UserLastName)
+// RefreshFromRemote refreshes the UserModel with the response from the API.
+func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, resp *cortexTypes.User) {
+	tflog.Debug(ctx, "Refreshing user model from remote")
+	m.Email = types.StringValue(resp.Email)
+	m.FirstName = types.StringValue(resp.FirstName)
+	m.LastName = types.StringValue(resp.LastName)
 	m.RoleName = types.StringValue(resp.RoleName)
 	m.LastLoggedIn = types.Int64Value(int64(resp.LastLoggedIn))
 	m.UserType = types.StringValue(resp.UserType)
 
+	tflog.Trace(ctx, "Converting groups to Terraform type")
 	groups, d := types.ListValueFrom(ctx, types.StringType, resp.Groups)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -77,6 +80,7 @@ func (m *UserModel) RefreshPropertyValues(ctx context.Context, diags *diag.Diagn
 	}
 	m.Groups = groups
 
+	tflog.Trace(ctx, "Initializing scope models if nil")
 	if m.Scope == nil {
 		m.Scope = &ScopeModel{}
 	}
@@ -93,6 +97,7 @@ func (m *UserModel) RefreshPropertyValues(ctx context.Context, diags *diag.Diagn
 		m.Scope.CasesIssues = &CasesIssuesModel{}
 	}
 
+	tflog.Trace(ctx, "Converting endpoint group IDs to Terraform type")
 	if resp.Scope.Endpoints.EndpointGroups.IDs != nil {
 		endpointGroupsIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.Endpoints.EndpointGroups.IDs)
 		diags.Append(d...)
@@ -105,6 +110,7 @@ func (m *UserModel) RefreshPropertyValues(ctx context.Context, diags *diag.Diagn
 	}
 	m.Scope.Endpoints.EndpointGroups.Mode = types.StringValue(resp.Scope.Endpoints.EndpointGroups.Mode)
 
+	tflog.Trace(ctx, "Converting endpoint tag IDs to Terraform type")
 	if resp.Scope.Endpoints.EndpointTags.IDs != nil {
 		endpointTagsIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.Endpoints.EndpointTags.IDs)
 		diags.Append(d...)
@@ -118,6 +124,7 @@ func (m *UserModel) RefreshPropertyValues(ctx context.Context, diags *diag.Diagn
 	m.Scope.Endpoints.EndpointTags.Mode = types.StringValue(resp.Scope.Endpoints.EndpointTags.Mode)
 	m.Scope.Endpoints.Mode = types.StringValue(resp.Scope.Endpoints.Mode)
 
+	tflog.Trace(ctx, "Converting cases/issues IDs to Terraform type")
 	if resp.Scope.CasesIssues.IDs != nil {
 		casesIssuesIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.CasesIssues.IDs)
 		diags.Append(d...)

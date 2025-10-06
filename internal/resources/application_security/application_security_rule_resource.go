@@ -406,7 +406,7 @@ func (r *ApplicationSecurityRuleResource) Create(ctx context.Context, req resour
 	//}
 
 	//// Populate API response values in model
-	//plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response)
+	//plan.RefreshFromRemote(ctx, &resp.Diagnostics, response)
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}
@@ -437,7 +437,7 @@ func (r *ApplicationSecurityRuleResource) Read(ctx context.Context, req resource
 	//}
 
 	//// Refresh state values
-	//state.RefreshPropertyValues(ctx, &resp.Diagnostics, rule)
+	//state.RefreshFromRemote(ctx, &resp.Diagnostics, rule)
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}
@@ -489,7 +489,7 @@ func (r *ApplicationSecurityRuleResource) Update(ctx context.Context, req resour
 	//}
 
 	//// Populate new values
-	//plan.RefreshPropertyValues(ctx, &resp.Diagnostics, response.Rule)
+	//plan.RefreshFromRemote(ctx, &resp.Diagnostics, response.Rule)
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}

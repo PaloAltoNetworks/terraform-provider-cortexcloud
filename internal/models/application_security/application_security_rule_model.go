@@ -162,7 +162,7 @@ var frameworkMetadataRegex = regexp.MustCompile(`(?m)^\s*metadata:\s*\n(?:^\s+.*
 //
 //}
 
-func (m *ApplicationSecurityRuleModel) RefreshPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response appsec.Rule) {
+func (m *ApplicationSecurityRuleModel) RefreshFromRemote(ctx context.Context, diagnostics *diag.Diagnostics, response appsec.Rule) {
 	// TODO: create member functions for conversion to schema
 
 	var frameworkValues []FrameworkModel

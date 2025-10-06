@@ -163,12 +163,7 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	// Retrieve user details from API
-	request := config.ToGetRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	response, err := r.client.GetUser(ctx, *request)
+	response, err := r.client.GetUser(ctx, config.Email.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"User Data Source Read Error",
@@ -178,7 +173,7 @@ func (r *UserDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	// Refresh state values
-	config.RefreshPropertyValues(ctx, &resp.Diagnostics, &response)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, &response)
 	if resp.Diagnostics.HasError() {
 		return
 	}

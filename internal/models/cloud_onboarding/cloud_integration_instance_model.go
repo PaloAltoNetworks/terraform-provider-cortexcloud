@@ -62,14 +62,14 @@ func securityCapabilityStatusToString(statusCode int) string {
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.GetIntegrationInstanceRequest {
+func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.GetIntegrationInstanceRequest {
 	tflog.Debug(ctx, "Creating GetIntegrationInstanceRequest from CloudIntegrationInstanceModel")
 	return cortexTypes.GetIntegrationInstanceRequest{
 		InstanceID: m.ID.ValueString(),
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
+func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstanceModel")
 	return cortexTypes.ListIntegrationInstancesRequest{
 		FilterData: cortexTypes.FilterData{
@@ -101,37 +101,38 @@ func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diagn
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, diagnostics *diag.Diagnostics, data cortexTypes.IntegrationInstance) {
+func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, data cortexTypes.IntegrationInstance) {
 	tflog.Debug(ctx, "Refreshing attribute values")
 
+	var diagsRefresh diag.Diagnostics
 
 	tflog.Trace(ctx, "Converting AdditionalCapabilities to Terraform type")
-	additionalCapabilities, diags := types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), data.AdditionalCapabilities)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
+	additionalCapabilities, diagsRefresh := types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), data.AdditionalCapabilities)
+	diags.Append(diagsRefresh...)
+	if diags.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Converting CollectionConfiguration to Terraform type")
-	collectionConfiguration, diags := types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), data.CollectionConfiguration)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
+	collectionConfiguration, diagsRefresh := types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), data.CollectionConfiguration)
+	diags.Append(diagsRefresh...)
+	if diags.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Converting CustomResourceTags to Terraform type")
-	tags, diags := types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), data.CustomResourcesTags)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
+	tags, diagsRefresh := types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), data.CustomResourcesTags)
+	diags.Append(diagsRefresh...)
+	if diags.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Converting Scan to Terraform type")
 	// TODO: StatusUI and outpost_id should be null instead of default
 	// empty values if not present in API response
-	scan, diags := types.ObjectValueFrom(ctx, m.Scan.AttributeTypes(ctx), data.Scan)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
+	scan, diagsRefresh := types.ObjectValueFrom(ctx, m.Scan.AttributeTypes(ctx), data.Scan)
+	diags.Append(diagsRefresh...)
+	if diags.HasError() {
 		return
 	}
 
@@ -147,11 +148,10 @@ func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, d
 
 		if sc.LastScanCoverage != nil {
 			lastScanCoverage, diags := types.ObjectValueFrom(ctx, lastScanCoverageAttrTypes, sc.LastScanCoverage)
-			diagnostics.Append(diags...)
-			if diagnostics.HasError() {
+			diagsRefresh.Append(diags...)
+			if diags.HasError() {
 				return
 			}
-
 			securityCapability.LastScanCoverage = lastScanCoverage
 		} else {
 			securityCapability.LastScanCoverage = types.ObjectNull(lastScanCoverageAttrTypes)
