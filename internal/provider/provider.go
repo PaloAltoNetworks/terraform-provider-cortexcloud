@@ -145,6 +145,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
+		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
 		platformDataSources.NewUserDataSource,
 		platformDataSources.NewRoleDataSource,
 		platformDataSources.NewGroupDataSource,
