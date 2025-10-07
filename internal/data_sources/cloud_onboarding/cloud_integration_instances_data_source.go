@@ -48,7 +48,7 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 				Computed:    true,
 			},
 			"cloud_provider": schema.StringAttribute{
-				Description: "The cloud service provider to filter by. Must be one of `" + "`AWS`" + `, ` + "`AZURE`" + ` or ` + "`GCP`" + "`.",
+				Description: "",
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -63,11 +63,11 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 			"status": schema.StringAttribute{
 				Description: "The status to filter by.",
 				Optional:    true,
-				//Validators: []validator.String{
-				//	stringvalidator.OneOf(
-				//		enums.AllStatuses()...,
-				//	),
-				//},
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						enums.AllIntegrationInstanceStatuses()...,
+					),
+				},
 			},
 			"scope": schema.StringAttribute{
 				Description: "The scope to filter by.",
