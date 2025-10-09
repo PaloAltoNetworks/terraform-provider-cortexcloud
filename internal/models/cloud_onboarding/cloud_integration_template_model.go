@@ -7,6 +7,7 @@ import (
 	"context"
 
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -14,12 +15,8 @@ import (
 	//"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// ----------------------------------------------------------------------------
-// Structs
-// ----------------------------------------------------------------------------
-
 type CloudIntegrationTemplateModel struct {
-	AccountDetails            types.Object `tfsdk:"account_details"`
+	//AccountDetails            types.Object `tfsdk:"account_details"`
 	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
 	CloudProvider             types.String `tfsdk:"cloud_provider"`
 	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
@@ -29,11 +26,11 @@ type CloudIntegrationTemplateModel struct {
 	Scope                     types.String `tfsdk:"scope"`
 	ScopeModifications        types.Object `tfsdk:"scope_modifications"`
 	Status                    types.String `tfsdk:"status"`
-	TrackingGuid              types.String `tfsdk:"tracking_guid"`
-	OutpostId                 types.String `tfsdk:"outpost_id"`
-	AutomatedDeploymentLink   types.String `tfsdk:"automated_deployment_link"`
-	ManualDeploymentLink      types.String `tfsdk:"manual_deployment_link"`
-	CloudFormationTemplateUrl types.String `tfsdk:"cloud_formation_template_url"`
+	TrackingGUID              types.String `tfsdk:"tracking_guid"`
+	OutpostID                 types.String `tfsdk:"outpost_id"`
+	AutomatedDeploymentURL   types.String `tfsdk:"automated_deployment_url"`
+	ManualDeploymentURL      types.String `tfsdk:"manual_deployment_url"`
+	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
 }
 
 func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.CreateIntegrationTemplateRequest {
@@ -67,29 +64,21 @@ func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, dia
 	return request
 }
 
-// ----------------------------------------------------------------------------
-// SDK Request Conversion
-// ----------------------------------------------------------------------------
-
 func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
-	andFilters := []*cortexTypes.Filter{
-		{
-			SearchField: "ID",
-			SearchType:  "EQ",
-			SearchValue: m.TrackingGuid.ValueString(),
-		},
-		{
-			SearchField: "STATUS",
-			SearchType:  "EQ",
-			SearchValue: "PENDING",
-		},
-	}
-
 	return cortexTypes.ListIntegrationInstancesRequest{
 		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.Filter{
-				And: andFilters,
-			},
+			Filter: cortexTypes.NewAndFilter(
+				cortexTypes.NewSearchFilter(
+					cortexEnums.SearchFieldID.String(),
+					cortexEnums.SearchTypeEqualTo.String(), 
+					m.TrackingGUID.ValueString(),
+				),
+				cortexTypes.NewSearchFilter(
+					cortexEnums.SearchFieldStatus.String(),
+					cortexEnums.SearchTypeNotEqualTo.String(),
+					cortexEnums.IntegrationInstanceStatusPending.String(),
+				),
+			),
 			Paging: cortexTypes.PagingFilter{
 				From: 0,
 				To:   1000,
@@ -120,17 +109,16 @@ func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, dia
 		CloudProvider:           m.CloudProvider.ValueString(),
 		CollectionConfiguration: collectionConfiguration,
 		CustomResourcesTags:     customResourcesTags,
-		InstanceID:              m.TrackingGuid.ValueString(),
+		InstanceID:              m.TrackingGUID.ValueString(),
 		InstanceName:            m.InstanceName.ValueString(),
 		ScopeModifications:      scopeModifications,
-		//ScanEnvId:               m.OutpostId.ValueString(),
-		ScanEnvID: "43083abe03a648e7b029b9b1b5403b13",
+		ScanEnvID:               m.OutpostID.ValueString(),
 	}
 }
 
 func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.DeleteIntegrationInstanceRequest {
 	return cortexTypes.DeleteIntegrationInstanceRequest{
-		IDs: []string{m.TrackingGuid.ValueString()},
+		IDs: []string{m.TrackingGUID.ValueString()},
 	}
 }
 
@@ -153,10 +141,10 @@ func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostic
 		}
 	}
 
-	m.TrackingGuid = types.StringValue(response.Automated.TrackingGuid)
-	m.AutomatedDeploymentLink = types.StringValue(response.Automated.Link)
-	m.ManualDeploymentLink = types.StringValue(response.Manual.CF)
-	m.CloudFormationTemplateUrl = types.StringValue(cloudFormationTemplateUrl)
+	m.TrackingGUID = types.StringValue(response.Automated.TrackingGuid)
+	m.AutomatedDeploymentURL = types.StringValue(response.Automated.Link)
+	m.ManualDeploymentURL = types.StringValue(response.Manual.CF)
+	m.CloudFormationTemplateURL = types.StringValue(cloudFormationTemplateUrl)
 }
 
 func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cortexTypes.ListIntegrationInstancesResponseWrapper) {
@@ -164,7 +152,7 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 	if len(response.Data) == 0 || len(response.Data) > 1 {
 		m.Status = types.StringNull()
 		m.InstanceName = types.StringNull()
-		m.OutpostId = types.StringNull()
+		m.OutpostID = types.StringNull()
 
 		if len(response.Data) == 0 {
 			diagnostics.AddWarning(
@@ -243,5 +231,5 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 	m.ScanMode = types.StringValue(data.Scan.ScanMethod)
 	m.Status = types.StringValue(data.Status)
 	// TODO: add OutpostId to IntegrationInstance struct?
-	m.OutpostId = types.StringValue(response.Data[0].OutpostID)
+	m.OutpostID = types.StringValue(response.Data[0].OutpostID)
 }

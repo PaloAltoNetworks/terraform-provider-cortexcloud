@@ -146,6 +146,8 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
+		cloudOnboardingDataSources.NewOutpostDataSource,
+		cloudOnboardingDataSources.NewOutpostsDataSource,
 		platformDataSources.NewUserDataSource,
 		platformDataSources.NewRoleDataSource,
 		platformDataSources.NewGroupDataSource,
@@ -190,7 +192,6 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	apiKey = providerConfig.ApiKey.ValueString()
 	apiKeyID = int(providerConfig.ApiKeyId.ValueInt32())
 	sdkLogLevel = providerConfig.SdkLogLevel.ValueString()
-	tflog.Debug(ctx, fmt.Sprintf("api url = %s", apiUrl))
 
 	// TODO: Check api key values against /api_keys/validate endpoint
 

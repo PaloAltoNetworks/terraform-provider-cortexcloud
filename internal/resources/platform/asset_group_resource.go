@@ -14,6 +14,7 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -125,17 +126,18 @@ func (r *AssetGroupResource) Configure(ctx context.Context, req resource.Configu
 
 func (r *AssetGroupResource) findAssetGroup(ctx context.Context, id int) (*cortexTypes.AssetGroup, error) {
 	listReq := cortexTypes.ListAssetGroupsRequest{
-		Filters: cortexTypes.Filter{
-			SearchField: "XDM.ASSET_GROUP.ID",
-			SearchType:  "EQ",
-			SearchValue: strconv.Itoa(id),
-		},
+		Filters: cortexTypes.NewSearchFilter(
+			"XDM.ASSET_GROUP.ID", 
+			cortexEnums.SearchTypeEqualTo.String(),
+			strconv.Itoa(id),
+		),
 	}
 	assetGroups, err := r.client.ListAssetGroups(ctx, listReq)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: return formatted error if len(assetGroups) > 1
 	if len(assetGroups) == 1 {
 		return &assetGroups[0], nil
 	}
@@ -153,9 +155,9 @@ func (r *AssetGroupResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var predicate cortexTypes.Filter
+	var predicate cortexTypes.FilterRoot
 	if plan.MembershipPredicate != nil {
-		predicate = *models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
+		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
 	}
 
 	createRequest := cortexTypes.CreateOrUpdateAssetGroupRequest{
@@ -240,9 +242,9 @@ func (r *AssetGroupResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	var predicate cortexTypes.Filter
+	var predicate cortexTypes.FilterRoot
 	if plan.MembershipPredicate != nil {
-		predicate = *models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
+		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
 	}
 
 	updateRequest := cortexTypes.CreateOrUpdateAssetGroupRequest{

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -73,20 +74,18 @@ func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstanceModel")
 	return cortexTypes.ListIntegrationInstancesRequest{
 		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.Filter{
-				And: []*cortexTypes.Filter{
-					{
-						SearchField: "ID",
-						SearchType:  "WILDCARD",
-						SearchValue: m.InstanceName.ValueString(),
-					},
-					{
-						SearchField: "STATUS",
-						SearchType:  "NEQ",
-						SearchValue: "PENDING",
-					},
-				},
-			},
+			Filter: cortexTypes.NewAndFilter(
+				cortexTypes.NewSearchFilter(
+					cortexEnums.SearchFieldID.String(),
+					cortexEnums.SearchTypeWildcard.String(), 
+					m.InstanceName.ValueString(),
+				),
+				cortexTypes.NewSearchFilter(
+					cortexEnums.SearchFieldStatus.String(),
+					cortexEnums.SearchTypeNotEqualTo.String(),
+					cortexEnums.IntegrationInstanceStatusPending.String(),
+				),
+			),
 			Paging: cortexTypes.PagingFilter{
 				From: 0,
 				To:   1000,

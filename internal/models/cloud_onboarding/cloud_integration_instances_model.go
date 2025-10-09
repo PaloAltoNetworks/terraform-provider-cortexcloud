@@ -75,76 +75,79 @@ var (
 func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstancesDataSourceModel")
 
-	var filters []*cortexTypes.Filter
+	var filters []cortexTypes.Filter
 	if !m.CloudProvider.IsNull() && !m.CloudProvider.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldProvider.String(),
-			SearchType:  "EQ",
-			SearchValue: m.CloudProvider.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldProvider.String(),
+			"EQ",
+			m.CloudProvider.ValueString(),
+		))
 	}
 	if !m.Name.IsNull() && !m.Name.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldInstanceName.String(),
-			SearchType:  "WILDCARD",
-			SearchValue: m.Name.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldInstanceName.String(),
+			"WILDCARD",
+			m.Name.ValueString(),
+		))
 	}
 	if !m.Status.IsNull() && !m.Status.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldStatus.String(),
-			SearchType:  "EQ",
-			SearchValue: m.Status.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldStatus.String(),
+			"EQ",
+			m.Status.ValueString(),
+		))
 	}
 	if !m.Scope.IsNull() && !m.Scope.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldScope.String(),
-			SearchType:  "EQ",
-			SearchValue: m.Scope.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldScope.String(),
+			"EQ",
+			m.Scope.ValueString(),
+		))
 	}
 	if !m.ScanMode.IsNull() && !m.ScanMode.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldScanMode.String(),
-			SearchType:  "EQ",
-			SearchValue: m.ScanMode.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldScanMode.String(),
+			"EQ",
+			m.ScanMode.ValueString(),
+		))
 	}
 	if !m.CreationTime.IsNull() && !m.CreationTime.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldCreationTime.String(),
-			SearchType:  "EQ",
-			SearchValue: m.CreationTime.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldCreationTime.String(),
+			"EQ",
+			m.CreationTime.ValueString(),
+		))
 	}
 	if !m.OutpostID.IsNull() && !m.OutpostID.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldOutpostID.String(),
-			SearchType:  "WILDCARD",
-			SearchValue: m.OutpostID.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldOutpostID.String(),
+			"WILDCARD",
+			m.OutpostID.ValueString(),
+		))
 	}
 	if !m.AuthenticationMethod.IsNull() && !m.AuthenticationMethod.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldAuthenticationMethod.String(),
-			SearchType:  "EQ",
-			SearchValue: m.AuthenticationMethod.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldAuthenticationMethod.String(),
+			"EQ",
+			m.AuthenticationMethod.ValueString(),
+		))
 	}
 	if !m.InstanceID.IsNull() && !m.InstanceID.IsUnknown() {
-		filters = append(filters, &cortexTypes.Filter{
-			SearchField: cortexEnums.SearchFieldID.String(),
-			SearchType:  "WILDCARD",
-			SearchValue: m.InstanceID.ValueString(),
-		})
+		filters = append(filters, cortexTypes.NewSearchFilter(
+			cortexEnums.SearchFieldID.String(),
+			"WILDCARD",
+			m.InstanceID.ValueString(),
+		))
+	}
+
+	var finalFilter cortexTypes.Filter
+	if len(filters) > 0 {
+		finalFilter = cortexTypes.NewAndFilter(filters...)
 	}
 
 	return cortexTypes.ListIntegrationInstancesRequest{
 		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.Filter{
-				And: filters,
-			},
+			Filter: finalFilter,
 			Paging: cortexTypes.PagingFilter{
 				From: 0,
 				To:   1000,
@@ -208,5 +211,5 @@ func (m *CloudIntegrationInstancesDataSourceModel) RefreshFromRemote(ctx context
 	}
 	m.Instances = instances
 	m.TotalCount = types.Int32Value(int32(len(instances)))
-	m.ID = types.StringValue("cortexcloud_cloud_integration_instances") // Static ID
+	m.ID = types.StringValue("cortexcloud_cloud_integration_instances")
 }

@@ -23,6 +23,7 @@ import (
 
 type CortexCloudProviderModel struct {
 	ConfigFile           types.String `tfsdk:"config_file"`
+	// TODO: change "Api" to uppercase	
 	ApiUrl               types.String `tfsdk:"cortex_cloud_api_url"`
 	ApiPort              types.Int32  `tfsdk:"cortex_cloud_api_port"`
 	ApiKey               types.String `tfsdk:"cortex_cloud_api_key"`
