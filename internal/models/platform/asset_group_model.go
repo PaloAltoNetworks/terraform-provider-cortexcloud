@@ -5,6 +5,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 
 	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -39,7 +40,7 @@ func (m *AssetGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Dia
 	m.CreatedBy = types.StringValue(remote.CreatedBy)
 	m.LastUpdateTime = types.Int64Value(remote.LastUpdateTime)
 	m.ModifiedBy = types.StringValue(remote.ModifiedBy)
-	m.MembershipPredicate = SDKToModel(ctx, &remote.MembershipPredicate)
+	m.MembershipPredicate = SDKToModel(ctx, remote.MembershipPredicate)
 }
 
 // RootFilterModel represents the root of the membership predicate.
@@ -55,6 +56,28 @@ type NestedFilterModel struct {
 	SearchField types.String        `tfsdk:"search_field" json:"SEARCH_FIELD"`
 	SearchType  types.String        `tfsdk:"search_type" json:"SEARCH_TYPE"`
 	SearchValue types.String        `tfsdk:"search_value" json:"SEARCH_VALUE"`
+}
+
+func (m *NestedFilterModel) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		And         []NestedFilterModel `json:"AND,omitempty"`
+		Or          []NestedFilterModel `json:"OR,omitempty"`
+		SearchField string              `json:"SEARCH_FIELD,omitempty"`
+		SearchType  string              `json:"SEARCH_TYPE,omitempty"`
+		SearchValue string              `json:"SEARCH_VALUE,omitempty"`
+	}
+
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	m.And = temp.And
+	m.Or = temp.Or
+	m.SearchField = types.StringValue(temp.SearchField)
+	m.SearchType = types.StringValue(temp.SearchType)
+	m.SearchValue = types.StringValue(temp.SearchValue)
+
+	return nil
 }
 
 func GetRecursiveFilterSchema(depth, maxDepth int) map[string]schema.Attribute {
@@ -88,100 +111,89 @@ func GetRecursiveFilterSchema(depth, maxDepth int) map[string]schema.Attribute {
 	return attrs
 }
 
-func RootModelToSDKFilter(ctx context.Context, model *RootFilterModel) *cortexTypes.Filter {
+func RootModelToSDKFilter(ctx context.Context, model *RootFilterModel) cortexTypes.FilterRoot {
 	tflog.Debug(ctx, "Converting root filter model to SDK type")
 	if model == nil {
-		tflog.Trace(ctx, "Root filter model is nil, returning nil")
-		return nil
+		tflog.Trace(ctx, "Root filter model is nil, returning empty FilterRoot")
+		return cortexTypes.NewRootFilter(nil, nil)
 	}
 
-	sdkFilter := &cortexTypes.Filter{}
-
-	for _, andFilterModel := range model.And {
-		sdkFilter.And = append(sdkFilter.And, NestedModelToSDKFilter(ctx, &andFilterModel))
+	var andFilters []cortexTypes.Filter
+	if len(model.And) > 0 {
+		andFilters = make([]cortexTypes.Filter, 0, len(model.And))
+		for i := range model.And {
+			andFilters = append(andFilters, NestedModelToSDKFilter(ctx, &model.And[i]))
+		}
 	}
 
-	for _, orFilterModel := range model.Or {
-		sdkFilter.Or = append(sdkFilter.Or, NestedModelToSDKFilter(ctx, &orFilterModel))
+	var orFilters []cortexTypes.Filter
+	if len(model.Or) > 0 {
+		orFilters = make([]cortexTypes.Filter, 0, len(model.Or))
+		for i := range model.Or {
+			orFilters = append(orFilters, NestedModelToSDKFilter(ctx, &model.Or[i]))
+		}
 	}
 
-	return sdkFilter
+	return cortexTypes.NewRootFilter(andFilters, orFilters)
 }
 
-func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) *cortexTypes.Filter {
+func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) cortexTypes.Filter {
 	tflog.Debug(ctx, "Converting nested filter model to SDK type")
 	if model == nil {
 		tflog.Trace(ctx, "Nested filter model is nil, returning nil")
 		return nil
 	}
 
-	sdkFilter := &cortexTypes.Filter{
-		SearchField: model.SearchField.ValueString(),
-		SearchType:  model.SearchType.ValueString(),
-		SearchValue: model.SearchValue.ValueString(),
-	}
-	tflog.Trace(ctx, "Converting search fields", map[string]any{
-		"search_field": sdkFilter.SearchField,
-		"search_type":  sdkFilter.SearchType,
-		"search_value": sdkFilter.SearchValue,
-	})
+	isSearch := !model.SearchField.IsNull() && !model.SearchField.IsUnknown() && model.SearchField.ValueString() != ""
+	hasAnd := len(model.And) > 0
+	hasOr := len(model.Or) > 0
 
-	for _, andFilterModel := range model.And {
-		sdkFilter.And = append(sdkFilter.And, NestedModelToSDKFilter(ctx, &andFilterModel))
+	if hasAnd {
+		filters := make([]cortexTypes.Filter, 0, len(model.And))
+		for i := range model.And {
+			filters = append(filters, NestedModelToSDKFilter(ctx, &model.And[i]))
+		}
+		return cortexTypes.NewAndFilter(filters...)
 	}
 
-	for _, orFilterModel := range model.Or {
-		sdkFilter.Or = append(sdkFilter.Or, NestedModelToSDKFilter(ctx, &orFilterModel))
+	if hasOr {
+		filters := make([]cortexTypes.Filter, 0, len(model.Or))
+		for i := range model.Or {
+			filters = append(filters, NestedModelToSDKFilter(ctx, &model.Or[i]))
+		}
+		return cortexTypes.NewOrFilter(filters...)
 	}
 
-	return sdkFilter
+	if isSearch {
+		return cortexTypes.NewSearchFilter(
+			model.SearchField.ValueString(),
+			model.SearchType.ValueString(),
+			model.SearchValue.ValueString(),
+		)
+	}
+
+	return nil
 }
 
-func SDKToModel(ctx context.Context, sdkFilter *cortexTypes.Filter) *RootFilterModel {
+func SDKToModel(ctx context.Context, sdkFilter cortexTypes.FilterRoot) *RootFilterModel {
 	tflog.Debug(ctx, "Converting SDK filter to root model type")
-	if sdkFilter == nil {
+
+	jsonData, err := json.Marshal(sdkFilter)
+	if err != nil {
+		tflog.Error(ctx, "SDKToModel: Failed to marshal SDK filter", map[string]any{"error": err})
+		return nil
+	}
+
+	if string(jsonData) == "null" {
 		tflog.Trace(ctx, "SDK filter is nil, returning nil")
 		return nil
 	}
 
-	model := &RootFilterModel{}
-
-	for _, sdkAndFilter := range sdkFilter.And {
-		model.And = append(model.And, *SDKToNestedModel(ctx, sdkAndFilter))
-	}
-
-	for _, sdkOrFilter := range sdkFilter.Or {
-		model.Or = append(model.Or, *SDKToNestedModel(ctx, sdkOrFilter))
-	}
-
-	return model
-}
-
-func SDKToNestedModel(ctx context.Context, sdkFilter *cortexTypes.Filter) *NestedFilterModel {
-	tflog.Debug(ctx, "Converting SDK filter to nested model type")
-	if sdkFilter == nil {
-		tflog.Trace(ctx, "SDK filter is nil, returning nil")
+	var model RootFilterModel
+	if err := json.Unmarshal(jsonData, &model); err != nil {
+		tflog.Error(ctx, "SDKToModel: Failed to unmarshal filter model", map[string]any{"error": err})
 		return nil
 	}
 
-	model := &NestedFilterModel{
-		SearchField: types.StringValue(sdkFilter.SearchField),
-		SearchType:  types.StringValue(sdkFilter.SearchType),
-		SearchValue: types.StringValue(sdkFilter.SearchValue),
-	}
-	tflog.Trace(ctx, "Converting search fields", map[string]any{
-		"search_field": model.SearchField,
-		"search_type":  model.SearchType,
-		"search_value": model.SearchValue,
-	})
-
-	for _, sdkAndFilter := range sdkFilter.And {
-		model.And = append(model.And, *SDKToNestedModel(ctx, sdkAndFilter))
-	}
-
-	for _, sdkOrFilter := range sdkFilter.Or {
-		model.Or = append(model.Or, *SDKToNestedModel(ctx, sdkOrFilter))
-	}
-
-	return model
+	return &model
 }

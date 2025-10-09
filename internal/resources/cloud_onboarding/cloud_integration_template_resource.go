@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -148,12 +149,12 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						},
 					},
 					// TODO: is this supposed to be "serverless *functions* scanning"?
-					"serverless_scanning": schema.BoolAttribute{
-						Description: "Enable serverless scanning.",
-						Optional:    true,
-						Computed:    true,
-						Default:     booldefault.StaticBool(true),
-					},
+					//"serverless_scanning": schema.BoolAttribute{
+					//	Description: "Enable serverless scanning.",
+					//	Optional:    true,
+					//	Computed:    true,
+					//	Default:     booldefault.StaticBool(true),
+					//},
 					"xsiam_analytics": schema.BoolAttribute{
 						Description: "Whether to enable XSIAM analytics to " +
 							"analyze your endpoint data to develop a " +
@@ -331,12 +332,14 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								Description: "TODO",
 								Optional:    true,
 								Computed:    true,
+								Default: stringdefault.StaticString(""),
 							},
 							"account_ids": schema.SetAttribute{
 								Description: "TODO",
 								Optional:    true,
 								Computed:    true,
 								ElementType: types.StringType,
+								Default: setdefault.StaticValue(types.SetNull(types.StringType)),
 							},
 						},
 						Default: objectdefault.StaticValue(
@@ -440,13 +443,15 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								Description: "TODO",
 								//Required:    true,
 								Optional: true,
-								//Computed:    true,
+								Computed:    true,
+								Default: stringdefault.StaticString(""),
 							},
 							"regions": schema.SetAttribute{
 								Description: "TODO",
 								Optional:    true,
-								//Computed:    true,
+								Computed:    true,
 								ElementType: types.StringType,
+								Default: setdefault.StaticValue(types.SetNull(types.StringType)),
 							},
 						},
 						Default: objectdefault.StaticValue(
@@ -487,7 +492,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				//},
 			},
 			// TODO: Planmodifier to use state if config values are unchanged
-			"automated_deployment_link": schema.StringAttribute{
+			"automated_deployment_url": schema.StringAttribute{
 				Description: "TODO",
 				Computed:    true,
 				//PlanModifiers: []planmodifier.String{
@@ -495,7 +500,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				//},
 			},
 			// TODO: Planmodifier to use state if config values are unchanged
-			"manual_deployment_link": schema.StringAttribute{
+			"manual_deployment_url": schema.StringAttribute{
 				Description: "TODO",
 				Computed:    true,
 				//PlanModifiers: []planmodifier.String{
@@ -569,7 +574,6 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Cloud Integration Template Create Error", // TODO: standardize this
-			//err.Error(),
 			err.Error(),
 		)
 		return
@@ -588,6 +592,9 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 // Read refreshes the Terraform state with the latest data.
 func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
+
+	// TODO: if the template doesn't exist in platform, just re-create it
+	// (maybe add a param to the schema like "recreate_if_missing" that defaults to `true`?)
 
 	//// Get current state
 	//var state models.CloudIntegrationTemplateModel
