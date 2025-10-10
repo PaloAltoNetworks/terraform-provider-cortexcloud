@@ -6,9 +6,9 @@ package models
 import (
 	"context"
 
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
-	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,8 +29,8 @@ type CloudIntegrationTemplateModel struct {
 	Status                    types.String `tfsdk:"status"`
 	TrackingGUID              types.String `tfsdk:"tracking_guid"`
 	OutpostID                 types.String `tfsdk:"outpost_id"`
-	AutomatedDeploymentURL   types.String `tfsdk:"automated_deployment_url"`
-	ManualDeploymentURL      types.String `tfsdk:"manual_deployment_url"`
+	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
+	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
 	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
 }
 
@@ -71,7 +71,7 @@ func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagno
 			Filter: filterTypes.NewAndFilter(
 				filterTypes.NewSearchFilter(
 					cortexEnums.SearchFieldID.String(),
-					cortexEnums.SearchTypeEqualTo.String(), 
+					cortexEnums.SearchTypeEqualTo.String(),
 					m.TrackingGUID.ValueString(),
 				),
 				filterTypes.NewSearchFilter(

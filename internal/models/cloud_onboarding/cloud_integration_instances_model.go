@@ -28,7 +28,7 @@ type CloudIntegrationInstancesDataSourceModel struct {
 	AuthenticationMethod types.String                    `tfsdk:"authentication_method"`
 	InstanceID           types.String                    `tfsdk:"instance_id"`
 	Instances            []cloudIntegrationInstanceModel `tfsdk:"instances"`
-	TotalCount types.Int32 `tfsdk:"total_count"`
+	TotalCount           types.Int32                     `tfsdk:"total_count"`
 }
 
 // cloudIntegrationInstancesModel is the model for the individual cloud integration instances returned by the API according to the configured filter values.
@@ -162,7 +162,6 @@ func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Con
 		},
 	}
 }
-
 
 // RefreshFromRemote refreshes the model from the remote API response.
 func (m *CloudIntegrationInstancesDataSourceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote []cloudOnboardingTypes.IntegrationInstance) {

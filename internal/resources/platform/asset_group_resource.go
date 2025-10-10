@@ -12,10 +12,10 @@ import (
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
-	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -128,7 +128,7 @@ func (r *AssetGroupResource) Configure(ctx context.Context, req resource.Configu
 func (r *AssetGroupResource) findAssetGroup(ctx context.Context, id int) (*platformTypes.AssetGroup, error) {
 	listReq := platformTypes.ListAssetGroupsRequest{
 		Filters: filterTypes.NewSearchFilter(
-			"XDM.ASSET_GROUP.ID", 
+			"XDM.ASSET_GROUP.ID",
 			cortexEnums.SearchTypeEqualTo.String(),
 			strconv.Itoa(id),
 		),

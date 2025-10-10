@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/json"
 
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"

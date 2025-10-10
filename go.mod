@@ -72,3 +72,9 @@ require (
 	google.golang.org/grpc v1.75.1 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/types => ../cortex-cloud-go/types
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/client => ../cortex-cloud-go/internal/client
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/internal/config => ../cortex-cloud-go/internal/config

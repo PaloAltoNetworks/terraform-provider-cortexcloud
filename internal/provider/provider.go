@@ -65,7 +65,7 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 				Description: "TODO",
 			},
 			"cortex_cloud_api_url": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
 				Description: "TODO",
 				//Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
 				//	"You can retrieve this from the Cortex Cloud console by "+

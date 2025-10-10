@@ -44,10 +44,10 @@ func TestConfigurationPrecedence(t *testing.T) {
 
 	// Provider Block (lowest precedence)
 	providerBlockValues := CortexCloudProviderModel{
-		ApiUrl:           types.StringValue("http://provider.block"),
-		ApiPort:          types.Int32Value(111),
-		ApiKey:           types.StringValue("key-from-provider-block"),
-		ApiKeyId:         types.Int32Value(123),
+		CortexAPIURL:     types.StringValue("http://provider.block"),
+		CortexAPIPort:    types.Int32Value(111),
+		CortexAPIKey:     types.StringValue("key-from-provider-block"),
+		CortexAPIKeyID:   types.Int32Value(123),
 		CheckEnvironment: types.BoolValue(true), // Must be true to enable env var parsing
 	}
 
@@ -83,8 +83,8 @@ func TestConfigurationPrecedence(t *testing.T) {
 		t.Fatalf("ParseConfigFile produced diagnostics")
 	}
 
-	if model.ApiUrl.ValueString() == "http://provider.block" {
-		t.Errorf("ApiUrl precedence incorrect: got %s, want %s", model.ApiUrl.ValueString(), "http://config.file")
+	if model.CortexAPIURL.ValueString() == "http://provider.block" {
+		t.Errorf("ApiUrl precedence incorrect: got %s, want %s", model.CortexAPIURL.ValueString(), "http://config.file")
 	}
 
 	model.ParseEnvVars(ctx, &diags)
@@ -98,29 +98,29 @@ func TestConfigurationPrecedence(t *testing.T) {
 	// Expected: Env Var > Config File > Provider Block
 	// ApiUrl: Env Var should win.
 	expectedApiUrl := "http://env.var"
-	if model.ApiUrl.ValueString() != expectedApiUrl {
-		t.Errorf("ApiUrl precedence incorrect: got %s, want %s", model.ApiUrl.ValueString(), expectedApiUrl)
+	if model.CortexAPIURL.ValueString() != expectedApiUrl {
+		t.Errorf("ApiUrl precedence incorrect: got %s, want %s", model.CortexAPIURL.ValueString(), expectedApiUrl)
 	}
 
 	// Expected: Config File > Provider Block (no Env Var set)
 	// ApiPort: Config File should win.
 	expectedApiPort := int32(222)
-	if model.ApiPort.ValueInt32() != expectedApiPort {
-		t.Errorf("ApiPort precedence incorrect: got %d, want %d", model.ApiPort.ValueInt32(), expectedApiPort)
+	if model.CortexAPIPort.ValueInt32() != expectedApiPort {
+		t.Errorf("ApiPort precedence incorrect: got %d, want %d", model.CortexAPIPort.ValueInt32(), expectedApiPort)
 	}
 
 	// Expected: Config File > Provider Block (no Env Var set)
 	// ApiKey: Config File should win.
 	expectedApiKey := "key-from-config-file"
-	if model.ApiKey.ValueString() != expectedApiKey {
-		t.Errorf("ApiKey precedence incorrect: got %s, want %s", model.ApiKey.ValueString(), expectedApiKey)
+	if model.CortexAPIKey.ValueString() != expectedApiKey {
+		t.Errorf("ApiKey precedence incorrect: got %s, want %s", model.CortexAPIKey.ValueString(), expectedApiKey)
 	}
 
 	// Expected: Env Var > Provider Block (no Config File value set)
 	// ApiKeyId: Env Var should win.
 	expectedApiKeyId := int32(999)
-	if model.ApiKeyId.ValueInt32() != expectedApiKeyId {
-		t.Errorf("ApiKeyId precedence incorrect: got %d, want %d", model.ApiKeyId.ValueInt32(), expectedApiKeyId)
+	if model.CortexAPIKeyID.ValueInt32() != expectedApiKeyId {
+		t.Errorf("ApiKeyId precedence incorrect: got %d, want %d", model.CortexAPIKeyID.ValueInt32(), expectedApiKeyId)
 	}
 }
 
@@ -129,7 +129,7 @@ func TestConfigurationPrecedence(t *testing.T) {
 func TestParseEnvVars_Disabled(t *testing.T) {
 	// 1. Setup
 	providerBlockValues := CortexCloudProviderModel{
-		ApiUrl:           types.StringValue("http://provider.block"),
+		CortexAPIURL:     types.StringValue("http://provider.block"),
 		CheckEnvironment: types.BoolValue(false), // Explicitly disable env var parsing
 	}
 
@@ -144,7 +144,7 @@ func TestParseEnvVars_Disabled(t *testing.T) {
 
 	// 3. Assertion
 	expectedApiUrl := "http://provider.block"
-	if model.ApiUrl.ValueString() != expectedApiUrl {
-		t.Errorf("ApiUrl should not have been updated from env var, got %s, want %s", model.ApiUrl.ValueString(), expectedApiUrl)
+	if model.CortexAPIURL.ValueString() != expectedApiUrl {
+		t.Errorf("ApiUrl should not have been updated from env var, got %s, want %s", model.CortexAPIURL.ValueString(), expectedApiUrl)
 	}
 }

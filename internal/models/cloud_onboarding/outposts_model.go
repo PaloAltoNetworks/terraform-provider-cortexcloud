@@ -19,14 +19,14 @@ import (
 
 // OutpostsDataSourceModel is the model for the outposts data source (plural).
 type OutpostsDataSourceModel struct {
-	ID       types.String   `tfsdk:"id"`
-	CloudProvider types.String `tfsdk:"cloud_provider"`
-	Status types.String `tfsdk:"status"`
-	OutpostAccountName types.String `tfsdk:"outpost_account_name"`
-	OutpostAccountID types.Int64 `tfsdk:"outpost_account_id"`
-	CreatedAt *models.FilterRangeInt64Model `tfsdk:"created_at"`
-	NumberOfInstances *models.FilterGreaterOrLessThanInt64Model `tfsdk:"number_of_instances"`
-	Outposts []OutpostModel `tfsdk:"outposts"`
+	ID                 types.String                              `tfsdk:"id"`
+	CloudProvider      types.String                              `tfsdk:"cloud_provider"`
+	Status             types.String                              `tfsdk:"status"`
+	OutpostAccountName types.String                              `tfsdk:"outpost_account_name"`
+	OutpostAccountID   types.Int64                               `tfsdk:"outpost_account_id"`
+	CreatedAt          *models.FilterRangeInt64Model             `tfsdk:"created_at"`
+	NumberOfInstances  *models.FilterGreaterOrLessThanInt64Model `tfsdk:"number_of_instances"`
+	Outposts           []OutpostModel                            `tfsdk:"outposts"`
 }
 
 // ToListRequest creates a ListOutpostsRequest from the data source's filters.
@@ -65,7 +65,7 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 	if m.CreatedAt != nil {
 		var (
 			fromVal, toVal = (*m.CreatedAt).From, (*m.CreatedAt).To
-			from, to = 0, math.MaxInt64
+			from, to       = 0, math.MaxInt64
 		)
 		if !fromVal.IsNull() && !fromVal.IsUnknown() {
 			from = int(fromVal.ValueInt64())
@@ -83,8 +83,8 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 	if m.NumberOfInstances != nil {
 		var (
 			conditionVal, valueVal = (*m.NumberOfInstances).Condition, (*m.NumberOfInstances).Value
-			condition = cortexEnums.SearchTypeEqualTo.String()
-			value int
+			condition              = cortexEnums.SearchTypeEqualTo.String()
+			value                  int
 		)
 		if !conditionVal.IsNull() && !conditionVal.IsUnknown() {
 			condition = conditionVal.ValueString()
@@ -102,7 +102,7 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 	return cloudOnboardingTypes.ListOutpostsRequest{
 		FilterData: filterTypes.FilterData{
 			Filter: filterTypes.NewAndFilter(
-				filters...,	
+				filters...,
 			),
 			Paging: filterTypes.PagingFilter{
 				From: 0,
@@ -129,4 +129,3 @@ func (m *OutpostsDataSourceModel) RefreshFromRemote(ctx context.Context, diags *
 	m.Outposts = outposts
 	m.ID = types.StringValue("cortexcloud_outposts")
 }
-

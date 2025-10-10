@@ -24,10 +24,10 @@ import (
 
 type CortexCloudProviderModel struct {
 	ConfigFile           types.String `tfsdk:"config_file"`
-	CortexAPIURL               types.String `tfsdk:"cortex_cloud_api_url"`
-	CortexAPIKey               types.String `tfsdk:"cortex_cloud_api_key"`
-	CortexAPIKeyID             types.Int32  `tfsdk:"cortex_cloud_api_key_id"`
-	CortexAPIPort              types.Int32  `tfsdk:"cortex_cloud_api_port"`
+	CortexAPIURL         types.String `tfsdk:"cortex_cloud_api_url"`
+	CortexAPIKey         types.String `tfsdk:"cortex_cloud_api_key"`
+	CortexAPIKeyID       types.Int32  `tfsdk:"cortex_cloud_api_key_id"`
+	CortexAPIPort        types.Int32  `tfsdk:"cortex_cloud_api_port"`
 	SkipSSLVerify        types.Bool   `tfsdk:"skip_ssl_verify"`
 	SDKLogLevel          types.String `tfsdk:"sdk_log_level"`
 	RequestTimeout       types.Int32  `tfsdk:"request_timeout"`
@@ -119,7 +119,6 @@ func (m *CortexCloudProviderModel) Validate(ctx context.Context, diags *diag.Dia
 			"value cannot be null or zero",
 		)
 	}
-
 
 	// TODO: implement this as SDK call
 	//if diags.HasError() {

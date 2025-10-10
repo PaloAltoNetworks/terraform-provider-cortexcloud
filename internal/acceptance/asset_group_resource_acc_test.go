@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func TestAccAssetGroupResource(t *testing.T) {

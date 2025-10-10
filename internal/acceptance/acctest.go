@@ -18,9 +18,9 @@ const (
 )
 
 var (
-	apiURL string
-	apiKey string
-	apiKeyID int
+	apiURL                          string
+	apiKey                          string
+	apiKeyID                        int
 	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 		providerName: providerserver.NewProtocol6WithError(provider.New("test")()),
 	}

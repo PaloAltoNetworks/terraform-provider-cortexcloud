@@ -6,9 +6,9 @@ package models
 import (
 	"context"
 
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
-	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -78,7 +78,7 @@ func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags
 			Filter: filterTypes.NewAndFilter(
 				filterTypes.NewSearchFilter(
 					cortexEnums.SearchFieldID.String(),
-					cortexEnums.SearchTypeWildcard.String(), 
+					cortexEnums.SearchTypeWildcard.String(),
 					m.InstanceName.ValueString(),
 				),
 				filterTypes.NewSearchFilter(

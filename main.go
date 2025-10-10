@@ -15,11 +15,13 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/provider"
 )
 
-//var (
+// var (
+//
 //	buildVersion string = "unknown"
 //	buildTime    string = "unknown"
 //	goVersion    string = "unknown"
-//)
+//
+// )
 var (
 	GitCommit           = "NOCOMMIT"
 	CortexServerVersion = "UNKNOWN"

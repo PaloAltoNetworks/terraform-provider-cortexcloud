@@ -6,9 +6,9 @@ package models
 import (
 	"context"
 
+	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
-	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -18,7 +18,7 @@ import (
 type OutpostModel struct {
 	ID            types.String `tfsdk:"id"`
 	CloudProvider types.String `tfsdk:"cloud_provider"`
-	CreatedAt     types.Int64 `tfsdk:"created_at"`
+	CreatedAt     types.Int64  `tfsdk:"created_at"`
 	Type          types.String `tfsdk:"type"`
 }
 
@@ -30,7 +30,7 @@ func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostic
 		FilterData: filterTypes.FilterData{
 			Paging: filterTypes.PagingFilter{
 				From: 0,
-				To: 1000,
+				To:   1000,
 			},
 			Filter: filterTypes.NewAndFilter(
 				filterTypes.NewSearchFilter(
