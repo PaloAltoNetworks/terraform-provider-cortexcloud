@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -56,14 +56,14 @@ type CasesIssuesModel struct {
 }
 
 // ToGetRequest converts the UserModel to a GetUserRequest.
-func (m *UserModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *cortexTypes.GetUserRequest {
-	return &cortexTypes.GetUserRequest{
+func (m *UserModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *platformTypes.GetUserRequest {
+	return &platformTypes.GetUserRequest{
 		Email: m.Email.ValueString(),
 	}
 }
 
 // RefreshFromRemote refreshes the UserModel with the response from the API.
-func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, resp *cortexTypes.User) {
+func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, resp *platformTypes.User) {
 	tflog.Debug(ctx, "Refreshing user model from remote")
 	m.Email = types.StringValue(resp.Email)
 	m.FirstName = types.StringValue(resp.FirstName)

@@ -6,8 +6,9 @@ package models
 import (
 	"context"
 
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,29 +29,29 @@ type CloudIntegrationTemplateModel struct {
 	Status                    types.String `tfsdk:"status"`
 	TrackingGUID              types.String `tfsdk:"tracking_guid"`
 	OutpostID                 types.String `tfsdk:"outpost_id"`
-	AutomatedDeploymentURL   types.String `tfsdk:"automated_deployment_url"`
-	ManualDeploymentURL      types.String `tfsdk:"manual_deployment_url"`
+	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
+	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
 	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
 }
 
-func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.CreateIntegrationTemplateRequest {
-	var additionalCapabilities cortexTypes.AdditionalCapabilities
+func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.CreateIntegrationTemplateRequest {
+	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
-	var collectionConfiguration cortexTypes.CollectionConfiguration
+	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
 	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
 
-	var customResourcesTags []cortexTypes.Tag
+	var customResourcesTags []cloudOnboardingTypes.Tag
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
-	var scopeModifications cortexTypes.ScopeModifications
+	var scopeModifications cloudOnboardingTypes.ScopeModifications
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
 
 	if diagnostics.HasError() {
-		return cortexTypes.CreateIntegrationTemplateRequest{}
+		return cloudOnboardingTypes.CreateIntegrationTemplateRequest{}
 	}
 
-	request := cortexTypes.CreateIntegrationTemplateRequest{
+	request := cloudOnboardingTypes.CreateIntegrationTemplateRequest{
 		AdditionalCapabilities:  additionalCapabilities,
 		CloudProvider:           m.CloudProvider.ValueString(),
 		CollectionConfiguration: collectionConfiguration,
@@ -64,22 +65,22 @@ func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, dia
 	return request
 }
 
-func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
-	return cortexTypes.ListIntegrationInstancesRequest{
-		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.NewAndFilter(
-				cortexTypes.NewSearchFilter(
+func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.ListIntegrationInstancesRequest {
+	return cloudOnboardingTypes.ListIntegrationInstancesRequest{
+		FilterData: filterTypes.FilterData{
+			Filter: filterTypes.NewAndFilter(
+				filterTypes.NewSearchFilter(
 					cortexEnums.SearchFieldID.String(),
-					cortexEnums.SearchTypeEqualTo.String(), 
+					cortexEnums.SearchTypeEqualTo.String(),
 					m.TrackingGUID.ValueString(),
 				),
-				cortexTypes.NewSearchFilter(
+				filterTypes.NewSearchFilter(
 					cortexEnums.SearchFieldStatus.String(),
 					cortexEnums.SearchTypeNotEqualTo.String(),
 					cortexEnums.IntegrationInstanceStatusPending.String(),
 				),
 			),
-			Paging: cortexTypes.PagingFilter{
+			Paging: filterTypes.PagingFilter{
 				From: 0,
 				To:   1000,
 			},
@@ -87,24 +88,24 @@ func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagno
 	}
 }
 
-func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.EditIntegrationInstanceRequest {
-	var additionalCapabilities cortexTypes.AdditionalCapabilities
+func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.EditIntegrationInstanceRequest {
+	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
-	var collectionConfiguration cortexTypes.CollectionConfiguration
+	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
 	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
 
-	var customResourcesTags []cortexTypes.Tag
+	var customResourcesTags []cloudOnboardingTypes.Tag
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
-	var scopeModifications cortexTypes.ScopeModifications
+	var scopeModifications cloudOnboardingTypes.ScopeModifications
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
 
 	if diagnostics.HasError() {
-		return cortexTypes.EditIntegrationInstanceRequest{}
+		return cloudOnboardingTypes.EditIntegrationInstanceRequest{}
 	}
 
-	return cortexTypes.EditIntegrationInstanceRequest{
+	return cloudOnboardingTypes.EditIntegrationInstanceRequest{
 		AdditionalCapabilities:  additionalCapabilities,
 		CloudProvider:           m.CloudProvider.ValueString(),
 		CollectionConfiguration: collectionConfiguration,
@@ -116,8 +117,8 @@ func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, dia
 	}
 }
 
-func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cortexTypes.DeleteIntegrationInstanceRequest {
-	return cortexTypes.DeleteIntegrationInstanceRequest{
+func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.DeleteIntegrationInstanceRequest {
+	return cloudOnboardingTypes.DeleteIntegrationInstanceRequest{
 		IDs: []string{m.TrackingGUID.ValueString()},
 	}
 }
@@ -126,7 +127,7 @@ func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, dia
 // Refresh Resource Attributes
 // ----------------------------------------------------------------------------
 
-func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostics *diag.Diagnostics, response cortexTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
+func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	var (
 		cloudFormationTemplateUrl = ""
 		err                       error
@@ -147,7 +148,7 @@ func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostic
 	m.CloudFormationTemplateURL = types.StringValue(cloudFormationTemplateUrl)
 }
 
-func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cortexTypes.ListIntegrationInstancesResponseWrapper) {
+func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.ListIntegrationInstancesResponseWrapper) {
 	// TODO: move this check outside?
 	if len(response.Data) == 0 || len(response.Data) > 1 {
 		m.Status = types.StringNull()

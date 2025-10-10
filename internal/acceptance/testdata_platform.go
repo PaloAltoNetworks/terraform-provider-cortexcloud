@@ -3,6 +3,10 @@
 
 package acceptance
 
+import (
+	"fmt"
+)
+
 const (
 	AccTestAuthSettings1Name              string = "tf-provider-acc-test-auth-settings"
 	AccTestAuthSettings1Domain            string = "test.com"
@@ -37,3 +41,18 @@ const (
   metadata_url = %s
 }`
 )
+
+func testdataAssetGroupConfig(name, groupType, description string, predicate string) string {
+	var predicateBlock string
+	if predicate != "" {
+		predicateBlock = fmt.Sprintf("membership_predicate = {%s}", predicate)
+	}
+	return fmt.Sprintf(`
+resource "cortexcloud_asset_group" "test" {
+    name = "%s"
+    type = "%s"
+    description = "%s"
+    %s
+}
+`, name, groupType, description, predicateBlock)
+}

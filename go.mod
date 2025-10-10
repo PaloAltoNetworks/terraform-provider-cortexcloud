@@ -4,7 +4,6 @@ go 1.25.0
 
 require (
 	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.8
-	github.com/PaloAltoNetworks/cortex-cloud-go/client v0.0.8
 	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.8
 	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.8
 	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.8
@@ -19,9 +18,10 @@ require (
 )
 
 require (
-	dario.cat/mergo v1.0.2 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.4 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/client v0.0.4 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/errors v0.0.8 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v0.0.0-00010101000000-000000000000 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
@@ -72,3 +72,9 @@ require (
 	google.golang.org/grpc v1.75.1 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/types => ../cortex-cloud-go/types
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/client => ../cortex-cloud-go/internal/client
+
+replace github.com/PaloAltoNetworks/cortex-cloud-go/internal/config => ../cortex-cloud-go/internal/config

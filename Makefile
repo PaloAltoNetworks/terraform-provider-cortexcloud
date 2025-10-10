@@ -15,9 +15,13 @@ PROVIDER_NAME 		?= cortexcloud
 PROVIDER_BINARY 	?= terraform-provider-${PROVIDER_NAME}
 PROVIDER_VERSION 	?= 0.0.1
 
-# Build flags
-BUILD_VERSION 		?= ${PROVIDER_VERSION}
-BUILD_TIME 			?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+# Linker values
+# TODO: parse the output from `go version -json -m .` within root dir
+GIT_COMMIT 					:= $(shell git rev-parse HEAD)
+CORTEX_SERVER_VERSION 		:= master-platform-v4.2.0-4877-g4886d-7fe3
+CORTEX_PAPI_VERSION 		:= 1.2
+BUILD_DATE 					?= $(shell TZ=UTC0 git show --quiet --date='format-local:%Y-%m-%dT%T%z' --format="%cd")
+GO_VERSION 					:= $(shell go version)
 
 # Target OS and architecture the provider binary will be built for.
 # Must follow the format "os_architecture".
@@ -29,63 +33,79 @@ TARGET_OS_ARCH 		?= darwin_arm64
 # -----------------------------------------------------------------------------
 
 # Target path for provider binary (without target OS/arch)
-PROVIDER_PATH 	:= "${TF_PLUGINS_DIR}/${PROVIDER_HOSTNAME}/" \
-				   + "${PROVIDER_NAMESPACE}/${PROVIDER_HOSTNAME}" \
-				   + "${PROVIDER_VERSION}"
+PROVIDER_PATH 	:= "${TF_PLUGINS_DIR}/${PROVIDER_HOSTNAME}/${PROVIDER_NAMESPACE}/${PROVIDER_NAME}/${PROVIDER_VERSION}/${TARGET_OS_ARCH}"
 
 # Local operating system/architecture
 OS 				:= $(shell uname -s | awk '{print tolower($0)}')
 ARCH 			:= $(shell uname -m)
 
+#------------------------------------------------------------------------------
+# LDFLAGS (Linker Flags) Definitions
+#------------------------------------------------------------------------------
+
+define LDFLAGS
+-s -w \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(GIT_COMMIT)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(CORTEX_SERVER_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(CORTEX_PAPI_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(BUILD_DATE)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(GO_VERSION)'
+endef
+
+define TEST_LDFLAGS
+-s -w \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(TEST_GIT_COMMIT)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(TEST_CORTEX_SERVER_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(TEST_CORTEX_PAPI_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(TEST_BUILD_DATE)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(TEST_GO_VERSION)'
+endef
+
+#------------------------------------------------------------------------------
+# Phony Targets
+#------------------------------------------------------------------------------
+
+.PHONY: format build copyright-check copyright docs test test-unit test-acc lint ci clean checkos
 
 # -----------------------------------------------------------------------------
-# Main Recipes
+# Main Targets
 # -----------------------------------------------------------------------------
 
-default: install
+default: build
 
-.PHONY: format
+# Format project Go files
 format:
 	@echo "Running gofmt..."
 	@gofmt -l -w .
 	@echo ""
 	@echo "Done!"
 
-# Build provider binary
-.PHONY: build
+# Build the provider binary and install it into the target directory
 build:
+	@echo "Creating output directory ${PROVIDER_PATH}"
+	@mkdir -p ${PROVIDER_PATH}
 	@echo "Building provider ${PROVIDER_BINARY}"
-	@echo "  - Version: ${PROVIDER_VERSION}"
-	@echo "  - Build Time: ${BUILD_TIME}"
-	@go build -ldflags="-X main.buildVersion=${PROVIDER_VERSION} -X main.buildTime=${BUILD_TIME}" -o ${PROVIDER_BINARY}
-	@echo ""
-	@echo "Done!"
-
-# Create plugin directory and move binary
-.PHONY: install
-install: build
-	@TARGET_DIR="${PROVIDER_PATH}/${TARGET_OS_ARCH}"
-	@echo "Creating plugin directory ${TARGET_DIR}"
-	@mkdir -p ${TARGET_DIR}
-	@echo "Moving binary to plugin directory..."
-	@mv ${PROVIDER_BINARY} ${TARGET_DIR}
+	@echo "  - Provider Version: ${PROVIDER_VERSION}"
+	@echo "  - Git Commit: ${GIT_COMMIT}"
+	@echo "  - Target Cortex Server Version: ${CORTEX_SERVER_VERSION}"
+	@echo "  - Target Cortex PAPI Version: ${CORTEX_PAPI_VERSION}"
+	@echo "  - Build Date: ${BUILD_DATE}"
+	@echo "  - Go Version: ${GO_VERSION}"
+	@go build -ldflags="${LDFLAGS}" -o ${PROVIDER_PATH}
 	@echo ""
 	@echo "Done!"
 
 # Check for missing copyright headers
-.PHONY: copyright-check
 copyright-check:
 	@echo "Checking for missing file headers..."
 	@copywrite headers --config .copywrite.hcl --plan
 
 # Add copywrite headers to all files
-.PHONY: copyright
 copyright:
 	@echo "Adding any missing file headers..."
 	@copywrite headers --config .copywrite.hcl
 
 # Generate provider documentation
-.PHONY: docs
 docs:
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
@@ -93,30 +113,25 @@ docs:
 	@echo "Done!"
 
 # Run all tests
-.PHONY: test
 test: test-unit test-acc
 
 # Run unit tests
-.PHONY: test-unit
 test-unit:
 	@echo "Running unit tests..."
 	@go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
 
 # Run acceptance tests
-.PHONY: test-acc
 test-acc: build
 	@echo "Running acceptance tests..."
-	@TF_ACC=1 go test -v -cover -race $$(go list ./... | grep /acceptance)
+	@TF_ACC=1 TF_ACC_LOG=DEBUG go test -v -cover -race $$(go list ./... | grep /acceptance)
 
 # Run linter
-.PHONY: lint
 lint:
 	@echo "Running linter..."
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run . ./internal/... ./vendor/github.com/PaloAltoNetworks/cortex-cloud-go/...
 
 # Run all CI checks
 # TODO: add acceptance tests
-.PHONY: ci
 ci: lint copyright-check test-unit
 
 # -----------------------------------------------------------------------------
@@ -124,7 +139,6 @@ ci: lint copyright-check test-unit
 # -----------------------------------------------------------------------------
 
 # Delete provider binary from plugin directory
-.PHONY: clean
 clean:
 	@echo "Deleting directory ${PROVIDER_PATH}"
 	@rm -rf ${PROVIDER_PATH}
@@ -134,7 +148,6 @@ clean:
 # Print warning message if target operating system architecture does not
 # match the values returned by the system, or error message if this is
 # being executed in a CI pipeline (dictated by the IS_CI_EXECTION value)
-.PHONY: checkos
 checkos:
 	@true
 ifneq ("${OS}_${ARCH}", "${TARGET_OS_ARCH}")

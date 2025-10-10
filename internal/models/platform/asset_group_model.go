@@ -7,7 +7,8 @@ import (
 	"context"
 	"encoding/json"
 
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,7 +29,7 @@ type AssetGroupModel struct {
 }
 
 // RefreshFromRemote refreshes the model from the remote API response.
-func (m *AssetGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *cortexTypes.AssetGroup) {
+func (m *AssetGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformTypes.AssetGroup) {
 	tflog.Debug(ctx, "Refreshing asset group model from remote")
 
 	tflog.Trace(ctx, "Setting asset group attributes")
@@ -111,33 +112,33 @@ func GetRecursiveFilterSchema(depth, maxDepth int) map[string]schema.Attribute {
 	return attrs
 }
 
-func RootModelToSDKFilter(ctx context.Context, model *RootFilterModel) cortexTypes.FilterRoot {
+func RootModelToSDKFilter(ctx context.Context, model *RootFilterModel) filterTypes.FilterRoot {
 	tflog.Debug(ctx, "Converting root filter model to SDK type")
 	if model == nil {
 		tflog.Trace(ctx, "Root filter model is nil, returning empty FilterRoot")
-		return cortexTypes.NewRootFilter(nil, nil)
+		return filterTypes.NewRootFilter(nil, nil)
 	}
 
-	var andFilters []cortexTypes.Filter
+	var andFilters []filterTypes.Filter
 	if len(model.And) > 0 {
-		andFilters = make([]cortexTypes.Filter, 0, len(model.And))
+		andFilters = make([]filterTypes.Filter, 0, len(model.And))
 		for i := range model.And {
 			andFilters = append(andFilters, NestedModelToSDKFilter(ctx, &model.And[i]))
 		}
 	}
 
-	var orFilters []cortexTypes.Filter
+	var orFilters []filterTypes.Filter
 	if len(model.Or) > 0 {
-		orFilters = make([]cortexTypes.Filter, 0, len(model.Or))
+		orFilters = make([]filterTypes.Filter, 0, len(model.Or))
 		for i := range model.Or {
 			orFilters = append(orFilters, NestedModelToSDKFilter(ctx, &model.Or[i]))
 		}
 	}
 
-	return cortexTypes.NewRootFilter(andFilters, orFilters)
+	return filterTypes.NewRootFilter(andFilters, orFilters)
 }
 
-func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) cortexTypes.Filter {
+func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) filterTypes.Filter {
 	tflog.Debug(ctx, "Converting nested filter model to SDK type")
 	if model == nil {
 		tflog.Trace(ctx, "Nested filter model is nil, returning nil")
@@ -149,23 +150,23 @@ func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) corte
 	hasOr := len(model.Or) > 0
 
 	if hasAnd {
-		filters := make([]cortexTypes.Filter, 0, len(model.And))
+		filters := make([]filterTypes.Filter, 0, len(model.And))
 		for i := range model.And {
 			filters = append(filters, NestedModelToSDKFilter(ctx, &model.And[i]))
 		}
-		return cortexTypes.NewAndFilter(filters...)
+		return filterTypes.NewAndFilter(filters...)
 	}
 
 	if hasOr {
-		filters := make([]cortexTypes.Filter, 0, len(model.Or))
+		filters := make([]filterTypes.Filter, 0, len(model.Or))
 		for i := range model.Or {
 			filters = append(filters, NestedModelToSDKFilter(ctx, &model.Or[i]))
 		}
-		return cortexTypes.NewOrFilter(filters...)
+		return filterTypes.NewOrFilter(filters...)
 	}
 
 	if isSearch {
-		return cortexTypes.NewSearchFilter(
+		return filterTypes.NewSearchFilter(
 			model.SearchField.ValueString(),
 			model.SearchType.ValueString(),
 			model.SearchValue.ValueString(),
@@ -175,7 +176,7 @@ func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) corte
 	return nil
 }
 
-func SDKToModel(ctx context.Context, sdkFilter cortexTypes.FilterRoot) *RootFilterModel {
+func SDKToModel(ctx context.Context, sdkFilter filterTypes.FilterRoot) *RootFilterModel {
 	tflog.Debug(ctx, "Converting SDK filter to root model type")
 
 	jsonData, err := json.Marshal(sdkFilter)

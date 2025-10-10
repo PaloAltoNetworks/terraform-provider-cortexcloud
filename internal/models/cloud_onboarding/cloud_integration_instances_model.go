@@ -7,7 +7,8 @@ import (
 	"context"
 
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,7 +28,7 @@ type CloudIntegrationInstancesDataSourceModel struct {
 	AuthenticationMethod types.String                    `tfsdk:"authentication_method"`
 	InstanceID           types.String                    `tfsdk:"instance_id"`
 	Instances            []cloudIntegrationInstanceModel `tfsdk:"instances"`
-	TotalCount types.Int32 `tfsdk:"total_count"`
+	TotalCount           types.Int32                     `tfsdk:"total_count"`
 }
 
 // cloudIntegrationInstancesModel is the model for the individual cloud integration instances returned by the API according to the configured filter values.
@@ -72,87 +73,87 @@ var (
 )
 
 // ToListRequest converts the model to a ListIntegrationInstancesRequest.
-func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.ListIntegrationInstancesRequest {
+func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListIntegrationInstancesRequest {
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstancesDataSourceModel")
 
-	var filters []cortexTypes.Filter
+	var filters []filterTypes.Filter
 	if !m.CloudProvider.IsNull() && !m.CloudProvider.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldProvider.String(),
 			"EQ",
 			m.CloudProvider.ValueString(),
 		))
 	}
 	if !m.Name.IsNull() && !m.Name.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldInstanceName.String(),
 			"WILDCARD",
 			m.Name.ValueString(),
 		))
 	}
 	if !m.Status.IsNull() && !m.Status.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldStatus.String(),
 			"EQ",
 			m.Status.ValueString(),
 		))
 	}
 	if !m.Scope.IsNull() && !m.Scope.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldScope.String(),
 			"EQ",
 			m.Scope.ValueString(),
 		))
 	}
 	if !m.ScanMode.IsNull() && !m.ScanMode.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldScanMode.String(),
 			"EQ",
 			m.ScanMode.ValueString(),
 		))
 	}
 	if !m.CreationTime.IsNull() && !m.CreationTime.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldCreationTime.String(),
 			"EQ",
 			m.CreationTime.ValueString(),
 		))
 	}
 	if !m.OutpostID.IsNull() && !m.OutpostID.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldOutpostID.String(),
 			"WILDCARD",
 			m.OutpostID.ValueString(),
 		))
 	}
 	if !m.AuthenticationMethod.IsNull() && !m.AuthenticationMethod.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldAuthenticationMethod.String(),
 			"EQ",
 			m.AuthenticationMethod.ValueString(),
 		))
 	}
 	if !m.InstanceID.IsNull() && !m.InstanceID.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldID.String(),
 			"WILDCARD",
 			m.InstanceID.ValueString(),
 		))
 	}
 
-	var finalFilter cortexTypes.Filter
+	var finalFilter filterTypes.Filter
 	if len(filters) > 0 {
-		finalFilter = cortexTypes.NewAndFilter(filters...)
+		finalFilter = filterTypes.NewAndFilter(filters...)
 	}
 
-	return cortexTypes.ListIntegrationInstancesRequest{
-		FilterData: cortexTypes.FilterData{
+	return cloudOnboardingTypes.ListIntegrationInstancesRequest{
+		FilterData: filterTypes.FilterData{
 			Filter: finalFilter,
-			Paging: cortexTypes.PagingFilter{
+			Paging: filterTypes.PagingFilter{
 				From: 0,
 				To:   1000,
 			},
-			Sort: []cortexTypes.SortFilter{
+			Sort: []filterTypes.SortFilter{
 				{
 					Field: cortexEnums.SearchFieldInstanceName.String(),
 					Order: "ASC",
@@ -162,9 +163,8 @@ func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Con
 	}
 }
 
-
 // RefreshFromRemote refreshes the model from the remote API response.
-func (m *CloudIntegrationInstancesDataSourceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote []cortexTypes.IntegrationInstance) {
+func (m *CloudIntegrationInstancesDataSourceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote []cloudOnboardingTypes.IntegrationInstance) {
 	tflog.Debug(ctx, "Refreshing cloud integration instances model from remote")
 
 	var instances []cloudIntegrationInstanceModel

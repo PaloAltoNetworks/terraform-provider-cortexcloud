@@ -77,12 +77,12 @@ func (d *OutpostsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Attributes: map[string]schema.Attribute{
 					"from": schema.Int64Attribute{
 						Description: "",
-						Optional: true,
+						Optional:    true,
 						//Computed: true,
 					},
 					"to": schema.Int64Attribute{
 						Description: "",
-						Optional: true,
+						Optional:    true,
 						//Computed: true,
 					},
 				},
@@ -93,12 +93,12 @@ func (d *OutpostsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Attributes: map[string]schema.Attribute{
 					"condition": schema.StringAttribute{
 						Description: "",
-						Optional: true,
+						Optional:    true,
 						//Computed: true,
 					},
 					"value": schema.StringAttribute{
 						Description: "",
-						Optional: true,
+						Optional:    true,
 						//Computed: true,
 					},
 				},
