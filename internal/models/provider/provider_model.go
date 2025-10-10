@@ -7,12 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	//"net/http"
+	//"io"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -23,13 +24,12 @@ import (
 
 type CortexCloudProviderModel struct {
 	ConfigFile           types.String `tfsdk:"config_file"`
-	// TODO: change "Api" to uppercase	
-	ApiUrl               types.String `tfsdk:"cortex_cloud_api_url"`
-	ApiPort              types.Int32  `tfsdk:"cortex_cloud_api_port"`
-	ApiKey               types.String `tfsdk:"cortex_cloud_api_key"`
-	ApiKeyId             types.Int32  `tfsdk:"cortex_cloud_api_key_id"`
-	SkipSslVerify        types.Bool   `tfsdk:"skip_ssl_verify"`
-	SdkLogLevel          types.String `tfsdk:"sdk_log_level"`
+	CortexAPIURL               types.String `tfsdk:"cortex_cloud_api_url"`
+	CortexAPIKey               types.String `tfsdk:"cortex_cloud_api_key"`
+	CortexAPIKeyID             types.Int32  `tfsdk:"cortex_cloud_api_key_id"`
+	CortexAPIPort              types.Int32  `tfsdk:"cortex_cloud_api_port"`
+	SkipSSLVerify        types.Bool   `tfsdk:"skip_ssl_verify"`
+	SDKLogLevel          types.String `tfsdk:"sdk_log_level"`
 	RequestTimeout       types.Int32  `tfsdk:"request_timeout"`
 	RequestRetryInterval types.Int32  `tfsdk:"request_retry_interval"`
 	CrashStackDir        types.String `tfsdk:"crash_stack_dir"`
@@ -85,34 +85,91 @@ var (
 )
 
 type CortexCloudSDKClients struct {
-	Config          client.Config
 	AppSec          *appsec.Client
 	CloudOnboarding *cloudonboarding.Client
 	Platform        *platform.Client
 }
 
-func (m *CortexCloudProviderModel) Validate(ctx context.Context, diagnostics *diag.Diagnostics) {
-	//if m.ApiUrl.IsNull() || m.ApiUrl.IsUnknown() || m.ApiUrl.ValueString() == "" {
-	//	diagnostics.AddAttributeError(
-	//		path.Root("cortex_cloud_api_url"),
-	//		"Invalid Provider Configuration",
-	//		"value cannot be null or empty",
-	//	)
+func (m *CortexCloudProviderModel) Validate(ctx context.Context, diags *diag.Diagnostics) {
+	tflog.Debug(ctx, "Validating provider configuration")
+	cortexAPIURL := m.CortexAPIURL
+	cortexAPIKey := m.CortexAPIKey
+	cortexAPIKeyID := m.CortexAPIKeyID
+
+	if cortexAPIURL.IsNull() || cortexAPIURL.IsUnknown() || cortexAPIURL.ValueString() == "" {
+		diags.AddAttributeError(
+			path.Root("cortex_cloud_api_url"),
+			"Invalid Provider Configuration",
+			"value cannot be null or empty",
+		)
+	}
+
+	if cortexAPIKey.IsNull() || cortexAPIKey.IsUnknown() || cortexAPIKey.ValueString() == "" {
+		diags.AddAttributeError(
+			path.Root("cortex_cloud_api_key"),
+			"Invalid Provider Configuration",
+			"value cannot be null or empty",
+		)
+	}
+
+	if cortexAPIKeyID.IsNull() || cortexAPIKeyID.IsUnknown() || int(cortexAPIKeyID.ValueInt32()) == 0 {
+		diags.AddAttributeError(
+			path.Root("cortex_cloud_api_key_id"),
+			"Invalid Provider Configuration",
+			"value cannot be null or zero",
+		)
+	}
+
+
+	// TODO: implement this as SDK call
+	//if diags.HasError() {
+	//	return
 	//}
 
-	//if m.ApiKey.IsNull() || m.ApiKey.IsUnknown() || m.ApiKey.ValueString() == "" {
-	//	diagnostics.AddAttributeError(
-	//		path.Root("cortex_cloud_api_key"),
-	//		"Invalid Provider Configuration",
-	//		"value cannot be null or empty",
+	//validateAPIKeyURL := fmt.Sprintf("%s/api_keys/validate", cortexAPIURL.ValueString())
+	//validateAPIKeyReq, err := http.NewRequest(
+	//	http.MethodPost,
+	//	validateAPIKeyURL,
+	//	nil,
+	//)
+	//if err != nil {
+	//	diags.AddError(
+	//		"Provider Config Validation Error",
+	//		// TODO: phrasing
+	//		fmt.Sprintf("Error occured during API Key validation: %s", err.Error()),
 	//	)
+	//	return
 	//}
-
-	//if m.ApiKeyId.IsNull() || m.ApiKeyId.IsUnknown() || int(m.ApiKeyId.ValueInt32()) == 0 {
-	//	diagnostics.AddAttributeError(
-	//		path.Root("cortex_cloud_api_key_id"),
-	//		"Invalid Provider Configuration",
-	//		"value cannot be null or zero",
+	//
+	//cortexAPIKeyIDStr := strconv.Itoa(int(cortexAPIKeyID.ValueInt32()))
+	//validateAPIKeyReq.Header.Set("x-xdr-auth-id", cortexAPIKeyIDStr)
+	//validateAPIKeyReq.Header.Set("Authorization", cortexAPIKey.ValueString())
+	//client := &http.Client{}
+	//validateAPIKeyResp, err := client.Do(validateAPIKeyReq)
+	//if err != nil {
+	//	diags.AddError(
+	//		"Cortex API Key Validation Error",
+	//		fmt.Sprintf("Cortex API Key validation failed: %s", err.Error()),
+	//	)
+	//	return
+	//}
+	//validateAPIKeyRespBody, err := io.ReadAll(validateAPIKeyResp.Body)
+	//if err != nil {
+	//	diags.AddError(
+	//		"Cortex API Key Validation Error",
+	//		// TODO: phrasing
+	//		fmt.Sprintf("Error occured during API Key validation: %s", err.Error()),
+	//	)
+	//	return
+	//}
+	//
+	//if string(validateAPIKeyRespBody) != "true" {
+	//	// TODO: parse the body as json and use that to
+	//	// determine if this is a matter of advanced vs basic
+	//	// API key provided
+	//	diags.AddError(
+	//		"Cortex API Key Validation Failed",
+	//		"Invalid Cortex API Key or Key ID value. Check your configured credentials and try again.",
 	//	)
 	//}
 }
@@ -176,22 +233,22 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 	tflog.Debug(ctx, "Config file successfully parsed -- overwriting provider block configuration")
 
 	if config.ApiUrl != nil {
-		m.ApiUrl = types.StringValue(*config.ApiUrl)
+		m.CortexAPIURL = types.StringValue(*config.ApiUrl)
 	}
 	if config.ApiPort != nil {
-		m.ApiPort = types.Int32Value(*config.ApiPort)
+		m.CortexAPIPort = types.Int32Value(*config.ApiPort)
 	}
 	if config.ApiKey != nil {
-		m.ApiKey = types.StringValue(*config.ApiKey)
+		m.CortexAPIKey = types.StringValue(*config.ApiKey)
 	}
 	if config.ApiKeyId != nil {
-		m.ApiKeyId = types.Int32Value(*config.ApiKeyId)
+		m.CortexAPIKeyID = types.Int32Value(*config.ApiKeyId)
 	}
 	if config.SkipSslVerify != nil {
-		m.SkipSslVerify = types.BoolValue(*config.SkipSslVerify)
+		m.SkipSSLVerify = types.BoolValue(*config.SkipSslVerify)
 	}
 	if config.SdkLogLevel != nil {
-		m.SdkLogLevel = types.StringValue(*config.SdkLogLevel)
+		m.SDKLogLevel = types.StringValue(*config.SdkLogLevel)
 	}
 	if config.RequestTimeout != nil {
 		m.RequestTimeout = types.Int32Value(*config.RequestTimeout)
@@ -218,21 +275,21 @@ func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics
 
 	// String types
 	if val, ok := MultiEnvGet(ApiUrlEnvVars); ok {
-		if val != m.ApiUrl.ValueString() {
+		if val != m.CortexAPIURL.ValueString() {
 			tflog.Debug(ctx, fmt.Sprintf("Overwriting api_url with value from environment variable (%s)", val))
-			m.ApiUrl = types.StringValue(val)
+			m.CortexAPIURL = types.StringValue(val)
 		}
 	}
 	if val, ok := MultiEnvGet(ApiKeyEnvVars); ok {
-		if val != m.ApiKey.ValueString() {
+		if val != m.CortexAPIKey.ValueString() {
 			tflog.Debug(ctx, fmt.Sprintf("Overwriting api_key with value from environment variable (%s)", val))
-			m.ApiKey = types.StringValue(val)
+			m.CortexAPIKey = types.StringValue(val)
 		}
 	}
 	if val, ok := MultiEnvGet(SdkLogLevelEnvVars); ok {
-		if val != m.SdkLogLevel.ValueString() {
+		if val != m.SDKLogLevel.ValueString() {
 			tflog.Debug(ctx, fmt.Sprintf("Overwriting sdk_log_level with value from environment variable (%s)", val))
-			m.SdkLogLevel = types.StringValue(val)
+			m.SDKLogLevel = types.StringValue(val)
 		}
 	}
 	if val, ok := MultiEnvGet(CrashStackDirEnvVars); ok {
@@ -246,9 +303,9 @@ func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics
 	if val, ok := MultiEnvGet(ApiPortEnvVars); ok {
 		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
 			parsedVal := int32(i)
-			if m.ApiPort.IsNull() || parsedVal != m.ApiPort.ValueInt32() {
+			if m.CortexAPIPort.IsNull() || parsedVal != m.CortexAPIPort.ValueInt32() {
 				tflog.Debug(ctx, fmt.Sprintf("Overwriting api_port with value from environment variable (%d)", parsedVal))
-				m.ApiPort = types.Int32Value(parsedVal)
+				m.CortexAPIPort = types.Int32Value(parsedVal)
 			}
 		} else {
 			diagnostics.AddAttributeWarning(path.Root("cortex_cloud_api_port"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to integer\nError: %s", val, err.Error()))
@@ -257,9 +314,9 @@ func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics
 	if val, ok := MultiEnvGet(ApiKeyIdEnvVars); ok {
 		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
 			parsedVal := int32(i)
-			if m.ApiKeyId.IsNull() || parsedVal != m.ApiKeyId.ValueInt32() {
+			if m.CortexAPIKeyID.IsNull() || parsedVal != m.CortexAPIKeyID.ValueInt32() {
 				tflog.Debug(ctx, fmt.Sprintf("Overwriting cortex_cloud_api_key_id with value from environment variable (%d)", parsedVal))
-				m.ApiKeyId = types.Int32Value(parsedVal)
+				m.CortexAPIKeyID = types.Int32Value(parsedVal)
 			}
 		} else {
 			diagnostics.AddAttributeWarning(path.Root("cortex_cloud_api_key_id"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to integer\nError: %s", val, err.Error()))
@@ -291,9 +348,9 @@ func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics
 	// Boolean types
 	if val, ok := MultiEnvGet(SkipSslVerifyEnvVars); ok {
 		if b, err := strconv.ParseBool(val); err == nil {
-			if m.SkipSslVerify.IsNull() || b != m.SkipSslVerify.ValueBool() {
+			if m.SkipSSLVerify.IsNull() || b != m.SkipSSLVerify.ValueBool() {
 				tflog.Debug(ctx, fmt.Sprintf("Overwriting skip_ssl_verify with value from environment variable (%t)", b))
-				m.SkipSslVerify = types.BoolValue(b)
+				m.SkipSSLVerify = types.BoolValue(b)
 			}
 		} else {
 			diagnostics.AddAttributeWarning(path.Root("skip_ssl_verify"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to boolean\nError: %s", val, err.Error()))

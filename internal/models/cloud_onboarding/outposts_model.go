@@ -9,7 +9,8 @@ import (
 	"strconv"
 
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/shared"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,33 +30,33 @@ type OutpostsDataSourceModel struct {
 }
 
 // ToListRequest creates a ListOutpostsRequest from the data source's filters.
-func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.ListOutpostsRequest {
+func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostsDataSourceModel")
 
-	var filters []cortexTypes.Filter
+	var filters []filterTypes.Filter
 	if !m.CloudProvider.IsNull() && !m.CloudProvider.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldProvider.String(),
 			cortexEnums.SearchTypeEqualTo.String(),
 			m.CloudProvider.ValueString(),
 		))
 	}
 	if !m.Status.IsNull() && !m.Status.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldStatus.String(),
 			cortexEnums.SearchTypeContains.String(),
 			m.Status.ValueString(),
 		))
 	}
 	if !m.OutpostAccountName.IsNull() && !m.OutpostAccountName.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldOutpostAccountName.String(),
 			cortexEnums.SearchTypeContains.String(),
 			m.OutpostAccountName.ValueString(),
 		))
 	}
 	if !m.OutpostAccountID.IsNull() && !m.OutpostAccountID.IsUnknown() {
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldOutpostAccountID.String(),
 			cortexEnums.SearchTypeContains.String(),
 			strconv.FormatInt(m.OutpostAccountID.ValueInt64(), 10),
@@ -72,7 +73,7 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 		if !toVal.IsNull() && !toVal.IsUnknown() {
 			to = int(toVal.ValueInt64())
 		}
-		filters = append(filters, cortexTypes.NewTimespanFilter(
+		filters = append(filters, filterTypes.NewTimespanFilter(
 			cortexEnums.SearchFieldCreationTime.String(),
 			cortexEnums.SearchTypeEqualTo.String(),
 			from,
@@ -91,19 +92,19 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 		if !valueVal.IsNull() && !valueVal.IsUnknown() {
 			value = int(valueVal.ValueInt64())
 		}
-		filters = append(filters, cortexTypes.NewSearchFilter(
+		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldCreationTime.String(),
 			condition,
 			strconv.Itoa(value),
 		))
 	}
 
-	return cortexTypes.ListOutpostsRequest{
-		FilterData: cortexTypes.FilterData{
-			Filter: cortexTypes.NewAndFilter(
+	return cloudOnboardingTypes.ListOutpostsRequest{
+		FilterData: filterTypes.FilterData{
+			Filter: filterTypes.NewAndFilter(
 				filters...,	
 			),
-			Paging: cortexTypes.PagingFilter{
+			Paging: filterTypes.PagingFilter{
 				From: 0,
 				To:   1000,
 			},
@@ -112,7 +113,7 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 }
 
 // RefreshFromRemote populates the model from a list of SDK Outpost objects.
-func (m *OutpostsDataSourceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote []cortexTypes.Outpost) {
+func (m *OutpostsDataSourceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote []cloudOnboardingTypes.Outpost) {
 	tflog.Debug(ctx, "Refreshing OutpostsDataSourceModel from remote")
 
 	var outposts []OutpostModel

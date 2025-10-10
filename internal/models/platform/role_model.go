@@ -3,8 +3,7 @@ package models
 import (
 	"context"
 
-	//"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,7 +21,7 @@ type RoleModel struct {
 	Users       types.List   `tfsdk:"users"`
 }
 
-func (m *RoleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *cortexTypes.Role) {
+func (m *RoleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformTypes.Role) {
 	tflog.Debug(ctx, "Refreshing attribute values")
 
 	var diagsRefresh diag.Diagnostics

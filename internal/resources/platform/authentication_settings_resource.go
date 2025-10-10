@@ -12,7 +12,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -231,7 +231,7 @@ func (r *AuthenticationSettingsResource) Configure(ctx context.Context, req reso
 	r.client = client.Platform
 }
 
-func (r *AuthenticationSettingsResource) findAuthSettings(ctx context.Context, name, domain string) (*cortexTypes.AuthSettings, error) {
+func (r *AuthenticationSettingsResource) findAuthSettings(ctx context.Context, name, domain string) (*platformTypes.AuthSettings, error) {
 	allAuthSettings, err := r.client.ListAuthSettings(ctx)
 	if err != nil {
 		return nil, err
@@ -247,7 +247,7 @@ func (r *AuthenticationSettingsResource) findAuthSettings(ctx context.Context, n
 	return nil, nil
 }
 
-func (r *AuthenticationSettingsResource) refreshModelFromAPI(authSettings *cortexTypes.AuthSettings, model *models.AuthenticationSettingsModel) {
+func (r *AuthenticationSettingsResource) refreshModelFromAPI(authSettings *platformTypes.AuthSettings, model *models.AuthenticationSettingsModel) {
 	model.Name = types.StringValue(authSettings.Name)
 	model.DefaultRole = types.StringValue(authSettings.DefaultRole)
 	model.IsAccountRole = types.BoolValue(authSettings.IsAccountRole)
@@ -293,7 +293,7 @@ func (r *AuthenticationSettingsResource) Create(ctx context.Context, req resourc
 	}
 
 	// Create new resource
-	createRequest := cortexTypes.CreateAuthSettingsRequest{
+	createRequest := platformTypes.CreateAuthSettingsRequest{
 		Name:               plan.Name.ValueString(),
 		DefaultRole:        plan.DefaultRole.ValueString(),
 		IsAccountRole:      plan.IsAccountRole.ValueBool(),
@@ -304,7 +304,7 @@ func (r *AuthenticationSettingsResource) Create(ctx context.Context, req resourc
 		MetadataURL:        plan.MetadataURL.ValueString(),
 	}
 	if plan.Mappings != nil {
-		createRequest.Mappings = cortexTypes.Mappings{
+		createRequest.Mappings = platformTypes.Mappings{
 			Email:     plan.Mappings.Email.ValueString(),
 			FirstName: plan.Mappings.FirstName.ValueString(),
 			LastName:  plan.Mappings.LastName.ValueString(),
@@ -312,7 +312,7 @@ func (r *AuthenticationSettingsResource) Create(ctx context.Context, req resourc
 		}
 	}
 	if plan.AdvancedSettings != nil {
-		createRequest.AdvancedSettings = cortexTypes.AdvancedSettings{
+		createRequest.AdvancedSettings = platformTypes.AdvancedSettings{
 			RelayState:                plan.AdvancedSettings.RelayState.ValueString(),
 			IDPSingleLogoutURL:        plan.AdvancedSettings.IdpSingleLogoutURL.ValueString(),
 			ServiceProviderPublicCert: plan.AdvancedSettings.ServiceProviderPublicCert.ValueString(),
@@ -411,7 +411,7 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 	}
 
 	// Update resource
-	updateRequest := cortexTypes.UpdateAuthSettingsRequest{
+	updateRequest := platformTypes.UpdateAuthSettingsRequest{
 		Name:               plan.Name.ValueString(),
 		DefaultRole:        plan.DefaultRole.ValueString(),
 		IsAccountRole:      plan.IsAccountRole.ValueBool(),
@@ -423,7 +423,7 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 		MetadataURL:        plan.MetadataURL.ValueString(),
 	}
 	if plan.Mappings != nil {
-		updateRequest.Mappings = cortexTypes.Mappings{
+		updateRequest.Mappings = platformTypes.Mappings{
 			Email:     plan.Mappings.Email.ValueString(),
 			FirstName: plan.Mappings.FirstName.ValueString(),
 			LastName:  plan.Mappings.LastName.ValueString(),
@@ -431,7 +431,7 @@ func (r *AuthenticationSettingsResource) Update(ctx context.Context, req resourc
 		}
 	}
 	if plan.AdvancedSettings != nil {
-		updateRequest.AdvancedSettings = cortexTypes.AdvancedSettings{
+		updateRequest.AdvancedSettings = platformTypes.AdvancedSettings{
 			RelayState:                plan.AdvancedSettings.RelayState.ValueString(),
 			IDPSingleLogoutURL:        plan.AdvancedSettings.IdpSingleLogoutURL.ValueString(),
 			ServiceProviderPublicCert: plan.AdvancedSettings.ServiceProviderPublicCert.ValueString(),

@@ -1,13 +1,11 @@
-dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
-dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
+dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
+dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.4 h1:85yvHtaARWaNW86UTLg9hE3cdGyXy3G5ewJCiCf8Q4s=
 github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.4/go.mod h1:oGxU/58mP8tsX/6T9iXdB/N94W3BCtBItmhLqjWsuvs=
 github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.8 h1:YHP/VEJV1+eSTnWFD+hAss3ZtsLvlPhxTbCLib4Xfo4=
 github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.8/go.mod h1:Rvpq+oKawhW813C32HgL/1YZzYuIWh9t85a4geQWjVY=
-github.com/PaloAltoNetworks/cortex-cloud-go/client v0.0.8 h1:IWotQpmrK6nwlB3n2LXYf1CbUlahJ1lDrsTFW7PaQxQ=
-github.com/PaloAltoNetworks/cortex-cloud-go/client v0.0.8/go.mod h1:wnxg36kY/VTaMlZHzrSE+sUMQinl8v4aXB+pfFiwFdQ=
 github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.8 h1:EgWG9dGlxqezKmATPmPlw2jFypgQAfR5LOysIMjLggw=
 github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.8/go.mod h1:JVnKb6DT/2BTH6B4EfZSaeH1kDTiS4x9njW9/eP3R38=
 github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.8 h1:6oc5Mva6GTe+bgcpN23Y9ngdcQcBPY7sGWUKLbR4vdk=
@@ -18,8 +16,6 @@ github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.8 h1:MupWF8K8mshpvcdHuLxPV6
 github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.8/go.mod h1:R2dQ9LQEuhF3cUR3KPAxVfhXvIHZAtwFtD1q8g7WK34=
 github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.8 h1:XQNBrnH/iBxJRFGdG88n3PJFykBtMgwSUKlJOYZzrew=
 github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.8/go.mod h1:XCwVKHzA1PFXkGobbrM6VONlU+ZgFmKx+fMWwO3MN7Y=
-github.com/PaloAltoNetworks/cortex-cloud-go/types v0.0.8 h1:MQ0jJfPnjz3qfmfEyWZ+8rvKsihCwS/K73V1VR8/eto=
-github.com/PaloAltoNetworks/cortex-cloud-go/types v0.0.8/go.mod h1:5tKIFawGP7McwFcqk23mGF59ipm2z8UUoXSOx46K9Zs=
 github.com/ProtonMail/go-crypto v1.1.6 h1:ZcV+Ropw6Qn0AX9brlQLAUXfqLBc7Bl+f/DmNxpLfdw=
 github.com/ProtonMail/go-crypto v1.1.6/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=

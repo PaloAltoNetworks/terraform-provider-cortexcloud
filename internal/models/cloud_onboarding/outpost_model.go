@@ -6,7 +6,8 @@ package models
 import (
 	"context"
 
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,17 +23,17 @@ type OutpostModel struct {
 }
 
 // ToListRequest creates a ListOutpostsRequest to find a single outpost by ID.
-func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cortexTypes.ListOutpostsRequest {
+func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostModel")
 
-	return cortexTypes.ListOutpostsRequest{
-		FilterData: cortexTypes.FilterData{
-			Paging: cortexTypes.PagingFilter{
+	return cloudOnboardingTypes.ListOutpostsRequest{
+		FilterData: filterTypes.FilterData{
+			Paging: filterTypes.PagingFilter{
 				From: 0,
 				To: 1000,
 			},
-			Filter: cortexTypes.NewAndFilter(
-				cortexTypes.NewSearchFilter(
+			Filter: filterTypes.NewAndFilter(
+				filterTypes.NewSearchFilter(
 					cortexEnums.SearchFieldOutpostID.String(),
 					cortexEnums.SearchTypeWildcard.String(),
 					m.ID.ValueString(),
@@ -43,7 +44,7 @@ func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostic
 }
 
 // RefreshFromRemote populates the model from a single SDK Outpost object.
-func (m *OutpostModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote cortexTypes.Outpost) {
+func (m *OutpostModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote cloudOnboardingTypes.Outpost) {
 	tflog.Debug(ctx, "Refreshing OutpostModel from remote")
 
 	m.ID = types.StringValue(remote.OutpostID)

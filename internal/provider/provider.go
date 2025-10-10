@@ -5,10 +5,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/client"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
@@ -33,6 +31,14 @@ var (
 
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
+	if version == "test" {
+		return func() provider.Provider {
+			return &CortexCloudProvider{
+				version: version,
+			}
+		}
+	}
+
 	return func() provider.Provider {
 		return &CortexCloudProvider{
 			version: version,
@@ -60,12 +66,13 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 			},
 			"cortex_cloud_api_url": schema.StringAttribute{
 				Optional: true,
-				Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
-					"You can retrieve this from the Cortex Cloud console by "+
-					"navigating to Settings > Configurations > Integrations > "+
-					"API Keys and clicking the \"Copy API URL\" button. Can "+
-					"also be configured using the `%s` environment "+
-					"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
+				Description: "TODO",
+				//Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
+				//	"You can retrieve this from the Cortex Cloud console by "+
+				//	"navigating to Settings > Configurations > Integrations > "+
+				//	"API Keys and clicking the \"Copy API URL\" button. Can "+
+				//	"also be configured using the `%s` environment "+
+				//	"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
 			"cortex_cloud_api_port": schema.Int32Attribute{
 				Optional:    true,
@@ -179,59 +186,65 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	// Validate provider configuration
 	(&providerConfig).Validate(ctx, &resp.Diagnostics)
 
-	var (
-		clientConfig *client.Config
-		err          error
-		apiUrl       string
-		apiKey       string
-		apiKeyID     int
-		sdkLogLevel  string
-	)
-
-	apiUrl = providerConfig.ApiUrl.ValueString()
-	apiKey = providerConfig.ApiKey.ValueString()
-	apiKeyID = int(providerConfig.ApiKeyId.ValueInt32())
-	sdkLogLevel = providerConfig.SdkLogLevel.ValueString()
+	cortexAPIURL := providerConfig.CortexAPIURL.ValueString()
+	cortexAPIKey := providerConfig.CortexAPIKey.ValueString()
+	cortexAPIKeyID := int(providerConfig.CortexAPIKeyID.ValueInt32())
+	sdkLogLevel := providerConfig.SDKLogLevel.ValueString()
 
 	// TODO: Check api key values against /api_keys/validate endpoint
-
-	// Create SDK config from provider values
-	clientConfig = client.NewConfig(
-		apiUrl,
-		apiKey,
-		apiKeyID,
-		providerConfig.CheckEnvironment.ValueBool(),
-		client.WithApiPort(int(providerConfig.ApiPort.ValueInt32())),
-		client.WithSkipVerifyCertificate(providerConfig.SkipSslVerify.ValueBool()),
-		client.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//client.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
-		client.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
-		client.WithLogger(log.TflogAdapter{}),
-		client.WithLogLevel(sdkLogLevel),
-	)
-
-	// Validate SDK client configuration
-	if err = clientConfig.Validate(); err != nil {
-		resp.Diagnostics.AddError("Cortex Cloud SDK Configuration Error", err.Error())
-		return
-	}
-
 	// Initialize SDK clients
 	clients := models.CortexCloudSDKClients{}
 
-	appSecClient, err := appsec.NewClient(clientConfig)
+	platformClient, err := platform.NewClient(
+		platform.WithCortexAPIURL(cortexAPIURL),
+		platform.WithCortexAPIKey(cortexAPIKey),
+		platform.WithCortexAPIKeyID(cortexAPIKeyID),
+		//platform.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
+		platform.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
+		platform.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//platform.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel(sdkLogLevel),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
-	cloudOnboardingClient, err := cloudonboarding.NewClient(clientConfig)
+	//appSecClient, err := appsec.NewClient(clientConfig)
+	appSecClient, err := appsec.NewClient(
+		appsec.WithCortexAPIURL(cortexAPIURL),
+		appsec.WithCortexAPIKey(cortexAPIKey),
+		appsec.WithCortexAPIKeyID(cortexAPIKeyID),
+		//appsec.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
+		appsec.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
+		appsec.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		appsec.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//appsec.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		appsec.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		appsec.WithLogger(log.TflogAdapter{}),
+		appsec.WithLogLevel(sdkLogLevel),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
-	platformClient, err := platform.NewClient(clientConfig)
+	cloudOnboardingClient, err := cloudonboarding.NewClient(
+		cloudonboarding.WithCortexAPIURL(cortexAPIURL),
+		cloudonboarding.WithCortexAPIKey(cortexAPIKey),
+		cloudonboarding.WithCortexAPIKeyID(cortexAPIKeyID),
+		//cloudonboarding.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
+		cloudonboarding.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
+		cloudonboarding.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		cloudonboarding.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//cloudonboarding.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		cloudonboarding.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		cloudonboarding.WithLogger(log.TflogAdapter{}),
+		cloudonboarding.WithLogLevel(sdkLogLevel),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return

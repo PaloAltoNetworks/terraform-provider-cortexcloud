@@ -13,7 +13,8 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -124,9 +125,9 @@ func (r *AssetGroupResource) Configure(ctx context.Context, req resource.Configu
 	r.client = client.Platform
 }
 
-func (r *AssetGroupResource) findAssetGroup(ctx context.Context, id int) (*cortexTypes.AssetGroup, error) {
-	listReq := cortexTypes.ListAssetGroupsRequest{
-		Filters: cortexTypes.NewSearchFilter(
+func (r *AssetGroupResource) findAssetGroup(ctx context.Context, id int) (*platformTypes.AssetGroup, error) {
+	listReq := platformTypes.ListAssetGroupsRequest{
+		Filters: filterTypes.NewSearchFilter(
 			"XDM.ASSET_GROUP.ID", 
 			cortexEnums.SearchTypeEqualTo.String(),
 			strconv.Itoa(id),
@@ -155,12 +156,12 @@ func (r *AssetGroupResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var predicate cortexTypes.FilterRoot
+	var predicate filterTypes.FilterRoot
 	if plan.MembershipPredicate != nil {
 		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
 	}
 
-	createRequest := cortexTypes.CreateOrUpdateAssetGroupRequest{
+	createRequest := platformTypes.CreateOrUpdateAssetGroupRequest{
 		GroupName:           plan.Name.ValueString(),
 		GroupType:           plan.Type.ValueString(),
 		GroupDescription:    plan.Description.ValueString(),
@@ -242,12 +243,12 @@ func (r *AssetGroupResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	var predicate cortexTypes.FilterRoot
+	var predicate filterTypes.FilterRoot
 	if plan.MembershipPredicate != nil {
 		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
 	}
 
-	updateRequest := cortexTypes.CreateOrUpdateAssetGroupRequest{
+	updateRequest := platformTypes.CreateOrUpdateAssetGroupRequest{
 		GroupName:           plan.Name.ValueString(),
 		GroupType:           plan.Type.ValueString(),
 		GroupDescription:    plan.Description.ValueString(),

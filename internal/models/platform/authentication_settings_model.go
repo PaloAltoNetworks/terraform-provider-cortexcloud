@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types"
+	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -50,7 +50,7 @@ type AdvancedSettingsModel struct {
 }
 
 // RefreshFromRemote refreshes the model from the remote API response.
-func (m *AuthenticationSettingsModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *cortexTypes.AuthSettings) {
+func (m *AuthenticationSettingsModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformTypes.AuthSettings) {
 	tflog.Debug(ctx, "Refreshing authentication settings model from remote")
 
 	tflog.Trace(ctx, "Setting authentication settings attributes")

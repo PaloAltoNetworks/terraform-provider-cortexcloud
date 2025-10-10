@@ -7,25 +7,33 @@ import (
 	"context"
 	"flag"
 	"log"
-	"runtime/debug"
+	//"runtime"
+	//"runtime/debug"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/provider"
 )
 
+//var (
+//	buildVersion string = "unknown"
+//	buildTime    string = "unknown"
+//	goVersion    string = "unknown"
+//)
 var (
-	buildVersion string = "unknown"
-	buildTime    string = "unknown"
-	goVersion    string = "unknown"
+	GitCommit           = "NOCOMMIT"
+	CortexServerVersion = "UNKNOWN"
+	CortexPAPIVersion   = "UNKNOWN"
+	GoVersion           = "UNKNOWN"
+	BuildDate           = "UNKNOWN"
 )
 
 func logBuildInfo() {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		goVersion = info.GoVersion
-	}
+	//if info, ok := debug.ReadBuildInfo(); ok {
+	//	goVersion = info.GoVersion
+	//}
 
-	log.Printf("{ \"buildVersion\": \"%s\", \"buildTime\": \"%s\", goVersion: \"%s\" }", buildVersion, buildTime, goVersion)
+	log.Printf("{ \"GitCommit\": \"%s\", \"CortexServerVersion\": \"%s\", \"CortexServerVersion\": \"%s\", \"GoVersion\": \"%s\", \"BuildDate\": \"%s\"}", GitCommit, CortexServerVersion, CortexPAPIVersion, GoVersion, BuildDate)
 }
 
 func main() {
@@ -42,7 +50,7 @@ func main() {
 		ProtocolVersion: 6,
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(buildVersion), opts)
+	err := providerserver.Serve(context.Background(), provider.New(GitCommit), opts)
 
 	if err != nil {
 		log.Fatal(err.Error())
