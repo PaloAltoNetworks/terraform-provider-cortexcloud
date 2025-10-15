@@ -5,6 +5,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	//"strconv"
+	//"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
@@ -31,6 +34,7 @@ var (
 
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
+	tflog.Info(context.Background(), fmt.Sprintf("Cortex Cloud Terraform Provider version: %s", version))
 	if version == "test" {
 		return func() provider.Provider {
 			return &CortexCloudProvider{
@@ -62,23 +66,26 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			"config_file": schema.StringAttribute{
 				Optional:    true,
-				Description: "TODO",
+				Description: "Local path to provider configuration JSON file.",
 			},
-			"cortex_cloud_api_url": schema.StringAttribute{
+			"fqdn": schema.StringAttribute{
 				Optional:    true,
-				Description: "TODO",
-				//Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
-				//	"You can retrieve this from the Cortex Cloud console by "+
-				//	"navigating to Settings > Configurations > Integrations > "+
-				//	"API Keys and clicking the \"Copy API URL\" button. Can "+
-				//	"also be configured using the `%s` environment "+
-				//	"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
+				Description: fmt.Sprintf("The FQDN of your Cortex Cloud " +
+					"tenant. Can also be configured using the `%s`" +
+					"environment variable.", "CORTEX_FQDN"),
+					//"environment variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
-			"cortex_cloud_api_port": schema.Int32Attribute{
+			"api_url": schema.StringAttribute{
 				Optional:    true,
-				Description: "TODO",
+				Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
+					"You can retrieve this from the Cortex Cloud console by "+
+					"navigating to Settings > Configurations > Integrations > "+
+					"API Keys and clicking the \"Copy API URL\" button. Can "+
+					"also be configured using the `%s` environment "+
+					"variable.", "CORTEX_API_URL"),
+					//"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
-			"cortex_cloud_api_key": schema.StringAttribute{
+			"api_key": schema.StringAttribute{
 				Optional:  true,
 				Sensitive: true,
 				Description: "The API key for the user in Cortex Cloud that the " +
@@ -89,7 +96,7 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 					"with Terraform with the `TF_LOG` environment variable set to `DEBUG`, " +
 					"the provider will output this value in the debug logs.",
 			},
-			"cortex_cloud_api_key_id": schema.Int32Attribute{
+			"api_key_id": schema.Int32Attribute{
 				Optional:  true,
 				Sensitive: true,
 				Description: "The ID of the API key provided in the \"api_key\" " +
@@ -97,6 +104,16 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 					"by navigating to Settings > Configurations > Integrations > " +
 					"API Keys. Can also be configured using the `CORTEX_API_KEY_ID` " +
 					"environment variable.",
+			},
+			"api_key_type": schema.StringAttribute{
+				Optional:    true,
+				Description: "The type of API key provided. Defaults to " +
+					"`standard`. Must be set to `advanced` if configuring " +
+					"the provider with an advanced API key. When using an " +
+					"advanced API key, requests to the Cortex API must " +
+					"include a nonce (64 byte random string) and a timestamp" +
+					"populated in the request headers to prevent replay " +
+					"attacks.",
 			},
 			"sdk_log_level": schema.StringAttribute{
 				Optional:    true,
@@ -185,24 +202,41 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 
 	// Validate provider configuration
 	(&providerConfig).Validate(ctx, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	cortexAPIURL := providerConfig.CortexAPIURL.ValueString()
-	cortexAPIKey := providerConfig.CortexAPIKey.ValueString()
-	cortexAPIKeyID := int(providerConfig.CortexAPIKeyID.ValueInt32())
+	fqdn := providerConfig.FQDN.ValueString()
+	apiURL := providerConfig.APIURL.ValueString()
+	apiKey := providerConfig.APIKey.ValueString()
+	apiKeyID := int(providerConfig.APIKeyID.ValueInt32())
+	apiKeyType := providerConfig.APIKeyType.ValueString()
 	sdkLogLevel := providerConfig.SDKLogLevel.ValueString()
+	
+	tflog.Debug(ctx, fmt.Sprintf("Using %s API key against API URL: %s", apiKeyType, apiURL))
 
-	// TODO: Check api key values against /api_keys/validate endpoint
+	// Set logger fields
+	ctx = tflog.SetField(ctx, "cortex_fqdn", fqdn)
+	ctx = tflog.SetField(ctx, "cortex_api_key", apiKey)
+	ctx = tflog.SetField(ctx, "cortex_api_key_id", apiKeyID)
+	ctx = tflog.SetField(ctx, "cortex_api_key_type", apiKeyType)
+
+	// TODO: create config param for conditionally applying the following masks
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "cortex_api_key", "cortex_api_key_id")
+
 	// Initialize SDK clients
 	clients := models.CortexCloudSDKClients{}
 
+	tflog.Debug(ctx, "Initializing platform client")
 	platformClient, err := platform.NewClient(
-		platform.WithCortexAPIURL(cortexAPIURL),
-		platform.WithCortexAPIKey(cortexAPIKey),
-		platform.WithCortexAPIKeyID(cortexAPIKeyID),
-		//platform.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
-		platform.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
-		platform.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithCortexFQDN(fqdn),
+		platform.WithCortexAPIURL(apiURL),
+		platform.WithCortexAPIKey(apiKey),
+		platform.WithCortexAPIKeyID(apiKeyID),
+		platform.WithCortexAPIKeyType(apiKeyType),
+		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//platform.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
 		//platform.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
 		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		platform.WithLogger(log.TflogAdapter{}),
@@ -213,16 +247,22 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	//appSecClient, err := appsec.NewClient(clientConfig)
+	// Set the API URL logger field
+	// TODO: define a way to retrieve this value without first creating a 
+	// client (or export)
+	ctx = tflog.SetField(ctx, "cortex_api_url", platformClient.APIURL())
+
+	tflog.Debug(ctx, "Initializing appsec client")
 	appSecClient, err := appsec.NewClient(
-		appsec.WithCortexAPIURL(cortexAPIURL),
-		appsec.WithCortexAPIKey(cortexAPIKey),
-		appsec.WithCortexAPIKeyID(cortexAPIKeyID),
-		//appsec.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
-		appsec.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
-		appsec.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		appsec.WithCortexFQDN(fqdn),
+		appsec.WithCortexAPIURL(apiURL),
+		appsec.WithCortexAPIKey(apiKey),
+		appsec.WithCortexAPIKeyID(apiKeyID),
+		appsec.WithCortexAPIKeyType(apiKeyType),
+		appsec.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		appsec.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
 		//appsec.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		//appsec.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
 		appsec.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		appsec.WithLogger(log.TflogAdapter{}),
 		appsec.WithLogLevel(sdkLogLevel),
@@ -232,14 +272,16 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	tflog.Debug(ctx, "Initializing cloudonboarding client")
 	cloudOnboardingClient, err := cloudonboarding.NewClient(
-		cloudonboarding.WithCortexAPIURL(cortexAPIURL),
-		cloudonboarding.WithCortexAPIKey(cortexAPIKey),
-		cloudonboarding.WithCortexAPIKeyID(cortexAPIKeyID),
-		//cloudonboarding.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
-		cloudonboarding.WithCortexAPIPort(int(providerConfig.CortexAPIPort.ValueInt32())),
-		cloudonboarding.WithSkipVerifyCertificate(providerConfig.SkipSSLVerify.ValueBool()),
+		cloudonboarding.WithCortexFQDN(fqdn),
+		cloudonboarding.WithCortexAPIURL(apiURL),
+		cloudonboarding.WithCortexAPIKey(apiKey),
+		cloudonboarding.WithCortexAPIKeyID(apiKeyID),
+		cloudonboarding.WithCortexAPIKeyType(apiKeyType),
+		cloudonboarding.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		cloudonboarding.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		//cloudonboarding.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
 		//cloudonboarding.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
 		cloudonboarding.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		cloudonboarding.WithLogger(log.TflogAdapter{}),
