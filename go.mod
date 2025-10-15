@@ -2,15 +2,30 @@ module github.com/PaloAltoNetworks/terraform-provider-cortexcloud
 
 go 1.25.0
 
+replace (
+	github.com/PaloAltoNetworks/cortex-cloud-go/appsec => ../cortex-cloud-go/appsec
+	github.com/PaloAltoNetworks/cortex-cloud-go/client => ../cortex-cloud-go/internal/client
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding => ../cortex-cloud-go/cloudonboarding
+	github.com/PaloAltoNetworks/cortex-cloud-go/config => ../cortex-cloud-go/internal/config
+	github.com/PaloAltoNetworks/cortex-cloud-go/cwp => ../cortex-cloud-go/cwp
+	github.com/PaloAltoNetworks/cortex-cloud-go/enums => ../cortex-cloud-go/enums
+	github.com/PaloAltoNetworks/cortex-cloud-go/errors => ../cortex-cloud-go/errors
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client => ../cortex-cloud-go/internal/client
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config => ../cortex-cloud-go/internal/config
+	github.com/PaloAltoNetworks/cortex-cloud-go/log => ../cortex-cloud-go/log
+	github.com/PaloAltoNetworks/cortex-cloud-go/platform => ../cortex-cloud-go/platform
+	github.com/PaloAltoNetworks/cortex-cloud-go/types => ../cortex-cloud-go/types
+)
+
 require (
-	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.8
-	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.8
+	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.0-00010101000000-000000000000
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.8
 	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.8
-	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.8
-	github.com/PaloAltoNetworks/cortex-cloud-go/types v0.0.8
-	github.com/hashicorp/terraform-plugin-framework v1.16.0
-	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0
+	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.0-00010101000000-000000000000
+	github.com/PaloAltoNetworks/cortex-cloud-go/types v0.0.0
+	github.com/hashicorp/terraform-plugin-framework v1.16.1
+	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
@@ -18,9 +33,8 @@ require (
 )
 
 require (
-	github.com/PaloAltoNetworks/cortex-cloud-go/api v0.0.4 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/client v0.0.4 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/errors v0.0.8 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/errors v0.0.0 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client v0.0.0-00010101000000-000000000000 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v0.0.0-00010101000000-000000000000 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
@@ -29,7 +43,7 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-cty v1.5.0 // indirect
@@ -42,12 +56,13 @@ require (
 	github.com/hashicorp/hc-install v0.9.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/terraform-exec v0.23.0 // indirect
-	github.com/hashicorp/terraform-json v0.25.0 // indirect
+	github.com/hashicorp/terraform-exec v0.24.0 // indirect
+	github.com/hashicorp/terraform-json v0.27.2 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -59,22 +74,16 @@ require (
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/zclconf/go-cty v1.16.3 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/mod v0.26.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	github.com/zclconf/go-cty v1.17.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/mod v0.28.0 // indirect
+	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
-	golang.org/x/tools v0.35.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/tools v0.37.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/grpc v1.75.1 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )
-
-replace github.com/PaloAltoNetworks/cortex-cloud-go/types => ../cortex-cloud-go/types
-
-replace github.com/PaloAltoNetworks/cortex-cloud-go/client => ../cortex-cloud-go/internal/client
-
-replace github.com/PaloAltoNetworks/cortex-cloud-go/internal/config => ../cortex-cloud-go/internal/config
