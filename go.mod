@@ -20,8 +20,8 @@ replace (
 require (
 	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.0-00010101000000-000000000000
-	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.8
-	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.8
+	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.0-00010101000000-000000000000
+	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/types v0.0.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
@@ -62,7 +62,6 @@ require (
 	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
