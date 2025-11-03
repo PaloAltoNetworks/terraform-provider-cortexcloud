@@ -5,80 +5,113 @@ package acceptance
 
 import (
 	"fmt"
-	"testing"
 	"os"
+	"path/filepath"
 	"strconv"
-	
+	"strings"
+	"testing"
+
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/joho/godotenv"
 )
 
 var (
-	providerName       = "cortexcloud"
+	providerName = "cortexcloud"
 
-	testFQDNEnvVar   = "TEST_CORTEX_FQDN"
-	testAPIURLEnvVar   = "TEST_CORTEX_API_URL"
-	testAPIKeyEnvVar   = "TEST_CORTEX_API_KEY"
-	testAPIKeyIDEnvVar = "TEST_CORTEX_API_KEY_ID"
+	dotEnvPath           = filepath.Join("..", "..", ".env.acctest")
+	testFQDNEnvVar       = "TEST_CORTEX_FQDN"
+	testAPIURLEnvVar     = "TEST_CORTEX_API_URL"
+	testAPIKeyEnvVar     = "TEST_CORTEX_API_KEY"
+	testAPIKeyIDEnvVar   = "TEST_CORTEX_API_KEY_ID"
 	testAPIKeyTypeEnvVar = "TEST_CORTEX_API_KEY_TYPE"
 
-	testFQDN                string = os.Getenv(testFQDNEnvVar)
-	testAPIURL                string = os.Getenv(testAPIURLEnvVar)
-	testAPIKey 			string = os.Getenv(testAPIKeyEnvVar)
-	testAPIKeyIDStr 		string = os.Getenv(testAPIKeyIDEnvVar)
-	testAPIKeyID 		int
-	testAPIKeyType 			string = os.Getenv(testAPIKeyTypeEnvVar)
-	testAccProtoV6ProviderFactories        = map[string]func() (tfprotov6.ProviderServer, error){
+	testFQDN                        string
+	testAPIURL                      string
+	testAPIKey                      string
+	testAPIKeyIDStr                 string
+	testAPIKeyID                    int
+	testAPIKeyType                  string
+	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 		providerName: providerserver.NewProtocol6WithError(provider.New("test")()),
 	}
 )
 
-func getProviderConfig(t *testing.T, enableSDKDebugLogs bool) string {
-	t.Logf("Creating provider config for %s", t.Name())
+func getProviderConfig(t *testing.T, envFilePath string, enableSDKDebugLogs bool) string {
+	err := loadDotEnv(t, envFilePath)
+	if err != nil {
+		t.Logf("Failed to load env file at \"%s\": %v", envFilePath, err)
+	}
 
 	var sdkLogLevelArg string
 	if enableSDKDebugLogs {
-		sdkLogLevelArg= `sdk_log_level = "debug"`
+		sdkLogLevelArg = `sdk_log_level = "debug"`
 	} else {
-		sdkLogLevelArg= `sdk_log_level = "info"`
+		sdkLogLevelArg = `sdk_log_level = "info"`
 	}
 
 	return fmt.Sprintf(`
 provider "%s" {
-	fqdn = "%s"
 	api_url = "%s"
 	api_key = "%s"
 	api_key_id = %s
 	api_key_type = "%s"
 	%s
 }
-`, providerName, testFQDN, testAPIURL, testAPIKey, testAPIKeyIDStr, testAPIKeyType, sdkLogLevelArg)
+`, providerName, testAPIURL, testAPIKey, testAPIKeyIDStr, testAPIKeyType, sdkLogLevelArg)
+}
+
+func loadDotEnv(t *testing.T, envFilePath string) error {
+	t.Logf("Loading dot env file at %s", envFilePath)
+	err := godotenv.Load(envFilePath)
+	if err != nil {
+		return fmt.Errorf("Failed to load .env file: %v", err)
+	}
+	testFQDN = os.Getenv(testFQDNEnvVar)
+	testAPIURL = os.Getenv(testAPIURLEnvVar)
+	testAPIKey = os.Getenv(testAPIKeyEnvVar)
+	testAPIKeyIDStr = os.Getenv(testAPIKeyIDEnvVar)
+	testAPIKeyType = os.Getenv(testAPIKeyTypeEnvVar)
+	testAPIKeyID, err = strconv.Atoi(testAPIKeyIDStr)
+	if err != nil {
+		return fmt.Errorf("Error converting API Key ID from string to int: %v", err)
+	}
+	t.Logf("API URL = %s", testAPIURL)
+	t.Logf("API Key = %s", testAPIKey)
+	t.Logf("API Key ID = %d", testAPIKeyID)
+	return nil
 }
 
 func testAccPreCheck(t *testing.T) {
 	t.Helper()
+	t.Log("Checking provider config env vars")
 
-	t.Log("Running pre-check")
-
+	configErrs := []string{}
 	// TODO: collect errors and run Fatal at the end if >0
 	if testFQDN == "" && testAPIURL == "" {
-		t.Fatalf("One of %s or %s must be set for acceptance tests", testFQDNEnvVar, testAPIURLEnvVar)
+		//t.Fatalf("One of %s or %s must be set for acceptance tests", testFQDNEnvVar, testAPIURLEnvVar)
+		configErrs = append(configErrs, fmt.Sprintf("One of %s or %s must be set for acceptance tests", testFQDNEnvVar, testAPIURLEnvVar))
 	}
 
 	if testAPIKey == "" {
-		t.Fatalf("%s must be set for acceptance tests", testAPIKeyEnvVar)
+		//t.Fatalf("%s must be set for acceptance tests", testAPIKeyEnvVar)
+		configErrs = append(configErrs, fmt.Sprintf("%s must be set for acceptance tests", testAPIKeyEnvVar))
 	}
 
 	if testAPIKeyIDStr == "" {
-		t.Fatalf("%s must be set for acceptance tests", testAPIKeyIDEnvVar)
+		//t.Fatalf("%s must be set for acceptance tests", testAPIKeyIDEnvVar)
+		configErrs = append(configErrs, fmt.Sprintf("%s must be set for acceptance tests", testAPIKeyIDEnvVar))
 	}
 
 	var strConvErr error
 	testAPIKeyID, strConvErr = strconv.Atoi(testAPIKeyIDStr)
 	if strConvErr != nil {
-		t.Fatalf("Failed to convert %s value \"%s\" to int: %s", testAPIKeyIDEnvVar, testAPIKeyIDStr, strConvErr.Error())
+		//t.Fatalf("Failed to convert %s value \"%s\" to int: %s", testAPIKeyIDEnvVar, testAPIKeyIDStr, strConvErr.Error())
+		configErrs = append(configErrs, fmt.Sprintf("Failed to convert %s value \"%s\" to int: %s", testAPIKeyIDEnvVar, testAPIKeyIDStr, strConvErr.Error()))
 	}
 
-	t.Log("Pre-check complete")
+	if len(configErrs) > 0 {
+		t.Fatalf("Pre-check failed:\n\t -%s", strings.Join(configErrs, "\n\t- "))
+	}
 }
