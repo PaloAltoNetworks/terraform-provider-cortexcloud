@@ -88,4 +88,5 @@ func (m *AuthenticationSettingsModel) RefreshFromRemote(ctx context.Context, dia
 	m.AdvancedSettings.ServiceProviderPublicCert = types.StringValue(remote.AdvancedSettings.ServiceProviderPublicCert)
 	m.AdvancedSettings.ServiceProviderPrivateKey = types.StringValue(remote.AdvancedSettings.ServiceProviderPrivateKey)
 	m.AdvancedSettings.AuthnContextEnabled = types.BoolValue(remote.AdvancedSettings.AuthnContextEnabled)
+	m.AdvancedSettings.ForceAuthn = types.BoolValue(remote.AdvancedSettings.ForceAuthn)
 }

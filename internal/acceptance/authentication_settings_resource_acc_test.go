@@ -3,76 +3,299 @@
 
 package acceptance
 
-//import (
-//	"fmt"
-//	"strconv"
-//	"testing"
-//
-//	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-//)
-//
-//func TestAccAuthenticationSettingsResource(t *testing.T) {
-//	t.Log("Creating test configurations")
-//
-//	resourceName := "cortexcloud_authentication_settings.test"
-//	resourceConfigCreate := fmt.Sprintf(
-//		AccTestAuthSettings1ConfigTmpl,
-//		strconv.Quote(AccTestAuthSettings1Name),
-//		strconv.Quote(AccTestAuthSettings1Domain),
-//		strconv.Quote(AccTestAuthSettings1DefaultRole),
-//		AccTestAuthSettings1IsAccountRole,
-//		strconv.Quote(AccTestAuthSettings1MappingsEmail),
-//		strconv.Quote(AccTestAuthSettings1MappingsFirstName),
-//		strconv.Quote(AccTestAuthSettings1MappingsLastName),
-//		strconv.Quote(AccTestAuthSettings1MappingsGroupName),
-//		strconv.Quote(AccTestAuthSettings1IdpSsoUrl),
-//		strconv.Quote(AccTestAuthSettings1IdpCertificate),
-//		strconv.Quote(AccTestAuthSettings1IdpIssuer),
-//		strconv.Quote(AccTestAuthSettings1MetadataUrl),
-//	)
-//	resourceConfigUpdate := fmt.Sprintf(
-//		AccTestAuthSettings1ConfigTmpl,
-//		strconv.Quote(AccTestAuthSettings1NameUpdated),
-//		strconv.Quote(AccTestAuthSettings1DomainUpdated),
-//		strconv.Quote(AccTestAuthSettings1DefaultRole),
-//		AccTestAuthSettings1IsAccountRole,
-//		strconv.Quote(AccTestAuthSettings1MappingsEmail),
-//		strconv.Quote(AccTestAuthSettings1MappingsFirstName),
-//		strconv.Quote(AccTestAuthSettings1MappingsLastName),
-//		strconv.Quote(AccTestAuthSettings1MappingsGroupName),
-//		strconv.Quote(AccTestAuthSettings1IdpSsoUrl),
-//		strconv.Quote(AccTestAuthSettings1IdpCertificate),
-//		strconv.Quote(AccTestAuthSettings1IdpIssuer),
-//		strconv.Quote(AccTestAuthSettings1MetadataUrl),
-//	)
-//
-//	t.Log("Running tests")
-//
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:                 func() { testAccPreCheck(t) },
-//		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-//		Steps: []resource.TestStep{
-//			// Create and Read testing
-//			{
-//				Config: resourceConfigCreate,
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					resource.TestCheckResourceAttr(resourceName, "name", AccTestAuthSettings1Name),
-//					resource.TestCheckResourceAttr(resourceName, "domain", AccTestAuthSettings1Domain),
-//					resource.TestCheckResourceAttr(resourceName, "default_role", AccTestAuthSettings1DefaultRole),
-//					resource.TestCheckResourceAttr(resourceName, "mappings.email", AccTestAuthSettings1MappingsEmail),
-//					resource.TestCheckResourceAttr(resourceName, "mappings.first_name", AccTestAuthSettings1MappingsFirstName),
-//					resource.TestCheckResourceAttr(resourceName, "mappings.last_name", AccTestAuthSettings1MappingsLastName),
-//					resource.TestCheckResourceAttr(resourceName, "mappings.group_name", AccTestAuthSettings1MappingsGroupName),
-//				),
-//			},
-//			// Update and Read testing
-//			{
-//				Config: resourceConfigUpdate,
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					resource.TestCheckResourceAttr(resourceName, "name", AccTestAuthSettings1NameUpdated),
-//					resource.TestCheckResourceAttr(resourceName, "domain", AccTestAuthSettings1DomainUpdated),
-//				),
-//			},
-//		},
-//	})
-//}
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"testing"
+
+	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+)
+
+const (
+	authSettingsSSOName                  string = "tf-provider-acctest-sso"
+	authSettingsMetadataName             string = "tf-provider-acctest-metadata"
+	authSettingsDomain                   string = "test.com"
+	authSettingsDefaultRole              string = "Instance Administrator"
+	authSettingsIsAccountRole            bool   = false
+	authSettingsMappingsEmail                   = "email"
+	authSettingsMappingsFirstName               = "firstName"
+	authSettingsMappingsLastName                = "lastName"
+	authSettingsMappingsGroupName               = "group"
+	authSettingsIDPSSOURL                       = "https://test-paloaltonetworks.com/app/signin"
+	authSettingsIDPCertificate                  = "MIIDuzCCAqOgAwIBAgIUQs1LRebZYRe1emleU6a8mBHxRJwwDQYJKoZIhvcNAQELBQAwbTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkFSMRQwEgYDVQQHDAtMaXR0bGUgUm9jazEbMBkGA1UECgwSUGFsbyBBbHRvIE5ldHdvcmtzMR4wHAYDVQQLDBVQcm9mZXNzaW9uYWwgU2VydmljZXMwHhcNMjUwODIxMTYxNzI4WhcNMjYwODIxMTYxNzI4WjBtMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQVIxFDASBgNVBAcMC0xpdHRsZSBSb2NrMRswGQYDVQQKDBJQYWxvIEFsdG8gTmV0d29ya3MxHjAcBgNVBAsMFVByb2Zlc3Npb25hbCBTZXJ2aWNlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKvLWHO1gwgMv5thWY3XR5+NCIuYZFxFHi1mva8w1e0b0A1nwwqO+eowzzxsEBcSIKf7rBkezDYrRJqnEuCqDKOI/jV/HAKU1h/ZJW3qgRFogO7eEmhPvvSOWXkExJmJ8ic7jS48pAbG9+dg9fZtAN6waMeB93mHAS0aY4sPuuyCbl8uyc0ovXJ2nqHTdB1Ff4W4wLtKJJsoK9N8E+Pz0YAI5dp2Ir2fgoERKDU9JjN5dwMGraQNa3LJCMpQj+1vrkBrL0bLfKI8daRk6MicYDTVnuBo/YDBRu+aLXftBpw7hyvmMivgwktDJDziBhmPoRv29A1bTOsxVEUt6w59QP8CAwEAAaNTMFEwHQYDVR0OBBYEFK3rXPMkuBe+hDNW3B4eYbnawCMAMB8GA1UdIwQYMBaAFK3rXPMkuBe+hDNW3B4eYbnawCMAMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAAJaB3Q3DvEu3LwPHFNCRnHwN8fAcGP1ItPB1G7f/EqBhzIOU0ZaxvqLnECPesy8LQqoHX8vdcAv6n1U+zPZp2zCSVVPd+sbZECqBhs9VsI2WF6LlkLvKDti0PESgkj1+K54xFDMiK56YmIUBP0rpOxL+MT+fzJCiG4H86uvc/jtMGVS96mWbl32Cf9MFhONhwDaxXDVhycWv197unvfIjrpMCOOxQCWGsU2MHGgidrtApHU9sufROCbjrm6wnuV0ndbHWUkK+oWmExIY/5h4qv7kQgme9tRkoKD3zyV8oqPt9NRzHTBR/5QDoaC/tvwb52Ohp+zKH/iD3CNrLPY5LQ="
+	authSettingsIDPIssuer                       = "https://www.test.com/a1b2c3d4e5f6g7h8i9j0"
+	authSettingsMetadataURL                     = "https://cortex-test.okta.com/app/exkbuuzw77Bh04V6M6b8/sso/saml/metadata"
+	authSettingsSSONameUpdated           string = "tf-provider-acctest-sso-updated"
+	authSettingsMetadataNameUpdated      string = "tf-provider-acctest-metadata-updated"
+	authSettingsDomainUpdated            string = "test1.com"
+	authSettingsMappingsEmailUpdated            = "emailUpdated"
+	authSettingsMappingsFirstNameUpdated        = "firstNameUpdated"
+	authSettingsMappingsLastNameUpdated         = "lastNameUpdated"
+	authSettingsMappingsGroupNameUpdated        = "groupUpdated"
+
+	authSettingsResourceType             = "cortexcloud_authentication_settings"
+	authSettingsIDPSSOResourceName       = "sso"
+	authSettingsIDPSSOResourceConfigTmpl = `
+resource "%s" "%s" {
+  name   = "%s"
+  domain = "%s"
+  default_role = "%s"
+  is_account_role = %t
+  mappings = {
+    email      = "%s"
+    first_name = "%s"
+    last_name  = "%s"
+    group_name = "%s"
+  }
+  idp_sso_url = "%s"
+  idp_certificate = "%s"
+  idp_issuer = "%s"
+}`
+	authSettingsIDPMetadataResourceName       = "metadata"
+	authSettingsIDPMetadataResourceConfigTmpl = `
+resource "%s" "%s" {
+  name   = "%s"
+  domain = "%s"
+  default_role = "%s"
+  is_account_role = %t
+  mappings = {
+    email      = "%s"
+    first_name = "%s"
+    last_name  = "%s"
+    group_name = "%s"
+  }
+  metadata_url = "%s"
+}`
+)
+
+var (
+	authSettingsIDPSSOResourceNameFull = fmt.Sprintf("%s.%s", authSettingsResourceType, authSettingsIDPSSOResourceName)
+	authSettingsIDPSSOResourceConfig   = fmt.Sprintf(
+		authSettingsIDPSSOResourceConfigTmpl,
+		authSettingsResourceType,
+		authSettingsIDPSSOResourceName,
+		authSettingsSSOName,
+		authSettingsDomain,
+		authSettingsDefaultRole,
+		authSettingsIsAccountRole,
+		authSettingsMappingsEmail,
+		authSettingsMappingsFirstName,
+		authSettingsMappingsLastName,
+		authSettingsMappingsGroupName,
+		authSettingsIDPSSOURL,
+		authSettingsIDPCertificate,
+		authSettingsIDPIssuer,
+	)
+	// TODO: update mappings/role/metadata_url
+	authSettingsIDPSSOResourceUpdatedConfig = fmt.Sprintf(
+		authSettingsIDPSSOResourceConfigTmpl,
+		authSettingsResourceType,
+		authSettingsIDPSSOResourceName,
+		authSettingsSSONameUpdated,
+		authSettingsDomainUpdated,
+		authSettingsDefaultRole,
+		authSettingsIsAccountRole,
+		authSettingsMappingsEmailUpdated,
+		authSettingsMappingsFirstNameUpdated,
+		authSettingsMappingsLastNameUpdated,
+		authSettingsMappingsGroupNameUpdated,
+		authSettingsIDPSSOURL,
+		authSettingsIDPCertificate,
+		authSettingsIDPIssuer,
+	)
+	authSettingsIDPMetadataResourceNameFull = fmt.Sprintf("%s.%s", authSettingsResourceType, authSettingsIDPMetadataResourceName)
+	authSettingsIDPMetadataResourceConfig   = fmt.Sprintf(
+		authSettingsIDPMetadataResourceConfigTmpl,
+		authSettingsResourceType,
+		authSettingsIDPMetadataResourceName,
+		authSettingsMetadataName,
+		authSettingsDomain,
+		authSettingsDefaultRole,
+		authSettingsIsAccountRole,
+		authSettingsMappingsEmail,
+		authSettingsMappingsFirstName,
+		authSettingsMappingsLastName,
+		authSettingsMappingsGroupName,
+		authSettingsMetadataURL,
+	)
+	// TODO: update mappings/role/metadata_url
+	authSettingsIDPMetadataResourceUpdatedConfig = fmt.Sprintf(
+		authSettingsIDPMetadataResourceConfigTmpl,
+		authSettingsResourceType,
+		authSettingsIDPMetadataResourceName,
+		authSettingsMetadataNameUpdated,
+		authSettingsDomainUpdated,
+		authSettingsDefaultRole,
+		authSettingsIsAccountRole,
+		authSettingsMappingsEmailUpdated,
+		authSettingsMappingsFirstNameUpdated,
+		authSettingsMappingsLastNameUpdated,
+		authSettingsMappingsGroupNameUpdated,
+		authSettingsMetadataURL,
+	)
+)
+
+func TestAccAuthenticationSettingsResourceIDPSSO(t *testing.T) {
+	providerConfig := getProviderConfig(t, dotEnvPath, true)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Create test step")
+					//t.Logf("Using the following test config: \n\n%s\n", authSettingsIDPSSOResourceConfig)
+				},
+				Config: providerConfig + authSettingsIDPSSOResourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "name", authSettingsSSOName),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "domain", authSettingsDomain),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "default_role", authSettingsDefaultRole),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "is_account_role", strconv.FormatBool(authSettingsIsAccountRole)),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.email", authSettingsMappingsEmail),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.first_name", authSettingsMappingsFirstName),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.last_name", authSettingsMappingsLastName),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.group_name", authSettingsMappingsGroupName),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_sso_url", authSettingsIDPSSOURL),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_certificate", authSettingsIDPCertificate),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_issuer", authSettingsIDPIssuer),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "metadata_url", ""),
+				),
+			},
+			// Update and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Update test step")
+					//t.Logf("Using the following test config: \n\n%s\n", authSettingsIDPSSOResourceUpdatedConfig)
+				},
+				Config: providerConfig + authSettingsIDPSSOResourceUpdatedConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "name", authSettingsSSONameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "domain", authSettingsDomainUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "default_role", authSettingsDefaultRole),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "is_account_role", strconv.FormatBool(authSettingsIsAccountRole)),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.email", authSettingsMappingsEmailUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.first_name", authSettingsMappingsFirstNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.last_name", authSettingsMappingsLastNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "mappings.group_name", authSettingsMappingsGroupNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_sso_url", authSettingsIDPSSOURL),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_certificate", authSettingsIDPCertificate),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "idp_issuer", authSettingsIDPIssuer),
+					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "metadata_url", ""),
+				),
+			},
+			// Delete and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Delete test step")
+				},
+				Config: providerConfig,
+			},
+		},
+		CheckDestroy: testAccCheckAuthSettingsDestroy,
+	})
+}
+
+func TestAccAuthenticationSettingsResourceIDPMetadata(t *testing.T) {
+	providerConfig := getProviderConfig(t, dotEnvPath, true)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Create test step")
+					//t.Logf("Using the following test config: \n\n%s\n", providerConfig+resourceConfigCreate)
+				},
+				Config: providerConfig + authSettingsIDPMetadataResourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "name", authSettingsMetadataName),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "domain", authSettingsDomain),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "default_role", authSettingsDefaultRole),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "is_account_role", strconv.FormatBool(authSettingsIsAccountRole)),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.email", authSettingsMappingsEmail),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.first_name", authSettingsMappingsFirstName),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.last_name", authSettingsMappingsLastName),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.group_name", authSettingsMappingsGroupName),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_sso_url", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_certificate", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_issuer", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "metadata_url", authSettingsMetadataURL),
+				),
+			},
+			// Update and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Update test step")
+				},
+				Config: providerConfig + authSettingsIDPMetadataResourceUpdatedConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "name", authSettingsMetadataNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "domain", authSettingsDomainUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "default_role", authSettingsDefaultRole),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "is_account_role", strconv.FormatBool(authSettingsIsAccountRole)),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.email", authSettingsMappingsEmailUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.first_name", authSettingsMappingsFirstNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.last_name", authSettingsMappingsLastNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "mappings.group_name", authSettingsMappingsGroupNameUpdated),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_sso_url", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_certificate", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "idp_issuer", ""),
+					resource.TestCheckResourceAttr(authSettingsIDPMetadataResourceNameFull, "metadata_url", authSettingsMetadataURL),
+				),
+			},
+			// Delete and Read testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Delete test step")
+				},
+				Config: providerConfig,
+			},
+		},
+		CheckDestroy: testAccCheckAuthSettingsDestroy,
+	})
+}
+
+func testAccCheckAuthSettingsDestroy(s *terraform.State) error {
+	ctx := context.Background()
+	tfsdklog.Debug(ctx, "Confirming resource destruction")
+
+	platformClient, err := platform.NewClient(
+		platform.WithCortexAPIURL(testAPIURL),
+		platform.WithCortexAPIKey(testAPIKey),
+		platform.WithCortexAPIKeyID(testAPIKeyID),
+		platform.WithCortexAPIKeyType("standard"),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel("debug"),
+	)
+
+	if err != nil {
+		return fmt.Errorf("error creating SDK client for destruction check: %s", err.Error())
+	}
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != authSettingsResourceType {
+			continue
+		}
+
+		authSettings, err := platformClient.ListAuthSettings(ctx)
+		if err != nil {
+			return fmt.Errorf("error listing authentication settings for destruction check: %s", err.Error())
+		}
+
+		if len(authSettings) > 1 {
+			return fmt.Errorf("Authentication settings still exist")
+		}
+	}
+
+	return nil
+}
