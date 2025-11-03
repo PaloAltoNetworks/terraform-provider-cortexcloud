@@ -23,8 +23,10 @@ CORTEX_PAPI_VERSION 		:= 1.2
 BUILD_DATE 					?= $(shell TZ=UTC0 git show --quiet --date='format-local:%Y-%m-%dT%T%z' --format="%cd")
 GO_VERSION 					:= $(shell go version)
 
-# Target OS and architecture the provider binary will be built for.
-# Must follow the format "os_architecture".
+# All target OS and architecture combinations for releases
+# (Note: linux_amd64 is REQUIRED for usage in HCP Terraform)
+ALL_TARGET_OS_ARCH = darwin_arm64 darwin_amd64 linux_amd64 linux_arm64 linux_arm windows_amd64
+# Target OS and architecture for local development/`make build`
 TARGET_OS_ARCH 		?= darwin_arm64
 
 
