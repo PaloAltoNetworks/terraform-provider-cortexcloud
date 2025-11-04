@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -20,67 +20,88 @@ type NestedGroupModel struct {
 // UserGroupModel is the model for the user_group resource.
 type UserGroupModel struct {
 	ID             types.String       `tfsdk:"id"`
-	Name           types.String       `tfsdk:"name"`
+	GroupName      types.String       `tfsdk:"group_name"`
 	Description    types.String       `tfsdk:"description"`
-	RoleName       types.String       `tfsdk:"role_name"`
+	RoleID         types.String       `tfsdk:"role_id"`
 	PrettyRoleName types.String       `tfsdk:"pretty_role_name"`
 	CreatedBy      types.String       `tfsdk:"created_by"`
-	UpdatedBy      types.String       `tfsdk:"updated_by"`
 	CreatedTS      types.Int64        `tfsdk:"created_ts"`
 	UpdatedTS      types.Int64        `tfsdk:"updated_ts"`
 	Users          []string           `tfsdk:"users"`
 	GroupType      types.String       `tfsdk:"group_type"`
-	NestedGroups   []NestedGroupModel `tfsdk:"nested_groups"`
+	NestedGroups   []NestedGroupModel `tfsdk:"nested_groups"` // read-only objects (from list)
 	IDPGroups      []string           `tfsdk:"idp_groups"`
 }
 
 // ToCreateRequest converts the model to a CreateUserGroup request for the SDK.
-func (m *UserGroupModel) ToCreateRequest() platformTypes.UserGroup {
-	return platformTypes.UserGroup{
-		GroupName:   m.Name.ValueString(),
-		Description: m.Description.ValueString(),
-		RoleName:    m.RoleName.ValueString(),
-		Users:       m.Users,
-		IDPGroups:   m.IDPGroups,
+func (m *UserGroupModel) ToCreateRequest() platformtypes.UserGroupCreateRequest {
+	var nestedGroupIDs []string
+	for _, ng := range m.NestedGroups {
+		if !ng.GroupID.IsNull() && !ng.GroupID.IsUnknown() {
+			nestedGroupIDs = append(nestedGroupIDs, ng.GroupID.ValueString())
+		}
+	}
+
+	return platformtypes.UserGroupCreateRequest{
+		GroupName:    m.GroupName.ValueString(),
+		Description:  m.Description.ValueString(),
+		RoleName:     m.RoleID.ValueString(),
+		Users:        m.Users,
+		NestedGroups: nestedGroupIDs,
+		IDPGroups:    m.IDPGroups,
 	}
 }
 
 // ToEditRequest converts the model to an UserGroupEditRequest for the SDK.
-func (m *UserGroupModel) ToEditRequest() platformTypes.UserGroup {
-	return platformTypes.UserGroup{
-		GroupName:   m.Name.ValueString(),
-		Description: m.Description.ValueString(),
-		RoleName:    m.RoleName.ValueString(),
-		Users:       m.Users,
-		IDPGroups:   m.IDPGroups,
-		UpdatedBy:   m.UpdatedBy.ValueString(),
+func (m *UserGroupModel) ToEditRequest() platformtypes.UserGroupEditRequest {
+	var nestedGroupIDs []string
+	for _, ng := range m.NestedGroups {
+		if !ng.GroupID.IsNull() && !ng.GroupID.IsUnknown() {
+			nestedGroupIDs = append(nestedGroupIDs, ng.GroupID.ValueString())
+		}
+	}
+
+	return platformtypes.UserGroupEditRequest{
+		GroupName:      m.GroupName.ValueString(),
+		Description:    m.Description.ValueString(),
+		RoleName:       m.RoleID.ValueString(),
+		Users:          m.Users,
+		NestedGroupIDs: nestedGroupIDs,
+		IDPGroups:      m.IDPGroups,
 	}
 }
 
 // RefreshFromRemote populates the model from the SDK's UserGroup object.
-func (m *UserGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformTypes.UserGroup) {
+func (m *UserGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformtypes.UserGroup) {
 	if remote == nil {
 		diags.AddError("User Group not found", "The requested user group does not exist.")
 		return
 	}
 	m.ID = types.StringValue(remote.GroupID)
-	m.Name = types.StringValue(remote.GroupName)
+	m.GroupName = types.StringValue(remote.GroupName)
 	m.Description = types.StringValue(remote.Description)
-	m.RoleName = types.StringValue(remote.RoleName)
+	if remote.RoleName == "" {
+		m.RoleID = types.StringNull()
+	} else {
+		m.RoleID = types.StringValue(remote.RoleName)
+	}
 	m.PrettyRoleName = types.StringValue(remote.PrettyRoleName)
 	m.CreatedBy = types.StringValue(remote.CreatedBy)
-	m.UpdatedBy = types.StringValue(remote.UpdatedBy)
 	m.CreatedTS = types.Int64Value(remote.CreatedTS)
 	m.UpdatedTS = types.Int64Value(remote.UpdatedTS)
 	m.Users = remote.Users
 	m.GroupType = types.StringValue(remote.GroupType)
 	m.IDPGroups = remote.IDPGroups
 
-	m.NestedGroups = make([]NestedGroupModel, len(remote.NestedGroups))
-	for i, ng := range remote.NestedGroups {
-		m.NestedGroups[i] = NestedGroupModel{
-			GroupID:   types.StringValue(ng.GroupID),
-			GroupName: types.StringValue(ng.GroupName),
+	if len(remote.NestedGroups) == 0 {
+		m.NestedGroups = nil
+	} else {
+		m.NestedGroups = make([]NestedGroupModel, len(remote.NestedGroups))
+		for i, ng := range remote.NestedGroups {
+			m.NestedGroups[i] = NestedGroupModel{
+				GroupID:   types.StringValue(ng.GroupID),
+				GroupName: types.StringValue(ng.GroupName),
+			}
 		}
 	}
 }

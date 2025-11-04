@@ -5,16 +5,20 @@ package platform
 
 import (
 	"context"
+	_ "strings"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -33,7 +37,7 @@ func NewUserGroupResource() resource.Resource {
 
 // userGroupResource is the resource implementation.
 type userGroupResource struct {
-	client *platform.Client
+	client *platformsdk.Client
 }
 
 // Metadata returns the resource type name.
@@ -53,17 +57,26 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			"group_name": schema.StringAttribute{
 				Description: "The name of the user group.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "The description of the user group.",
 				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"role_name": schema.StringAttribute{
-				Description: "The name of the role associated with the user group.",
+			"role_id": schema.StringAttribute{
+				Description: "The role id associated with the user group.",
 				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"pretty_role_name": schema.StringAttribute{
 				Description: "The pretty name of the role associated with the user group.",
@@ -71,10 +84,6 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"created_by": schema.StringAttribute{
 				Description: "The user who created the user group.",
-				Computed:    true,
-			},
-			"updated_by": schema.StringAttribute{
-				Description: "The user who last updated the user group.",
 				Computed:    true,
 			},
 			"created_ts": schema.Int64Attribute{
@@ -89,6 +98,9 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Description: "The users in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"group_type": schema.StringAttribute{
 				Description: "The type of the user group.",
@@ -102,6 +114,9 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 						"group_id": schema.StringAttribute{
 							Description: "The ID of the nested group.",
 							Required:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"group_name": schema.StringAttribute{
 							Description: "The name of the nested group.",
@@ -114,6 +129,9 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Description: "The IDP groups in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -143,18 +161,25 @@ func (r *userGroupResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	request := plan.ToCreateRequest()
-	created, err := r.client.CreateUserGroup(ctx, request)
+	groupID, err := r.client.CreateUserGroup(ctx, request)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user group", err.Error())
 		return
 	}
 
-	plan.RefreshFromRemote(ctx, &resp.Diagnostics, &created)
+	plan.ID = types.StringValue(groupID)
+	plan.PrettyRoleName = types.StringNull()
+	plan.CreatedBy = types.StringNull()
+	plan.CreatedTS = types.Int64Null()
+	plan.UpdatedTS = types.Int64Null()
+	plan.GroupType = types.StringNull()
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -171,20 +196,22 @@ func (r *userGroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var found bool
-	for _, group := range groups {
-		if group.GroupID == state.ID.ValueString() {
-			state.RefreshFromRemote(ctx, &resp.Diagnostics, &group)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			found = true
+	var remote *platformtypes.UserGroup
+	for i := range groups {
+		if groups[i].GroupID == state.ID.ValueString() {
+			remote = &groups[i]
 			break
 		}
 	}
 
-	if !found {
+	if remote == nil {
+		// deleted
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	state.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -206,33 +233,32 @@ func (r *userGroupResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	request := plan.ToEditRequest()
-	_, err := r.client.EditUserGroup(ctx, state.ID.ValueString(), request)
-	if err != nil {
+	if _, err := r.client.EditUserGroup(ctx, state.ID.ValueString(), request); err != nil {
 		resp.Diagnostics.AddError("Error updating user group", err.Error())
 		return
 	}
 
-	// Read the updated state from the API
 	groups, err := r.client.ListUserGroups(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading user groups after update", err.Error())
 		return
 	}
 
-	var found bool
-	for _, group := range groups {
-		if group.GroupID == state.ID.ValueString() {
-			plan.RefreshFromRemote(ctx, &resp.Diagnostics, &group)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			found = true
+	var remote *platformtypes.UserGroup
+	for i := range groups {
+		if groups[i].GroupID == state.ID.ValueString() {
+			remote = &groups[i]
 			break
 		}
 	}
 
-	if !found {
+	if remote == nil {
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	plan.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
