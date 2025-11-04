@@ -78,9 +78,9 @@ func TestUnitAuthenticationSettingsResource(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 					provider "cortexcloud" {
-						api_url = "%s"
-						api_key = "test"
-						api_key_id = 123
+						cortex_cloud_api_url = "%s"
+						cortex_cloud_api_key = "test"
+						cortex_cloud_api_key_id = 123
 					}
 					resource "cortexcloud_authentication_settings" "test" {
 						name   = "test-auth-settings"
