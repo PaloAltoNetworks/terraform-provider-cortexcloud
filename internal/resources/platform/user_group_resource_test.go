@@ -19,18 +19,17 @@ import (
 func TestUnitUserGroupResource(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			if strings.HasSuffix(r.URL.String(), "/user-groups") {
+			if strings.HasSuffix(r.URL.String(), "/user-group") {
 				w.WriteHeader(http.StatusCreated)
 				fmt.Fprintln(w, `{
-					"group_id": "test-group-1",
-					"group_name": "test-group-1",
-					"description": "This is a test user group.",
-					"role_name": "test-role"
+					"data": {
+						"message": "user group with group id test-group-1 created successfully"
+					}
 				}`) //nolint:errcheck
 				return
 			}
 		} else if r.Method == http.MethodGet {
-			if strings.HasSuffix(r.URL.String(), "/user-groups") {
+			if strings.HasSuffix(r.URL.String(), "/user-group") {
 				w.WriteHeader(http.StatusOK)
 				//nolint:errcheck
 				fmt.Fprintln(w, `{
@@ -39,22 +38,30 @@ func TestUnitUserGroupResource(t *testing.T) {
 							"group_id": "test-group-1",
 							"group_name": "test-group-1",
 							"description": "This is a test user group.",
-							"role_name": "test-role"
+							"role_id": "test-role"
 						}
 					]
 				}`)
 				return
 			}
 		} else if r.Method == http.MethodPatch {
-			if strings.Contains(r.URL.String(), "/user-groups/") {
+			if strings.Contains(r.URL.String(), "/user-group/") {
 				w.WriteHeader(http.StatusOK)
-				fmt.Fprintln(w, `{"reply": {"success": true}}`) //nolint:errcheck
+				fmt.Fprintln(w, `{
+					"data": {
+						"message": "user group with group id test-group-1 updated successfully"
+					}
+				}`) //nolint:errcheck
 				return
 			}
 		} else if r.Method == http.MethodDelete {
-			if strings.Contains(r.URL.String(), "/user-groups/") {
+			if strings.Contains(r.URL.String(), "/user-group/") {
 				w.WriteHeader(http.StatusOK)
-				fmt.Fprintln(w, `{"reply": {"success": true}}`) //nolint:errcheck
+				fmt.Fprintln(w, `{
+					"data": {
+						"message": "user group with group id test-group-1 deleted successfully"
+					}
+				}`) //nolint:errcheck
 				return
 			}
 		}
@@ -78,15 +85,15 @@ func TestUnitUserGroupResource(t *testing.T) {
 						api_key_id = 123
 					}
 					resource "cortexcloud_user_group" "test" {
-						name        = "test-group-1"
+						group_name        = "test-group-1"
 						description = "This is a test user group."
-						role_name   = "test-role"
+						role_id   = "test-role"
 					}
 				`, server.URL),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("cortexcloud_user_group.test", "name", "test-group-1"),
+					resource.TestCheckResourceAttr("cortexcloud_user_group.test", "group_name", "test-group-1"),
 					resource.TestCheckResourceAttr("cortexcloud_user_group.test", "description", "This is a test user group."),
-					resource.TestCheckResourceAttr("cortexcloud_user_group.test", "role_name", "test-role"),
+					resource.TestCheckResourceAttr("cortexcloud_user_group.test", "role_id", "test-role"),
 				),
 			},
 		},

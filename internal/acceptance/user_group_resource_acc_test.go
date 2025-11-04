@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	AccTestUserGroup1Name        = "test-group-1"
-	AccTestUserGroup1NameUpdated = "test-group-1-updated"
-	AccTestUserGroup1Description = "This is a test user group."
-	AccTestUserGroup1RoleName    = "test-role"
+	AccTestUserGroup1Name               = "test-group-2"
+	AccTestUserGroup1NameUpdated        = "test-group-2-updated"
+	AccTestUserGroup1Description        = "This is a test user group."
+	AccTestUserGroup1DescriptionUpdated = "This is an updated test user group."
 )
 
 func TestAcc_UserGroupResource(t *testing.T) {
@@ -25,23 +25,19 @@ func TestAcc_UserGroupResource(t *testing.T) {
 	resourceName := "cortexcloud_user_group.test"
 	resourceConfigCreate := fmt.Sprintf(
 		`resource "cortexcloud_user_group" "test" {
-			name = %s
+			group_name = %s
 			description = %s
-			role_name = %s
 		}`,
 		strconv.Quote(AccTestUserGroup1Name),
 		strconv.Quote(AccTestUserGroup1Description),
-		strconv.Quote(AccTestUserGroup1RoleName),
 	)
 	resourceConfigUpdate := fmt.Sprintf(
 		`resource "cortexcloud_user_group" "test" {
-			name = %s
+			group_name = %s
 			description = %s
-			role_name = %s
 		}`,
 		strconv.Quote(AccTestUserGroup1NameUpdated),
-		strconv.Quote(AccTestUserGroup1Description),
-		strconv.Quote(AccTestUserGroup1RoleName),
+		strconv.Quote(AccTestUserGroup1DescriptionUpdated),
 	)
 
 	t.Log("Running tests")
@@ -54,16 +50,16 @@ func TestAcc_UserGroupResource(t *testing.T) {
 			{
 				Config: providerConfig + resourceConfigCreate,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", AccTestUserGroup1Name),
+					resource.TestCheckResourceAttr(resourceName, "group_name", AccTestUserGroup1Name),
 					resource.TestCheckResourceAttr(resourceName, "description", AccTestUserGroup1Description),
-					resource.TestCheckResourceAttr(resourceName, "role_name", AccTestUserGroup1RoleName),
 				),
 			},
 			// Update and Read testing
 			{
 				Config: providerConfig + resourceConfigUpdate,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", AccTestUserGroup1NameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "group_name", AccTestUserGroup1NameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", AccTestUserGroup1DescriptionUpdated),
 				),
 			},
 		},
