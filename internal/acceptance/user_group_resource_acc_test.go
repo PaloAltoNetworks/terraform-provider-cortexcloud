@@ -21,7 +21,7 @@ const (
 func TestAcc_UserGroupResource(t *testing.T) {
 	t.Log("Creating test configurations")
 
-	providerConfig := getProviderConfig(t, true)
+	providerConfig := getProviderConfig(t, dotEnvPath, true)
 	resourceName := "cortexcloud_user_group.test"
 	resourceConfigCreate := fmt.Sprintf(
 		`resource "cortexcloud_user_group" "test" {
