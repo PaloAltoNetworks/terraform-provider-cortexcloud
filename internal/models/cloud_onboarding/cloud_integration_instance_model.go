@@ -64,41 +64,41 @@ func securityCapabilityStatusToString(statusCode int) string {
 	}
 }
 
-func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.GetIntegrationInstanceRequest {
+func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.GetIntegrationInstanceRequest {
 	tflog.Debug(ctx, "Creating GetIntegrationInstanceRequest from CloudIntegrationInstanceModel")
-	return cloudOnboardingTypes.GetIntegrationInstanceRequest{
-		InstanceID: m.ID.ValueString(),
-	}
+	return cloudOnboardingTypes.NewGetIntegrationInstanceRequest(m.ID.ValueString())
 }
 
-func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListIntegrationInstancesRequest {
+func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstanceModel")
-	return cloudOnboardingTypes.ListIntegrationInstancesRequest{
-		FilterData: filterTypes.FilterData{
-			Filter: filterTypes.NewAndFilter(
-				filterTypes.NewSearchFilter(
-					cortexEnums.SearchFieldID.String(),
-					cortexEnums.SearchTypeWildcard.String(),
-					m.InstanceName.ValueString(),
+	return cloudOnboardingTypes.NewListIntegrationInstancesRequest(
+		cloudOnboardingTypes.WithIntegrationFilterData(
+			filterTypes.FilterData{
+				Filter: filterTypes.NewAndFilter(
+					filterTypes.NewSearchFilter(
+						cortexEnums.SearchFieldID.String(),
+						cortexEnums.SearchTypeWildcard.String(),
+						m.InstanceName.ValueString(),
+					),
+					filterTypes.NewSearchFilter(
+						cortexEnums.SearchFieldStatus.String(),
+						cortexEnums.SearchTypeNotEqualTo.String(),
+						cortexEnums.IntegrationInstanceStatusPending.String(),
+					),
 				),
-				filterTypes.NewSearchFilter(
-					cortexEnums.SearchFieldStatus.String(),
-					cortexEnums.SearchTypeNotEqualTo.String(),
-					cortexEnums.IntegrationInstanceStatusPending.String(),
-				),
-			),
-			Paging: filterTypes.PagingFilter{
-				From: 0,
-				To:   1000,
-			},
-			Sort: []filterTypes.SortFilter{
-				{
-					Field: "INSTANCE_NAME",
-					Order: "ASC",
+				Paging: filterTypes.PagingFilter{
+					From: 0,
+					To:   1000,
+				},
+				Sort: []filterTypes.SortFilter{
+					{
+						Field: "INSTANCE_NAME",
+						Order: "ASC",
+					},
 				},
 			},
-		},
-	}
+		),
+	)
 }
 
 func (m *CloudIntegrationInstanceModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, data cloudOnboardingTypes.IntegrationInstance) {

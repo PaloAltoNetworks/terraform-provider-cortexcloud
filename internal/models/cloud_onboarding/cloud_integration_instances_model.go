@@ -57,6 +57,7 @@ var (
 		"registry_scanning_options": types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				"type": types.StringType,
+				"last_days": types.Int32Type,
 			},
 		},
 		"agentless_disk_scanning": types.BoolType,
@@ -73,7 +74,7 @@ var (
 )
 
 // ToListRequest converts the model to a ListIntegrationInstancesRequest.
-func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListIntegrationInstancesRequest {
+func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
 	tflog.Debug(ctx, "Creating ListIntegrationInstancesRequest from CloudIntegrationInstancesDataSourceModel")
 
 	var filters []filterTypes.Filter
@@ -141,26 +142,30 @@ func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Con
 		))
 	}
 
-	var finalFilter filterTypes.Filter
+	var finalFilter filterTypes.Filter = filterTypes.FilterRoot{}
+	var orFilter []filterTypes.Filter = []filterTypes.Filter{}
 	if len(filters) > 0 {
-		finalFilter = filterTypes.NewAndFilter(filters...)
+		//finalFilter = filterTypes.NewAndFilter(filters...)
+		finalFilter = filterTypes.NewRootFilter(filters, orFilter)
 	}
 
-	return cloudOnboardingTypes.ListIntegrationInstancesRequest{
-		FilterData: filterTypes.FilterData{
-			Filter: finalFilter,
-			Paging: filterTypes.PagingFilter{
-				From: 0,
-				To:   1000,
-			},
-			Sort: []filterTypes.SortFilter{
-				{
-					Field: cortexEnums.SearchFieldInstanceName.String(),
-					Order: "ASC",
+	return cloudOnboardingTypes.NewListIntegrationInstancesRequest(
+		cloudOnboardingTypes.WithIntegrationFilterData(
+			filterTypes.FilterData{
+				Filter: finalFilter,
+				Paging: filterTypes.PagingFilter{
+					From: 0,
+					To:   1000,
+				},
+				Sort: []filterTypes.SortFilter{
+					{
+						Field: cortexEnums.SearchFieldInstanceName.String(),
+						Order: "ASC",
+					},
 				},
 			},
-		},
-	}
+		),
+	)
 }
 
 // RefreshFromRemote refreshes the model from the remote API response.

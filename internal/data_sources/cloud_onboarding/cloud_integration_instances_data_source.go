@@ -147,6 +147,23 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 											Description: "Type of registry scanning.",
 											Computed:    true,
 										},
+										"last_days": schema.Int32Attribute{
+											Description: "Number of days within which " +
+												"the tags on a registry image must have " +
+												"been created or updated for the image " +
+												"to be scanned. Minimum value is 0 and " +
+												"maximum value is 90. Cannot be " +
+												"configured if \"type\" is not set to " +
+												"\"TAGS_MODIFIED_DAYS\".",
+											MarkdownDescription: "Number of days within which " +
+												"the tags on a registry image must have " +
+												"been created or updated for the image " +
+												"to be scanned. Minimum value is 0 and " +
+												"maximum value is 90. Cannot be " +
+												"configured if `type` is not set to " +
+												"`TAGS_MODIFIED_DAYS`.",
+											Computed: true,
+										},
 									},
 								},
 								"agentless_disk_scanning": schema.BoolAttribute{
