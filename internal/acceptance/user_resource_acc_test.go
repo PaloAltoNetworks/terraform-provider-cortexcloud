@@ -15,9 +15,7 @@ func TestAcc_UserResource(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
 	email := os.Getenv("TF_ACC_TEST_USER_EMAIL")
-	if email == "" {
-		email = os.Getenv("TEST_CORTEX_USER_EMAIL")
-	}
+
 	if email == "" {
 		t.Skip("skipping: please set TF_ACC_TEST_USER_EMAIL (or TEST_CORTEX_USER_EMAIL)")
 	}
