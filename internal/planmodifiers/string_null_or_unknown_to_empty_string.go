@@ -10,11 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-//var (
-//	_ validator.String = NullIfAlsoSetPlanModifier{}
-//	_ validator.Bool   = NullIfAlsoSetPlanModifier{}
-//)
-
 func ToEmptyStringIfNullOrUnknown() planmodifier.String {
 	return &toEmptyStringIfNullOrUnknown{}
 }

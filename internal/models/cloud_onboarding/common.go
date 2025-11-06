@@ -38,3 +38,9 @@ type ScopeModificationsModel struct {
 type ScopeModificationsRegionsModel struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
+
+type scopeModificationRegions struct {
+	Enabled bool     `json:"enabled" tfsdk:"enabled"`
+	Type    *string   `json:"type,omitempty" tfsdk:"type"`
+	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
+}

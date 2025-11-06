@@ -1,10 +1,8 @@
-
 // Copyright (c) Palo Alto Networks, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
 package cloud_onboarding
 
-/*
 import (
 	"context"
 	"fmt"
@@ -28,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -38,99 +35,84 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource               = &CloudIntegrationTemplateResource{}
-	_ resource.ResourceWithModifyPlan = &CloudIntegrationTemplateResource{}
+	_ resource.Resource               = &CloudIntegrationTemplateAzureResource{}
+	_ resource.ResourceWithModifyPlan = &CloudIntegrationTemplateAzureResource{}
 )
 
-// NewCloudIntegrationTemplateResource is a helper function to simplify the provider implementation.
-func NewCloudIntegrationTemplateResource() resource.Resource {
-	return &CloudIntegrationTemplateResource{}
+// NewCloudIntegrationTemplateAzureResource is a helper function to simplify the provider implementation.
+func NewCloudIntegrationTemplateAzureResource() resource.Resource {
+	return &CloudIntegrationTemplateAzureResource{}
 }
 
-// CloudIntegrationTemplateResource is the resource implementation.
-type CloudIntegrationTemplateResource struct {
+// CloudIntegrationTemplateAzureResource is the resource implementation.
+type CloudIntegrationTemplateAzureResource struct {
 	client *cloudonboarding.Client
 }
 
 // Metadata returns the resource type name.
-func (r *CloudIntegrationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_integration_template"
+func (r *CloudIntegrationTemplateAzureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_integration_template_azure"
 }
 
 // Schema defines the schema for the resource.
-func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	configurableAttributes := []path.Path{
-		//path.Root("account_details"),
-		//path.Root("additional_capabilities"),
-		path.Root("cloud_provider"),
-		//path.Root("collection_configuration"),
-		//path.Root("custom_resources_tags"),
 		path.Root("instance_name"),
 		path.Root("scan_mode"),
 		path.Root("scope"),
-		//path.Root("scope_modifications"),
 	}
 	useStateIfConfigUnchangedModifier := planmodifiers.StringUseStateIfConfigUnchanged(configurableAttributes)
 
 	resp.Schema = schema.Schema{
-		// TODO: when populating the description, make sure to call out that
-		// only AWS and GCP are currently supported.
-		Description: "Manages a cloud onboarding integration template.",
+		Description: "Manages a cloud onboarding integration template for Azure.",
 		Attributes: map[string]schema.Attribute{
 			"account_details": schema.SingleNestedAttribute{
-				Description: "Additional required configuration parameters " \
+				Description: "Additional required configuration parameters " +
 					"for Azure tenants.",
-				Optional: true,
-				Computed: true,
+				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"organization_id": schema.StringAttribute{
 						Description: "Azure tenant ID.",
-						//Required:    true,
-						Optional:    true,
-						Computed:    true,
+						Required:    true,
 					},
 				},
-				//PlanModifiers: []planmodifier.Object{
-				//	planmodifiers.ObjectSuppressIfAttributeNotEquals(path.Root("cloud_provider"), types.StringValue(enums.CloudProviderAzure.String())),
-				//},
-				//Default: objectdefault.StaticValue(types.ObjectNull(map[string]attr.Type{"organization_id": types.StringType})),
 			},
 			"additional_capabilities": schema.SingleNestedAttribute{
-				Description: "Define which additional security capabilities " \
-					"to enable. Note that adding additional capabilities " \
-					"typically requires additional cloud provider " \
-					"permissions. For more information, refer to the Cortex " \
-					"Cloud Posture Management documentation: " \
+				Description: "Define which additional security capabilities " +
+					"to enable. Note that adding additional capabilities " +
+					"typically requires additional cloud provider " +
+					"permissions. For more information, refer to the Cortex " +
+					"Cloud Posture Management documentation: " +
 					"https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions",
-				MarkdownDescription: "Define which additional security capabilities " \
-					"to enable. Note that adding additional capabilities " \
-					"typically requires additional cloud provider " \
-					"permissions. For more information, refer to the " \
-					"[Cortex Cloud Posture Management documentation]" \
+				MarkdownDescription: "Define which additional security capabilities " +
+					"to enable. Note that adding additional capabilities " +
+					"typically requires additional cloud provider " +
+					"permissions. For more information, refer to the " +
+					"[Cortex Cloud Posture Management documentation]" +
 					"(https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions).",
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"data_security_posture_management": schema.BoolAttribute{
-						Description: "Whether to enable data security " \
-							"posture management, an agentless data security " \
-							"scanner that discovers, classifies, protects, " \
+						Description: "Whether to enable data security " +
+							"posture management, an agentless data security " +
+							"scanner that discovers, classifies, protects, " +
 							"and governs sensitive data.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
 					"registry_scanning": schema.BoolAttribute{
-						Description: "Whether to enable registry scanning, " \
-							"a container registry scanner that scans " \
-							"registry images for vulnerabilities, malware, " \
+						Description: "Whether to enable registry scanning, " +
+							"a container registry scanner that scans " +
+							"registry images for vulnerabilities, malware, " +
 							"and secrets.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
-						Description: "Additional configuration options for" \
+						Description: "Additional configuration options for" +
 							"registry scanning.",
 						Optional: true,
 						Computed: true,
@@ -142,7 +124,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								Default:     stringdefault.StaticString(enums.RegistryScanningTypeAll.String()),
 								Validators: []validator.String{
 									stringvalidator.OneOf(
-										enums.AllRegistryScanningTypes()...,
+										enums.AllRegistryScanningTypes()...
 									),
 									validators.AlsoRequiresOnStringValues(
 										[]string{
@@ -153,19 +135,19 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								},
 							},
 							"last_days": schema.Int32Attribute{
-								Description: "Number of days within which " \
-									"the tags on a registry image must have " \
-									"been created or updated for the image " \
-									"to be scanned. Minimum value is 0 and " \
-									"maximum value is 90. Cannot be " \
-									"configured if \"type\" is not set to " \
+								Description: "Number of days within which " +
+									"the tags on a registry image must have " +
+									"been created or updated for the image " +
+									"to be scanned. Minimum value is 0 and " +
+									"maximum value is 90. Cannot be " +
+									"configured if \"type\" is not set to " +
 									"\"TAGS_MODIFIED_DAYS\".",
-								MarkdownDescription: "Number of days within which " \
-									"the tags on a registry image must have " \
-									"been created or updated for the image " \
-									"to be scanned. Minimum value is 0 and " \
-									"maximum value is 90. Cannot be " \
-									"configured if `type` is not set to " \
+								MarkdownDescription: "Number of days within which " +
+									"the tags on a registry image must have " +
+									"been created or updated for the image " +
+									"to be scanned. Minimum value is 0 and " +
+									"maximum value is 90. Cannot be " +
+									"configured if `type` is not set to " +
 									"`TAGS_MODIFIED_DAYS`.",
 								Optional: true,
 								Validators: []validator.Int32{
@@ -175,43 +157,24 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						},
 					},
 					"agentless_disk_scanning": schema.BoolAttribute{
-						Description: "Whether to enable agentless disk " \
-							"scanning to remotely detect and remediate " \
-							"vulnerabilities during the development " \
+						Description: "Whether to enable agentless disk " +
+							"scanning to remotely detect and remediate " +
+							"vulnerabilities during the development " +
 							"lifecycle.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
 					"xsiam_analytics": schema.BoolAttribute{
-						Description: "Whether to enable XSIAM analytics to " \
-							"analyze your endpoint data to develop a " \
-							"baseline and raise Analytics and Analytics " \
-							"BIOC alerts when anomalies and malicious " \
+						Description: "Whether to enable XSIAM analytics to " +
+							"analyze your endpoint data to develop a " +
+							"baseline and raise Analytics and Analytics " +
+							"BIOC alerts when anomalies and malicious " +
 							"behaviors are detected.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
-				},
-			},
-			"cloud_provider": schema.StringAttribute{
-				Description:         "The cloud service provider.",
-				MarkdownDescription: "The cloud service provider.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						enums.AllCloudProviders()...,
-					),
-					//validators.AlsoRequiresOnStringValues(
-					//	[]string{
-					//		enums.CloudProviderAzure.String(),
-					//	},
-					//	path.MatchRelative().AtParent().AtName("account_details"),
-					//),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"collection_configuration": schema.SingleNestedAttribute{
@@ -237,12 +200,12 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								Default:     stringdefault.StaticString(enums.AuditLogCollectionMethodAutomated.String()),
 								Validators: []validator.String{
 									stringvalidator.OneOf(
-										enums.AllAuditLogCollectionMethods()...,
+										enums.AllAuditLogCollectionMethods()...
 									),
 								},
 							},
 							"data_events": schema.BoolAttribute{
-								Description: "Whether to collect data " \
+								Description: "Whether to collect data " +
 									"events as part of audit log collection.",
 								Optional: true,
 								Computed: true,
@@ -251,10 +214,9 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						},
 					},
 				},
-				// TODO: make helpers for this
 				Default: objectdefault.StaticValue(
 					types.ObjectValueMust(
-						Map[string]attr.Type{
+						map[string]attr.Type{
 							"audit_logs": types.ObjectType{
 								AttrTypes: map[string]attr.Type{
 									"enabled":           types.BoolType,
@@ -263,14 +225,14 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								},
 							},
 						},
-						Map[string]attr.Value{
+						map[string]attr.Value{
 							"audit_logs": types.ObjectValueMust(
-								Map[string]attr.Type{
+								map[string]attr.Type{
 									"enabled":           types.BoolType,
 									"collection_method": types.StringType,
 									"data_events":       types.BoolType,
 								},
-								Map[string]attr.Value{
+								map[string]attr.Value{
 									"enabled":           types.BoolValue(true),
 									"collection_method": types.StringValue(enums.AuditLogCollectionMethodAutomated.String()),
 									"data_events":       types.BoolValue(false),
@@ -281,14 +243,15 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				),
 			},
 			"custom_resources_tags": schema.SetNestedAttribute{
-				// TODO: prevent duplicate tag keys
-				Description: "Tags applied to any new resource created by " \
-					"Cortex Cloud in the cloud environment." \
-					"\n\nThe tag \"managed_by\" with the value " \
+				Description: "Tags applied to any new resource created by " +
+					"Cortex Cloud in the cloud environment." +
+					"\n\n" +
+					"The tag \"managed_by\" with the value " +
 					"\"paloaltonetworks\" will be applied by default.",
-				MarkdownDescription: "Tags applied to any new resource created by " \
-					"Cortex Cloud in the cloud environment." \
-					"\n\nThe tag `managed_by` with the value " \
+				MarkdownDescription: "Tags applied to any new resource created by " +
+					"Cortex Cloud in the cloud environment." +
+					"\n\n" +
+					"The tag `managed_by` with the value " +
 					"`paloaltonetworks` will be applied by default.",
 				Optional: true,
 				Computed: true,
@@ -297,41 +260,35 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						"key": schema.StringAttribute{
 							Description: "The tag key.",
 							Required:    true,
-							//Optional:    true,
-							//Computed:    true,
 						},
 						"value": schema.StringAttribute{
 							Description: "The tag value.",
 							Required:    true,
-							//Optional:    true,
-							//Computed:    true,
 						},
 					},
 				},
 			},
 			"instance_name": schema.StringAttribute{
-				Description: "Name of the integration instance. If left " \
+				Description: "Name of the integration instance. If left " +
 					"empty, the name will be auto-populated.",
 				Optional: true,
-				Validators: []validator.String{
-					validators.ValidateCloudIntegrationInstanceName(),
-				},
+				//Validators: []validator.String{
+				//	validators.ValidateCloudIntegrationInstanceName(),
+				//},
 			},
 			"scan_mode": schema.StringAttribute{
-				// TODO: add description of outpost
-				// TODO: find out how to get the default outpost id
-				Description: "Define what infrastructure the integration " \
-					"will use to scan cloud workloads. If set to" \
-					"\"MANAGED\", scanning will be done in the Cortex Cloud" \
-					"environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Default value is \"%s\". Possible values are: \"%s\"." \
-					"\n\nNOTE: Scanning with an outpost may require " \
-					"additional CSP permissions and may incur additional " \
+				Description: "Define what infrastructure the integration " +
+					"will use to scan cloud workloads. If set to" +
+					"\"MANAGED\", scanning will be done in the Cortex Cloud" +
+					"environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Default value is \"%s\". Possible values are: \"%s\"." +
+					"\n\nNOTE: Scanning with an outpost may require " +
+					"additional CSP permissions and may incur additional " +
 					"costs.",
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						enums.AllScanModes()...,
+						enums.AllScanModes()...
 					),
 					validators.AlsoRequiresOnStringValues(
 						[]string{
@@ -342,13 +299,13 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				},
 			},
 			"scope": schema.StringAttribute{
-				Description: "Define the scope for this integration " \
-					"instance. Must be one of `ACCOUNT`, `ORGANIZATION` or " \
+				Description: "Define the scope for this integration " +
+					"instance. Must be one of `ACCOUNT`, `ORGANIZATION` or " +
 					"`ACCOUNT_GROUP`.",
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						enums.AllScopes()...,
+						enums.AllScopes()...
 					),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -356,93 +313,11 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				},
 			},
 			"scope_modifications": schema.SingleNestedAttribute{
-				Description: "Define the scope of scans by including/excluding " \
+				Description: "Define the scope of scans by including/excluding " +
 					"accounts or regions.",
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"accounts": schema.SingleNestedAttribute{
-						Description: "Configuration for account-level scope " \
-							"modifications for AWS integrations. Cannot be " \
-							"configured if `cloud_type` is not set to `AWS`.",
-						Optional: true,
-						Computed: true,
-						Attributes: map[string]schema.Attribute{
-							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification.",
-								Optional:    true,
-								Computed:    true,
-							},
-							"type": schema.StringAttribute{
-								Description: "Whether the specified account IDs should be included in the scope or excluded from the scope.",
-								Optional:    true,
-								Computed:    true,
-								//Default:     stringdefault.StaticString(""),
-								Validators: []validator.String{
-									stringvalidator.OneOf(
-										enums.AllScopeModificationTypes()...,
-									),
-								},
-							},
-							"account_ids": schema.SetAttribute{
-								Description: "Account IDs to include or exclude from scans",
-								Optional:    true,
-								Computed:    true,
-								ElementType: types.StringType,
-								Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
-							},
-						},
-						Default: objectdefault.StaticValue(
-							types.ObjectNull(
-								Map[string]attr.Type{
-									"enabled": types.BoolType,
-									"type":    types.StringType,
-									"account_ids": types.SetType{
-										ElemType: types.StringType,
-									},
-								},
-							),
-						),
-					},
-					"projects": schema.SingleNestedAttribute{
-						Description: "TODO",
-						Optional:    true,
-						Computed:    true,
-						Attributes: map[string]schema.Attribute{
-							"enabled": schema.BoolAttribute{
-								Description: "TODO",
-								Optional:    true,
-								Computed:    true,
-							},
-							"type": schema.StringAttribute{
-								Description: "TODO",
-								Optional:    true,
-								Computed:    true,
-								Validators: []validator.String{
-									stringvalidator.OneOf(
-										enums.AllScopeModificationTypes()...,
-									),
-								},
-							},
-							"project_ids": schema.SetAttribute{
-								Description: "TODO",
-								Optional:    true,
-								Computed:    true,
-								ElementType: types.StringType,
-							},
-						},
-						Default: objectdefault.StaticValue(
-							types.ObjectNull(
-								Map[string]attr.Type{
-									"enabled": types.BoolType,
-									"type":    types.StringType,
-									"project_ids": types.SetType{
-										ElemType: types.StringType,
-									},
-								},
-							),
-						),
-					},
 					"subscriptions": schema.SingleNestedAttribute{
 						Description: "TODO",
 						Optional:    true,
@@ -459,7 +334,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								Computed:    true,
 								Validators: []validator.String{
 									stringvalidator.OneOf(
-										enums.AllScopeModificationTypes()...,
+										enums.AllScopeModificationTypes()...
 									),
 								},
 							},
@@ -472,7 +347,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						},
 						Default: objectdefault.StaticValue(
 							types.ObjectNull(
-								Map[string]attr.Type{
+								map[string]attr.Type{
 									"enabled": types.BoolType,
 									"type":    types.StringType,
 									"subscription_ids": types.SetType{
@@ -483,20 +358,13 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						),
 					},
 					"regions": schema.SingleNestedAttribute{
-						// TODO: add validator to prevent user from
-						// configuring the `type` and `regions`
-						// attributes if `enabled` is false
 						Description: "TODO",
 						Optional:    true,
 						Computed:    true,
 						Attributes: map[string]schema.Attribute{
-							// TODO: do we need an enabled attribute or is it
-							// not needed since it's optional?
 							"enabled": schema.BoolAttribute{
 								Description: "TODO",
 								Required:    true,
-								//Optional:    true,
-								//Computed:    true,
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
 										true,
@@ -517,16 +385,14 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 								},
 								Validators: []validator.String{
 									stringvalidator.OneOf(
-										enums.AllScopeModificationTypes()...,
+										enums.AllScopeModificationTypes()...
 									),
 								},
 							},
 							"regions": schema.SetAttribute{
 								Description: "TODO",
 								Optional:    true,
-								//Computed:    true,
 								ElementType: types.StringType,
-								//Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
 								Validators: []validator.Set{
 									setvalidator.SizeAtLeast(1),
 								},
@@ -534,7 +400,7 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 						},
 						Default: objectdefault.StaticValue(
 							types.ObjectNull(
-								Map[string]attr.Type{
+								map[string]attr.Type{
 									"enabled": types.BoolType,
 									"type":    types.StringType,
 									"regions": types.SetType{
@@ -562,11 +428,11 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 				Description: "TODO",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
-					planmodifiers.StringSuppressIfAttributeEquals(path.Root("scan_mode"), types.StringValue(enums.ScanModeManaged.String())),
+					useStateIfConfigUnchangedModifier,
+					planmodifiers.ToNullStringIfUnknown(),
 				},
-			}, // TODO: Planmodifier to use state if config values are unchanged
+			},
 			"automated_deployment_url": schema.StringAttribute{
 				Description: "TODO",
 				Computed:    true,
@@ -574,7 +440,6 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 					useStateIfConfigUnchangedModifier,
 				},
 			},
-			// TODO: Planmodifier to use state if config values are unchanged
 			"manual_deployment_url": schema.StringAttribute{
 				Description: "TODO",
 				Computed:    true,
@@ -582,21 +447,10 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 					useStateIfConfigUnchangedModifier,
 				},
 			},
-			// TODO: Planmodifier to use state if config values are unchanged
-			"cloud_formation_template_url": schema.StringAttribute{
-				Description: "TODO",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					planmodifiers.StringSuppressIfAttributeNotEquals(path.Root("cloud_provider"), types.StringValue(enums.CloudProviderAWS.String())),
-					useStateIfConfigUnchangedModifier,
-				},
-			},
-			// TODO: Planmodifier to use state if config values are unchanged
 			"arm_template_url": schema.StringAttribute{
 				Description: "TODO",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
-					planmodifiers.StringSuppressIfAttributeNotEquals(path.Root("cloud_provider"), types.StringValue(enums.CloudProviderAzure.String())),
 					useStateIfConfigUnchangedModifier,
 				},
 			},
@@ -605,13 +459,14 @@ func (r *CloudIntegrationTemplateResource) Schema(ctx context.Context, req resou
 }
 
 // Configure adds the provider-configured client to the resource.
-func (r *CloudIntegrationTemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CloudIntegrationTemplateAzureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured
 	if req.ProviderData == nil {
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_operation", "Configure")
 	tflog.Debug(ctx, "Configuring SDK client")
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
@@ -624,14 +479,16 @@ func (r *CloudIntegrationTemplateResource) Configure(ctx context.Context, req re
 	r.client = client.CloudOnboarding
 }
 
-func (r *CloudIntegrationTemplateResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	// TODO: do we need this or is it the same context as the one modified in Configure?
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template")
+func (r *CloudIntegrationTemplateAzureResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_operation", "ModifyPlan")
 	tflog.Debug(ctx, "Executing ModifyPlan")
+
+	
 
 	// If the entire plan is null, the resource is planned for destruction
 	if req.Plan.Raw.IsNull() {
-		var state models.CloudIntegrationTemplateModel
+		var state models.CloudIntegrationTemplateAzureModel
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -644,14 +501,15 @@ func (r *CloudIntegrationTemplateResource) ModifyPlan(ctx context.Context, req r
 }
 
 // Create creates the resource and sets the initial Terraform state.
-func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CloudIntegrationTemplateAzureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_operation", "Create")
 
 	// Retrieve values from plan
 	tflog.Debug(ctx, "Retrieving values from plan")
-	var plan models.CloudIntegrationTemplateModel
+	var plan models.CloudIntegrationTemplateAzureModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -663,12 +521,6 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	// Create new cloud integration template
-	//
-	// [Max] TODO: if we get a 500 error with the message "local variable 'template_url'
-	// reference before assignment" here, it likely means that they have to first
-	// approve Cortex in their Azure tenant and we should return an error
-	// diagnostic with the appropriate guidance.
 	tflog.Debug(ctx, "Executing API request")
 	createResponse, err := r.client.CreateIntegrationTemplate(ctx, createRequest)
 	if err != nil {
@@ -681,7 +533,7 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 
 	// Map response body to schema and populate Computed attribute values
 	tflog.Debug(ctx, "Setting computed attributes")
-	plan.SetGeneratedValues(&resp.Diagnostics, createResponse)
+	plan.SetGeneratedValues(ctx, &resp.Diagnostics, createResponse)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -692,19 +544,19 @@ func (r *CloudIntegrationTemplateResource) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Debug(ctx, "Done")
 }
 
 // Read refreshes the Terraform state with the latest values.
-func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CloudIntegrationTemplateAzureResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
 	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
+	ctx = tflog.SetField(ctx, "resource_operation", "Read")
 
 	// Retrieve values from state
 	tflog.Debug(ctx, "Retrieving values from state")
-	var state models.CloudIntegrationTemplateModel
+	var state models.CloudIntegrationTemplateAzureModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -729,12 +581,8 @@ func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	// If the template expired or was deleted out of band, remove the resource
-	// from the state so Terraform plans to recreate it
 	if len(response) == 0 {
 		tflog.Debug(ctx, "Template not found, removing from state")
-		// TODO: add warning saying this is being recreated?
-		//resp.Diagnostics.
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -743,10 +591,9 @@ func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resourc
 		tflog.Debug(ctx, "API returned multiple results")
 		resp.Diagnostics.AddWarning(
 			"Multiple Cloud Integration Templates Returned",
-			// TODO: this should return a "please send this to the devs" message
-			"Multiple values returned for the following arguments: " \
-				"status, instance_name, account_name, outpost_id, creation_time\n\n" \
-				"The provider will attempt to populate these arguments during " \
+			"Multiple values returned for the following arguments: "+
+				"status, instance_name, account_name, outpost_id, creation_time\n\n"+
+				"The provider will attempt to populate these arguments during "+
 				"the next terraform refresh or apply operation.",
 		)
 		return
@@ -759,58 +606,22 @@ func (r *CloudIntegrationTemplateResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	//state.RefreshComputedPropertyValues(ctx, &resp.Diagnostics, response)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-
 	// Set refreshed state
 	tflog.Debug(ctx, "Setting refreshed state")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *CloudIntegrationTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO: print diagnostic about how this isnt implemented yet
-
-	//defer util.PanicHandler(&resp.Diagnostics)
-
-	//// Read Terraform plan data into model
-	//var plan models.CloudIntegrationTemplateModel
-	//resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	//// Generate API request body from plan
-	//request := plan.ToUpdateRequest(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	//// Update integration
-	//response, err := r.client.EditIntegrationInstance(ctx, request)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Cloud Integration Template Update Error", // TODO: standardize this
-			err.Error(),
-		)
-		return
-	}
-
-	//// Refresh state values
-	//plan.RefreshComputedPropertyValues(&resp.Diagnostics, response)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	//// Set state to updated values
-	//resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+func (r *CloudIntegrationTemplateAzureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+	//resp.Diagnostics.AddWarning(
+	//	"Updating Not Supported",
+	//	//"Cloud integration templates do not support updates. If you wish to change 
+	//)
+	resp.State.RemoveResource(ctx)
 }
 
 // Delete deletes the resource and removes it from the Terraform state on success.
-func (r *CloudIntegrationTemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CloudIntegrationTemplateAzureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
-	resp.State.RemoveResource(ctx)
 }
-*/

@@ -69,21 +69,21 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 				Description: "Local path to provider configuration JSON file.",
 			},
 			"fqdn": schema.StringAttribute{
-				Optional:    true,
-				Description: fmt.Sprintf("The FQDN of your Cortex Cloud " +
-					"tenant. Can also be configured using the `%s`" +
+				Optional: true,
+				Description: fmt.Sprintf("The FQDN of your Cortex Cloud "+
+					"tenant. Can also be configured using the `%s`"+
 					"environment variable.", "CORTEX_FQDN"),
-					//"environment variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
+				//"environment variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
 			"api_url": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
 				Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
 					"You can retrieve this from the Cortex Cloud console by "+
 					"navigating to Settings > Configurations > Integrations > "+
 					"API Keys and clicking the \"Copy API URL\" button. Can "+
 					"also be configured using the `%s` environment "+
 					"variable.", "CORTEX_API_URL"),
-					//"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
+				//"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
 			},
 			"api_key": schema.StringAttribute{
 				Optional:  true,
@@ -106,7 +106,7 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 					"environment variable.",
 			},
 			"api_key_type": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
 				Description: "The type of API key provided. Defaults to " +
 					"`standard`. Must be set to `advanced` if configuring " +
 					"the provider with an advanced API key. When using an " +
@@ -158,15 +158,39 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 }
 
 func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		cloudOnboardingResources.NewCloudIntegrationTemplateResource,
-		appSecResources.NewApplicationSecurityRuleResource,
+	resources := []func() resource.Resource{}
+	tflog.Debug(ctx, "Registering Cloud Onboarding Resources")
+	resources = append(
+		resources, 
+		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
+		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
+	)
+	
+	tflog.Debug(ctx, "Registering Platform Resources")
+	resources = append(
+		resources, 
 		platformResources.NewAuthenticationSettingsResource,
 		platformResources.NewAssetGroupResource,
-	}
+	)
+	
+	tflog.Debug(ctx, "Registering AppSec Resources")
+	resources = append(
+		resources, 
+		appSecResources.NewApplicationSecurityRuleResource,
+	)
+
+	return resources
+	//return []func() resource.Resource{
+	//	cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
+	//	cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
+	//	appSecResources.NewApplicationSecurityRuleResource,
+	//	platformResources.NewAuthenticationSettingsResource,
+	//	platformResources.NewAssetGroupResource,
+	//}
 }
 
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	tflog.Debug(ctx, "Registering Data Sources")	
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
@@ -212,7 +236,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	apiKeyID := int(providerConfig.APIKeyID.ValueInt32())
 	apiKeyType := providerConfig.APIKeyType.ValueString()
 	sdkLogLevel := providerConfig.SDKLogLevel.ValueString()
-	
+
 	tflog.Debug(ctx, fmt.Sprintf("Using %s API key against API URL: %s", apiKeyType, apiURL))
 
 	// Set logger fields
@@ -248,7 +272,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	// Set the API URL logger field
-	// TODO: define a way to retrieve this value without first creating a 
+	// TODO: define a way to retrieve this value without first creating a
 	// client (or export)
 	ctx = tflog.SetField(ctx, "cortex_api_url", platformClient.APIURL())
 

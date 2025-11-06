@@ -3,9 +3,12 @@
 
 package models
 
+/*
 import (
 	"context"
+	"fmt"
 
+	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
@@ -13,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	//"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type CloudIntegrationTemplateModel struct {
-	//AccountDetails            types.Object `tfsdk:"account_details"`
+	AccountDetails            types.Object `tfsdk:"account_details"`
 	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
 	CloudProvider             types.String `tfsdk:"cloud_provider"`
 	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
@@ -32,9 +35,19 @@ type CloudIntegrationTemplateModel struct {
 	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
 	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
 	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
+	ARMTemplateURL            types.String `tfsdk:"arm_template_url"`
 }
 
-func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.CreateIntegrationTemplateRequest {
+func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.CreateIntegrationTemplateRequest {
+	tflog.Debug(ctx, "Executing ToCreateRequest")
+
+	//var accountDetails *cloudOnboardingTypes.AccountDetails = nil
+	var accountDetails cloudOnboardingTypes.AccountDetails
+	if !m.AccountDetails.IsNull() {
+		//tflog.Debug(ctx, "Error diagnostic in AccountDetails")
+		diagnostics.Append(m.AccountDetails.As(ctx, &accountDetails, basetypes.ObjectAsOptions{})...)
+	}
+
 	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
@@ -48,145 +61,187 @@ func (m *CloudIntegrationTemplateModel) ToCreateRequest(ctx context.Context, dia
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
 
 	if diagnostics.HasError() {
-		return cloudOnboardingTypes.CreateIntegrationTemplateRequest{}
+		return nil
 	}
 
-	request := cloudOnboardingTypes.CreateIntegrationTemplateRequest{
-		AdditionalCapabilities:  additionalCapabilities,
-		CloudProvider:           m.CloudProvider.ValueString(),
-		CollectionConfiguration: collectionConfiguration,
-		CustomResourcesTags:     customResourcesTags,
-		InstanceName:            m.InstanceName.ValueString(),
-		ScanMode:                m.ScanMode.ValueString(),
-		Scope:                   m.Scope.ValueString(),
-		ScopeModifications:      scopeModifications,
-	}
-
-	return request
-}
-
-func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.ListIntegrationInstancesRequest {
-	return cloudOnboardingTypes.ListIntegrationInstancesRequest{
-		FilterData: filterTypes.FilterData{
-			Filter: filterTypes.NewAndFilter(
-				filterTypes.NewSearchFilter(
-					cortexEnums.SearchFieldID.String(),
-					cortexEnums.SearchTypeEqualTo.String(),
-					m.TrackingGUID.ValueString(),
-				),
-				filterTypes.NewSearchFilter(
-					cortexEnums.SearchFieldStatus.String(),
-					cortexEnums.SearchTypeNotEqualTo.String(),
-					cortexEnums.IntegrationInstanceStatusPending.String(),
-				),
-			),
-			Paging: filterTypes.PagingFilter{
-				From: 0,
-				To:   1000,
-			},
-		},
-	}
-}
-
-func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.EditIntegrationInstanceRequest {
-	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
-	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
-
-	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
-	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
-
-	var customResourcesTags []cloudOnboardingTypes.Tag
-	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
-
-	var scopeModifications cloudOnboardingTypes.ScopeModifications
-	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
-
-	if diagnostics.HasError() {
-		return cloudOnboardingTypes.EditIntegrationInstanceRequest{}
-	}
-
-	return cloudOnboardingTypes.EditIntegrationInstanceRequest{
-		AdditionalCapabilities:  additionalCapabilities,
-		CloudProvider:           m.CloudProvider.ValueString(),
-		CollectionConfiguration: collectionConfiguration,
-		CustomResourcesTags:     customResourcesTags,
-		InstanceID:              m.TrackingGUID.ValueString(),
-		InstanceName:            m.InstanceName.ValueString(),
-		ScopeModifications:      scopeModifications,
-		ScanEnvID:               m.OutpostID.ValueString(),
-	}
-}
-
-func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.DeleteIntegrationInstanceRequest {
-	return cloudOnboardingTypes.DeleteIntegrationInstanceRequest{
-		IDs: []string{m.TrackingGUID.ValueString()},
-	}
-}
-
-// ----------------------------------------------------------------------------
-// Refresh Resource Attributes
-// ----------------------------------------------------------------------------
-
-func (m *CloudIntegrationTemplateModel) RefreshComputedPropertyValues(diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
-	var (
-		cloudFormationTemplateUrl = ""
-		err                       error
+	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
+		cloudOnboardingTypes.WithAccountDetails(&accountDetails),
+		cloudOnboardingTypes.WithAdditionalCapabilities(additionalCapabilities),
+		cloudOnboardingTypes.WithCloudProvider(m.CloudProvider.ValueString()),
+		cloudOnboardingTypes.WithCollectionConfiguration(collectionConfiguration),
+		cloudOnboardingTypes.WithCustomResourcesTags(customResourcesTags),
+		cloudOnboardingTypes.WithInstanceName(m.InstanceName.ValueString()),
+		cloudOnboardingTypes.WithScanMode(m.ScanMode.ValueString()),
+		cloudOnboardingTypes.WithScope(m.Scope.ValueString()),
+		cloudOnboardingTypes.WithScopeModifications(scopeModifications),
 	)
-	if m.CloudProvider.ValueString() == "AWS" {
-		cloudFormationTemplateUrl, err = response.GetTemplateUrl()
+}
+
+func (m *CloudIntegrationTemplateModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
+	var filter filterTypes.Filter
+	switch m.CloudProvider.ValueString() {
+	case enums.CloudProviderAWS.String():
+		filter = filterTypes.NewAndFilter(
+			filterTypes.NewSearchFilter(
+				cortexEnums.SearchFieldID.String(),
+				cortexEnums.SearchTypeEqualTo.String(),
+				m.TrackingGUID.ValueString(),
+			),
+			filterTypes.NewSearchFilter(
+				cortexEnums.SearchFieldStatus.String(),
+				cortexEnums.SearchTypeEqualTo.String(),
+				cortexEnums.IntegrationInstanceStatusPending.String(),
+			),
+		)
+	default:
+		filter = filterTypes.NewAndFilter(
+			filterTypes.NewSearchFilter(
+				cortexEnums.SearchFieldID.String(),
+				cortexEnums.SearchTypeEqualTo.String(),
+				m.TrackingGUID.ValueString(),
+			),
+			filterTypes.NewSearchFilter(
+				cortexEnums.SearchFieldStatus.String(),
+				cortexEnums.SearchTypeEqualTo.String(),
+				cortexEnums.IntegrationInstanceStatusPending.String(),
+			),
+		)
+	}
+
+	return cloudOnboardingTypes.NewListIntegrationInstancesRequest(
+		cloudOnboardingTypes.WithIntegrationFilterData(
+			filterTypes.FilterData{
+				Filter: filter,
+				Paging: filterTypes.PagingFilter{
+					From: 0,
+					To:   1000,
+				},
+			},
+		),
+	)
+}
+
+//func (m *CloudIntegrationTemplateModel) ToUpdateRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.EditIntegrationInstanceRequest {
+//	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
+//	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
+//
+//	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
+//	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
+//
+//	var customResourcesTags []cloudOnboardingTypes.Tag
+//	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
+//
+//	var scopeModifications cloudOnboardingTypes.ScopeModifications
+//	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
+//
+//	if diagnostics.HasError() {
+//		return cloudOnboardingTypes.EditIntegrationInstanceRequest{}
+//	}
+//
+//	return cloudOnboardingTypes.EditIntegrationInstanceRequest{
+//		AdditionalCapabilities:  additionalCapabilities,
+//		CloudProvider:           m.CloudProvider.ValueString(),
+//		CollectionConfiguration: collectionConfiguration,
+//		CustomResourcesTags:     customResourcesTags,
+//		InstanceID:              m.TrackingGUID.ValueString(),
+//		InstanceName:            m.InstanceName.ValueString(),
+//		ScopeModifications:      scopeModifications,
+//		ScanEnvID:               m.OutpostID.ValueString(),
+//	}
+//}
+//
+//func (m *CloudIntegrationTemplateModel) ToDeleteRequest(ctx context.Context, diagnostics *diag.Diagnostics) cloudOnboardingTypes.DeleteIntegrationInstanceRequest {
+//	return cloudOnboardingTypes.DeleteIntegrationInstanceRequest{
+//		IDs: []string{m.TrackingGUID.ValueString()},
+//	}
+//}
+
+func (m *CloudIntegrationTemplateModel) SetGeneratedValues(diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
+	tflog.Debug(context.Background(), "Executing SetGeneratedValues")
+
+	if response.Automated.TrackingGUID == nil {
+		m.TrackingGUID = types.StringNull()
+	} else {
+		m.TrackingGUID = types.StringValue(*response.Automated.TrackingGUID)
+	}
+
+	if response.Automated.Link == nil {
+		m.AutomatedDeploymentURL = types.StringNull()
+	} else {
+		m.AutomatedDeploymentURL = types.StringValue(*response.Automated.Link)
+	}
+
+	switch m.CloudProvider.ValueString() {
+	case enums.CloudProviderAWS.String():
+		tflog.Debug(context.Background(), "handling AWS values")
+
+		m.AccountDetails = types.ObjectNull(m.AccountDetails.AttributeTypes(context.Background()))
+		m.ARMTemplateURL = types.StringNull()
+
+		cloudFormationTemplateURL, err := response.GetCloudFormationTemplateURL()
 		if err != nil {
 			diagnostics.AddError(
-				"Error Parsing Template URL",
-				err.Error(),
-			)
-		}
-	}
-
-	m.TrackingGUID = types.StringValue(response.Automated.TrackingGuid)
-	m.AutomatedDeploymentURL = types.StringValue(response.Automated.Link)
-	m.ManualDeploymentURL = types.StringValue(response.Manual.CF)
-	m.CloudFormationTemplateURL = types.StringValue(cloudFormationTemplateUrl)
-}
-
-func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.ListIntegrationInstancesResponseWrapper) {
-	// TODO: move this check outside?
-	if len(response.Data) == 0 || len(response.Data) > 1 {
-		m.Status = types.StringNull()
-		m.InstanceName = types.StringNull()
-		m.OutpostID = types.StringNull()
-
-		if len(response.Data) == 0 {
-			diagnostics.AddWarning(
-				"Integration Status Unknown",
-				"Unable to retrieve computed values for the following arguments "+
-					"from the Cortex Cloud API: status, instance_name, account_name, "+
-					"outpost_id, creation_time\n\n"+
-					"The provider will attempt to populate these arguments during "+
-					"the next terraform apply operation.",
-			)
-		} else if len(response.Data) > 1 {
-			diagnostics.AddWarning(
-				"Integration Status Unknown",
-				"Multiple values returned for the following arguments: "+
-					"status, instance_name, account_name, outpost_id, creation_time\n\n"+
-					"The provider will attempt to populate these arguments during "+
-					"the next terraform refresh or apply operation.",
+				"Error Parsing CloudFormation Template URL",
+				fmt.Sprintf("Failed to parse CloudFormation template URL from API response: %s", err.Error()),
 			)
 		}
 
-		return
-	}
+		tflog.Debug(context.Background(), "setting cloud formation template URL")
+		m.CloudFormationTemplateURL = types.StringValue(cloudFormationTemplateURL)
 
-	marshalledResponse, err := response.Marshal()
-	if err != nil {
+		if response.Manual.CF != nil {
+			tflog.Debug(context.Background(), "setting manual deployment URL to Manual.CF")
+			m.ManualDeploymentURL = types.StringValue(*response.Manual.CF)
+		} else {
+			tflog.Debug(context.Background(), "setting manual deployment URL to nil")
+			m.ManualDeploymentURL = types.StringNull()
+		}
+	case enums.CloudProviderAzure.String():
+		tflog.Debug(context.Background(), "handling Azure values")
+
+		m.CloudFormationTemplateURL = types.StringNull()
+
+		trackingGUID, err := response.GetTrackingGUIDFromAzureResponse()
+		if err != nil {
+			diagnostics.AddError(
+				"Error Parsing Tracking GUID",
+				fmt.Sprintf("Failed to parse tracking GUID from API response: %s", err.Error()),
+			)
+		}
+
+		tflog.Debug(context.Background(), "setting tracking GUID")
+		m.TrackingGUID = types.StringValue(trackingGUID)
+
+		if response.Manual.ARM != nil {
+			tflog.Debug(context.Background(), "setting manual deployment URL to Manual.ARM")
+			m.ManualDeploymentURL = types.StringValue(*response.Manual.ARM)
+		} else {
+			tflog.Debug(context.Background(), "setting manual deployment URL to nil")
+			m.ManualDeploymentURL = types.StringNull()
+		}
+	default:
+		// TODO: return a "please send this to developers" message
 		diagnostics.AddError(
-			"Value Conversion Error", // TODO: standardize this
-			err.Error(),
+			"Error Setting Manual Deployment URL",
+			fmt.Sprintf("Invalid cloud provider \"%s\".", m.CloudProvider.ValueString()),
 		)
 		return
 	}
+}
 
-	data := marshalledResponse[0]
+func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.IntegrationInstance) {
+	tflog.Debug(context.Background(), "Executing RefreshConfiguredPropertyValues")
+
+	//if m.CloudProvider.ValueString() == enums.CloudProviderAzure.String() {
+	//	var accountDetails basetypes.ObjectValue
+	//	accountDetails, diags := types.ObjectValueFrom(ctx, m.AccountDetails.AttributeTypes(ctx), response.AccountName)
+	//	//m.AccountDetails = types.ObjectNull(
+	//	//	//	m.AccountDetails.AttributeTypes(ctx)
+	//	//	//	map[string]attr.Type{
+	//	//	//		"organization_id": types.StringType
+	//	//	//	}
+	//	//)
+	//}
 
 	var (
 		additionalCapabilities  basetypes.ObjectValue
@@ -195,42 +250,32 @@ func (m *CloudIntegrationTemplateModel) RefreshConfiguredPropertyValues(ctx cont
 		diags                   diag.Diagnostics
 	)
 
-	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), data.AdditionalCapabilities)
+	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), response.AdditionalCapabilities)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
-	// TODO: remove this conditional when API bug is fixed and CollectionConfiguration
-	// isnt returned as an empty string
-	if response.Data[0].CollectionConfiguration != "" {
-		collectionConfiguration, diags = types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), data.CollectionConfiguration)
-		diagnostics.Append(diags...)
-		if diagnostics.HasError() {
-			return
-		}
-	} else {
-		collectionConfiguration = types.ObjectNull(m.CollectionConfiguration.AttributeTypes(ctx))
-	}
-
-	tags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), data.CustomResourcesTags)
+	collectionConfiguration, diags = types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), response.CollectionConfiguration)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
+	tags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), response.CustomResourcesTags)
+	diagnostics.Append(diags...)
+	if diagnostics.HasError() {
+		return
+	}
+ 
+	//m.AccountDetails = types.ObjectNull(m.AccountDetails.AttributeTypes(ctx))
 	m.AdditionalCapabilities = additionalCapabilities
-	m.CloudProvider = types.StringValue(data.CloudProvider)
-	//m.CollectionConfiguration = collectionConfiguration
-	// TEMPORARY
-	if !collectionConfiguration.IsNull() {
-		m.CollectionConfiguration = collectionConfiguration
-	}
-	// END TEMPORARY
+	m.CloudProvider = types.StringValue(response.CloudProvider)
+	m.CollectionConfiguration = collectionConfiguration
 	m.CustomResourcesTags = tags
-	m.InstanceName = types.StringValue(data.InstanceName)
-	m.ScanMode = types.StringValue(data.Scan.ScanMethod)
-	m.Status = types.StringValue(data.Status)
-	// TODO: add OutpostId to IntegrationInstance struct?
-	m.OutpostID = types.StringValue(response.Data[0].OutpostID)
+	m.InstanceName = types.StringValue(response.InstanceName)
+	m.ScanMode = types.StringValue(response.Scan.ScanMethod)
+	m.Status = types.StringValue(response.Status)
+	m.OutpostID = types.StringValue(response.OutpostID)
 }
+*/
