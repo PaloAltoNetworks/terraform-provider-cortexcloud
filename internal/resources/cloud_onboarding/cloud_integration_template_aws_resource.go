@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -326,7 +328,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				},
 			},
 			"instance_name": schema.StringAttribute{
-				// TODO: add guidance on what happens when you dont populate this
+				// TODO: add guidance on results of empty value here
 				Description: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
 				MarkdownDescription: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
 				Optional: true,
@@ -383,9 +385,11 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. If enabled, the \"type\" and \"account_ids\" attributes must be configured as well.",
-								MarkdownDescription: "Whether to enable this scope modification. If enabled, the `type` and `account_ids` attributes must be configured as well.",
+								Description: "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"ACCOUNT\". If enabled, the \"type\" and \"account_ids\" attributes must be configured as well.",
+								MarkdownDescription: "Whether to enable this scope modification. Cannot be set to `true` if scope is set to `ACCOUNT`. If enabled, the `type` and `account_ids` attributes must be configured as well.",
 								Required:    true,
+								// TODO: add validation to prevent this from
+								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
 										true,
@@ -398,9 +402,11 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\". Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
-								MarkdownDescription: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
+								Description: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
+								MarkdownDescription: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
 								Optional:    true,
+								// TODO: add validation to prevent this from
+								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.String{
 									stringvalidator.OneOf(
 										enums.AllScopeModificationTypes()...,
@@ -408,10 +414,12 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"account_ids": schema.SetAttribute{
-								Description: "Account IDs to include or exclude from scans. Must be configured with at least 1 value if `enabled\" is set to \"true\".",
-								MarkdownDescription: "Account IDs to include or exclude from scans. Must be configured with at least 1 value if `enabled` is set to `true`.",
+								Description: "Account IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
+								MarkdownDescription: "Account IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.",
 								Optional:    true,
 								ElementType: types.StringType,
+								// TODO: add validation to prevent this from
+								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.Set{
 									setvalidator.SizeAtLeast(1),
 								},
@@ -559,24 +567,24 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				Default:     stringdefault.StaticString(enums.IntegrationInstanceStatusPending.String()),
 			},
 			"tracking_guid": schema.StringAttribute{
-				Description: "The instance ID value assigned to this template after creation.",
-				MarkdownDescription: "The instance ID value assigned to this template after creation.",
+				Description: "The unique ID value assigned to this template after creation.",
+				MarkdownDescription: "The unique ID value assigned to this template after creation.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"automated_deployment_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can execute the created template as a CloudFormation stack.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
-				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can execute the created template as a CloudFormation stack.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
+				Description: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
+				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"manual_deployment_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will start a download of the created template as a CloudFormation stack, which can then be uploaded to the CloudFormation console for execution.",
-				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will start a download of the created template as a CloudFormation stack, which can then be uploaded to the CloudFormation console for execution.",
+				Description: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.",
+				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -629,9 +637,29 @@ func (r *CloudIntegrationTemplateAwsResource) ModifyPlan(ctx context.Context, re
 		}
 		resp.Diagnostics.AddWarning(
 			"Manual Deletion Required for Cloud Integration Template Resources",
-			fmt.Sprintf("Terraform will remove this resource from the state, but cannot delete the cloud integration template with ID \"%s\" from Cortex due to API limitations. To complete the deletion, manually remove it in the Cortex UI under Settings > Data Sources. You may need to adjust filters to find templates with a 'PENDING' status.", state.TrackingGUID.ValueString()),
+			fmt.Sprintf("Destroying this resource will only remove it from the Terraform state. You may manually delete the template in the Cortex UI by navigating to Settings > Data Sources, right-clicking the record with the ID value \"%s\", and clicking \"Delete\". If you do not see the template in Data Sources, adjust the table filters to include rows with a status of \"PENDING\".", state.TrackingGUID.ValueString()),
 		)
 	}
+}
+
+func fetchTemplateAWS(ctx context.Context, diagnostics *diag.Diagnostics, sdkClient *cloudonboarding.Client, model models.CloudIntegrationTemplateAwsModel) []cortexTypes.IntegrationInstance {
+	tflog.Debug(ctx, "Generating fetch API request payload")
+	request := model.ToGetRequest(ctx, diagnostics)
+	if diagnostics.HasError() {
+		return []cortexTypes.IntegrationInstance{}
+	}
+
+	tflog.Debug(ctx, "Executing API request")
+	response, err := sdkClient.ListIntegrationInstances(ctx, request)
+	if err != nil {
+		diagnostics.AddError(
+			"Error Fetching Cloud Integration Template",
+			err.Error(),
+		)
+		return []cortexTypes.IntegrationInstance{}
+	}
+
+	return response
 }
 
 // Create creates the resource and sets the initial Terraform state.
@@ -663,6 +691,27 @@ func (r *CloudIntegrationTemplateAwsResource) Create(ctx context.Context, req re
 			err.Error(),
 		)
 		return
+	}
+	
+	// Fetch the created template and populate OutpostID
+	if createResponse.Automated.TrackingGUID != nil {
+		tflog.Debug(ctx, "Fetching created template")
+		plan.TrackingGUID = types.StringValue(*createResponse.Automated.TrackingGUID)
+		response := fetchTemplateAWS(ctx, &resp.Diagnostics, r.client, plan)	
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if len(response) == 1 && response[0].OutpostID != "" {
+			plan.OutpostID = types.StringValue(response[0].OutpostID)
+		} else {
+			plan.OutpostID = types.StringNull()
+		}
+	} else {
+		tflog.Debug(ctx, "No Tracking GUID found")
+
+		plan.TrackingGUID = types.StringNull()
+		plan.OutpostID = types.StringNull()
 	}
 
 	// Map response body to schema and populate Computed attribute values
@@ -732,10 +781,10 @@ func (r *CloudIntegrationTemplateAwsResource) Read(ctx context.Context, req reso
 		)
 		return
 	}
-
+	
 	// Refresh state values
 	tflog.Debug(ctx, "Refreshing configured attributes")
-	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, state, response[0])
+	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response[0])
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -748,6 +797,15 @@ func (r *CloudIntegrationTemplateAwsResource) Read(ctx context.Context, req reso
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *CloudIntegrationTemplateAwsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
+	
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_aws")
+	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
+	ctx = tflog.SetField(ctx, "resource_operation", "Read")
+	
+	// The resource should require replacement upon modifying any of the 
+	// configurable attributes, but as a fallback we will remove the resource
+	// from the state.
+	resp.State.RemoveResource(ctx)
 }
 
 // Delete deletes the resource and removes it from the Terraform state on success.
