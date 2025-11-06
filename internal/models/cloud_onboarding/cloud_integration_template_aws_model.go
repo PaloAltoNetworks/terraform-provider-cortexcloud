@@ -38,7 +38,7 @@ type CloudIntegrationTemplateAwsModel struct {
 	OutpostID                 types.String `tfsdk:"outpost_id"`
 	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
 	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
-	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
+	CloudFormationTemplateURL types.String `tfsdk:"cloudformation_template_url"`
 }
 
 type scopeModificationsAws struct {
