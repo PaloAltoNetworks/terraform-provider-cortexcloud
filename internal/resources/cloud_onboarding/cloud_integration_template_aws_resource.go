@@ -6,10 +6,8 @@ package cloud_onboarding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
@@ -21,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -62,17 +59,21 @@ func (r *CloudIntegrationTemplateAwsResource) Metadata(ctx context.Context, req 
 // Schema defines the schema for the resource.
 func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages a cloud onboarding integration template for " +
-			"AWS.",
+		Description: "Manages a cloud onboarding integration template for AWS.",
 		Attributes: map[string]schema.Attribute{
 			"additional_capabilities": schema.SingleNestedAttribute{
-				Description: "Define which additional security capabilities to enable. " +
-				"\n\n~>**NOTE**: adding additional capabilities " +
+				Description: "Define which additional security capabilities " +
+					"to enable. Note that adding additional capabilities " +
 					"typically requires additional cloud provider " +
 					"permissions. For more information, refer to the Cortex " +
 					"Cloud Posture Management documentation: " +
 					"https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions",
-				MarkdownDescription: "Define which additional security capabilities to enable. \n\n~>**NOTE** that adding additional capabilities typically requires additional cloud provider permissions. For more information, refer to the [Cortex Cloud Posture Management documentation](https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions).",
+				MarkdownDescription: "Define which additional security capabilities " +
+					"to enable. Note that adding additional capabilities " +
+					"typically requires additional cloud provider " +
+					"permissions. For more information, refer to the " +
+					"[Cortex Cloud Posture Management documentation]" +
+					"(https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions).",
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -80,11 +81,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						Description: "Whether to enable data security " +
 							"posture management, an agentless data security " +
 							"scanner that discovers, classifies, protects, " +
-							"and governs sensitive data. Default value is \"true\".",
-						MarkdownDescription: "Whether to enable data security " +
-							"posture management, an agentless data security " +
-							"scanner that discovers, classifies, protects, " +
-							"and governs sensitive data. Default value is `true`.",
+							"and governs sensitive data.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
@@ -93,20 +90,14 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						Description: "Whether to enable registry scanning, " +
 							"a container registry scanner that scans " +
 							"registry images for vulnerabilities, malware, " +
-							"and secrets. Default value is \"true\".",
-						MarkdownDescription: "Whether to enable registry scanning, " +
-							"a container registry scanner that scans " +
-							"registry images for vulnerabilities, malware, " +
-							"and secrets. Default value is `true`.",
+							"and secrets.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
 						Description: "Additional configuration options for" +
-							"registry scanning. Default value is \"true\".",
-						MarkdownDescription: "Additional configuration options for" +
-							"registry scanning. Default value is `true`.",
+							"registry scanning.",
 						Optional: true,
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
@@ -163,11 +154,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						Description: "Whether to enable agentless disk " +
 							"scanning to remotely detect and remediate " +
 							"vulnerabilities during the development " +
-							"lifecycle. Default value is \"true\".",
-						MarkdownDescription: "Whether to enable agentless disk " +
-							"scanning to remotely detect and remediate " +
-							"vulnerabilities during the development " +
-							"lifecycle. Default value is `true`.",
+							"lifecycle.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
@@ -177,12 +164,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 							"analyze your endpoint data to develop a " +
 							"baseline and raise Analytics and Analytics " +
 							"BIOC alerts when anomalies and malicious " +
-							"behaviors are detected. Default value is \"true\".",
-						MarkdownDescription: "Whether to enable XSIAM analytics to " +
-							"analyze your endpoint data to develop a " +
-							"baseline and raise Analytics and Analytics " +
-							"BIOC alerts when anomalies and malicious " +
-							"behaviors are detected. Default value is `true`.",
+							"behaviors are detected.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
@@ -226,25 +208,21 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 			},
 			"collection_configuration": schema.SingleNestedAttribute{
 				Description: "Configure log data collection.",
-				MarkdownDescription: "Configure log data collection.",
 				Optional:    true,
 				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"audit_logs": schema.SingleNestedAttribute{
 						Description: "Configuration for audit logs collection.",
-						MarkdownDescription: "Configuration for audit logs collection.",
 						Required:    true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable audit log collection. Default value is \"true\".",
-								MarkdownDescription: "Whether to enable audit log collection. Default value is `true`.",
+								Description: "Whether to enable audit log collection.",
 								Optional:    true,
 								Computed:    true,
 								Default:     booldefault.StaticBool(true),
 							},
 							"collection_method": schema.StringAttribute{
-								Description: fmt.Sprintf("Method of audit log collection. Default value is \"%s\".", enums.AuditLogCollectionMethodAutomated.String()),
-								MarkdownDescription: fmt.Sprintf("Method of audit log collection. Default value is `%s`.", enums.AuditLogCollectionMethodAutomated.String()),
+								Description: "Method of audit log collection.",
 								Optional:    true,
 								Computed:    true,
 								Default:     stringdefault.StaticString(enums.AuditLogCollectionMethodAutomated.String()),
@@ -256,9 +234,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 							},
 							"data_events": schema.BoolAttribute{
 								Description: "Whether to collect data " +
-									"events as part of audit log collection. Default value is \"false\".",
-								MarkdownDescription: "Whether to collect data " +
-									"events as part of audit log collection. Default value is `false`.",
+									"events as part of audit log collection.",
 								Optional: true,
 								Computed: true,
 								Default:  booldefault.StaticBool(false),
@@ -301,7 +277,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				Description: "Tags applied to any new resource created by " +
 					"Cortex Cloud in the cloud environment." +
 					"\n\nThe tag \"managed_by\" with the value " +
-					"\"paloaltonetworks\" will always be applied by default.",
+					"\"paloaltonetworks\" will be applied by default.",
 				MarkdownDescription: "Tags applied to any new resource created by " +
 					"Cortex Cloud in the cloud environment." +
 					"\n\nThe tag `managed_by` with the value " +
@@ -319,26 +295,26 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						},
 					},
 				},
-				// TODO: enforce unique keys
-				//Validators: []validator.Set{
-				//	//setvalidator.
-				//},
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"instance_name": schema.StringAttribute{
-				// TODO: add guidance on results of empty value here
-				Description: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
-				MarkdownDescription: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
+				Description: "Name of the integration instance. If left " +
+					"empty, the name will be auto-populated.",
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"scan_mode": schema.StringAttribute{
-				Description: fmt.Sprintf("Define what infrastructure the integration will use to scan cloud workloads. If set to \"MANAGED\", scanning will be done in the Cortex Cloud environment. If set to \"OUTPOST\", scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: \"%s\". \n\n~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.", strings.Join(enums.AllScanModes(), "\", \"")),
-				MarkdownDescription: fmt.Sprintf("Define what infrastructure the integration will use to scan cloud workloads. If set to `MANAGED`, scanning will be done in the Cortex Cloud environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: `%s`. \n\n~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.", strings.Join(enums.AllScanModes(), "`, `")),
+				Description: "Define what infrastructure the integration " +
+					"will use to scan cloud workloads. If set to" +
+					"\"MANAGED\", scanning will be done in the Cortex Cloud" +
+					"environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Default value is \"%s\". Possible values are: \"%s\"." +
+					"\n\nNOTE: Scanning with an outpost may require " +
+					"additional CSP permissions and may incur additional " +
+					"costs.",
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -356,8 +332,9 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				},
 			},
 			"scope": schema.StringAttribute{
-				Description: fmt.Sprintf("Define the scope for this integration instance. Possible values are: \"%s\"", strings.Join(enums.AllScopes(), "\", \"")),
-				MarkdownDescription: fmt.Sprintf("Define the scope for this integration instance. Possible values are: `%s`", strings.Join(enums.AllScopes(), "`, `")),
+				Description: "Define the scope for this integration " +
+					"instance. Must be one of `ACCOUNT`, `ORGANIZATION` or " +
+					"`ACCOUNT_GROUP`.",
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -371,25 +348,18 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 			"scope_modifications": schema.SingleNestedAttribute{
 				Description: "Define the scope of scans by including/excluding " +
 					"accounts or regions.",
-				MarkdownDescription: "Define the scope of scans by including/excluding " +
-					"accounts or regions.",
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"accounts": schema.SingleNestedAttribute{
 						Description: "Configuration for account-level scope " +
 							"modifications for AWS integrations.",
-						MarkdownDescription: "Configuration for account-level scope " +
-							"modifications for AWS integrations.",
 						Optional: true,
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"ACCOUNT\". If enabled, the \"type\" and \"account_ids\" attributes must be configured as well.",
-								MarkdownDescription: "Whether to enable this scope modification. Cannot be set to `true` if scope is set to `ACCOUNT`. If enabled, the `type` and `account_ids` attributes must be configured as well.",
+								Description: "Whether to enable this scope modification.",
 								Required:    true,
-								// TODO: add validation to prevent this from
-								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
 										true,
@@ -402,11 +372,8 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
-								MarkdownDescription: fmt.Sprintf("Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
+								Description: "Whether the specified account IDs should be included in the scope or excluded from the scope.",
 								Optional:    true,
-								// TODO: add validation to prevent this from
-								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.String{
 									stringvalidator.OneOf(
 										enums.AllScopeModificationTypes()...,
@@ -414,12 +381,9 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"account_ids": schema.SetAttribute{
-								Description: "Account IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
-								MarkdownDescription: "Account IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.",
+								Description: "Account IDs to include or exclude from scans",
 								Optional:    true,
 								ElementType: types.StringType,
-								// TODO: add validation to prevent this from
-								// being configured if scope set to `ACCOUNT`
 								Validators: []validator.Set{
 									setvalidator.SizeAtLeast(1),
 								},
@@ -443,8 +407,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 						Computed:    true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. If set to \"true\", the \"type\" and \"regions\" attributes must be configured as well.",
-								MarkdownDescription: "Whether to enable this scope modification. If set to `true`, the `type` and `regions` attributes must be configured as well.",
+								Description: "TODO",
 								Required:    true,
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
@@ -458,8 +421,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\". Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
-								MarkdownDescription: fmt.Sprintf("Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
+								Description: "TODO",
 								Optional:    true,
 								Validators: []validator.String{
 									stringvalidator.OneOf(
@@ -468,8 +430,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 								},
 							},
 							"regions": schema.SetAttribute{
-								Description: "Regions to include or exclude from scans. Must be configured with at least 1 value if \"enabled\" is set to \"true\".",
-								MarkdownDescription: "Regions to include or exclude from scans. Must be configured with at least 1 value if `enabled` is set to `true`.",
+								Description: "TODO",
 								Optional:    true,
 								ElementType: types.StringType,
 								Validators: []validator.Set{
@@ -549,10 +510,7 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				},
 			},
 			"outpost_id": schema.StringAttribute{
-				// TODO: allow user to specify the name of an outpost (if its unique)
-				// which we then go and retrieve the ID of.
-				Description: "The ID of the outpost that will be used for scanning. Must be configured if \"scan_mode\" is set to \"OUTPOST\".",
-				MarkdownDescription: "The ID of the outpost that will be used for scanning. Must be configured if `scan_mode` is set to `OUTPOST`.",
+				Description: "TODO",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
@@ -561,38 +519,33 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				},
 			},
 			"status": schema.StringAttribute{
-				Description: "Status of the template.",
-				MarkdownDescription: "Status of the template.",
+				Description: "Status of the integration.",
 				Computed:    true,
 				Default:     stringdefault.StaticString(enums.IntegrationInstanceStatusPending.String()),
 			},
 			"tracking_guid": schema.StringAttribute{
-				Description: "The unique ID value assigned to this template after creation.",
-				MarkdownDescription: "The unique ID value assigned to this template after creation.",
+				Description: "TODO (be sure to mention that this is the instance_id)",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"automated_deployment_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
-				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.\n\n~>**NOTE** This option requires you to already be logged into the AWS console.",
+				Description: "TODO",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"manual_deployment_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.",
-				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.",
+				Description: "TODO",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cloudformation_template_url": schema.StringAttribute{
-				Description: "The direct link to the CloudFormation template parsed from the \"manual_deployment_url\" attribute. This value may be supplied to the AWS Terraform Provider's \"aws_cloudformation_stack\" resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
-				MarkdownDescription: "The direct link to the CloudFormation template parsed from the `manual_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
+			"cloud_formation_template_url": schema.StringAttribute{
+				Description: "TODO",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -637,29 +590,9 @@ func (r *CloudIntegrationTemplateAwsResource) ModifyPlan(ctx context.Context, re
 		}
 		resp.Diagnostics.AddWarning(
 			"Manual Deletion Required for Cloud Integration Template Resources",
-			fmt.Sprintf("Destroying this resource will only remove it from the Terraform state. You may manually delete the template in the Cortex UI by navigating to Settings > Data Sources, right-clicking the record with the ID value \"%s\", and clicking \"Delete\". If you do not see the template in Data Sources, adjust the table filters to include rows with a status of \"PENDING\".", state.TrackingGUID.ValueString()),
+			fmt.Sprintf("Terraform will remove this resource from the state, but cannot delete the cloud integration template with ID \"%s\" from Cortex due to API limitations. To complete the deletion, manually remove it in the Cortex UI under Settings > Data Sources. You may need to adjust filters to find templates with a 'PENDING' status.", state.TrackingGUID.ValueString()),
 		)
 	}
-}
-
-func fetchTemplateAWS(ctx context.Context, diagnostics *diag.Diagnostics, sdkClient *cloudonboarding.Client, model models.CloudIntegrationTemplateAwsModel) []cortexTypes.IntegrationInstance {
-	tflog.Debug(ctx, "Generating fetch API request payload")
-	request := model.ToGetRequest(ctx, diagnostics)
-	if diagnostics.HasError() {
-		return []cortexTypes.IntegrationInstance{}
-	}
-
-	tflog.Debug(ctx, "Executing API request")
-	response, err := sdkClient.ListIntegrationInstances(ctx, request)
-	if err != nil {
-		diagnostics.AddError(
-			"Error Fetching Cloud Integration Template",
-			err.Error(),
-		)
-		return []cortexTypes.IntegrationInstance{}
-	}
-
-	return response
 }
 
 // Create creates the resource and sets the initial Terraform state.
@@ -691,27 +624,6 @@ func (r *CloudIntegrationTemplateAwsResource) Create(ctx context.Context, req re
 			err.Error(),
 		)
 		return
-	}
-	
-	// Fetch the created template and populate OutpostID
-	if createResponse.Automated.TrackingGUID != nil {
-		tflog.Debug(ctx, "Fetching created template")
-		plan.TrackingGUID = types.StringValue(*createResponse.Automated.TrackingGUID)
-		response := fetchTemplateAWS(ctx, &resp.Diagnostics, r.client, plan)	
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(response) == 1 && response[0].OutpostID != "" {
-			plan.OutpostID = types.StringValue(response[0].OutpostID)
-		} else {
-			plan.OutpostID = types.StringNull()
-		}
-	} else {
-		tflog.Debug(ctx, "No Tracking GUID found")
-
-		plan.TrackingGUID = types.StringNull()
-		plan.OutpostID = types.StringNull()
 	}
 
 	// Map response body to schema and populate Computed attribute values
@@ -774,15 +686,17 @@ func (r *CloudIntegrationTemplateAwsResource) Read(ctx context.Context, req reso
 		tflog.Debug(ctx, "API returned multiple results")
 		resp.Diagnostics.AddWarning(
 			"Multiple Cloud Integration Templates Returned",
-			"Cortex Cloud returned multiple results for this resource. " +
-				"Please report this issue to the provider developers.",
+			"Multiple values returned for the following arguments: "+
+				"status, instance_name, account_name, outpost_id, creation_time\n\n"+
+				"The provider will attempt to populate these arguments during "+
+				"the next terraform refresh or apply operation.",
 		)
 		return
 	}
-	
+
 	// Refresh state values
 	tflog.Debug(ctx, "Refreshing configured attributes")
-	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response[0])
+	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, state, response[0])
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -795,15 +709,6 @@ func (r *CloudIntegrationTemplateAwsResource) Read(ctx context.Context, req reso
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *CloudIntegrationTemplateAwsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
-	
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_aws")
-	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
-	ctx = tflog.SetField(ctx, "resource_operation", "Read")
-	
-	// The resource should require replacement upon modifying any of the 
-	// configurable attributes, but as a fallback we will remove the resource
-	// from the state.
-	resp.State.RemoveResource(ctx)
 }
 
 // Delete deletes the resource and removes it from the Terraform state on success.

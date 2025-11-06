@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+var managedByPANWTag = cloudOnboardingTypes.Tag{
+	Key: "managed_by",
+	Value: "paloaltonetworks",
+}
+
 type CloudIntegrationTemplateAwsModel struct {
 	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
 	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
@@ -33,7 +38,7 @@ type CloudIntegrationTemplateAwsModel struct {
 	OutpostID                 types.String `tfsdk:"outpost_id"`
 	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
 	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
-	CloudFormationTemplateURL types.String `tfsdk:"cloudformation_template_url"`
+	CloudFormationTemplateURL types.String `tfsdk:"cloud_formation_template_url"`
 }
 
 type scopeModificationsAws struct {
@@ -167,7 +172,7 @@ func (m *CloudIntegrationTemplateAwsModel) SetGeneratedValues(ctx context.Contex
 	}
 }
 
-func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
+func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, state CloudIntegrationTemplateAwsModel, apiResponse cloudOnboardingTypes.IntegrationInstance) {
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
@@ -187,7 +192,7 @@ func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx c
 		return
 	}
 
-	if !m.CustomResourcesTags.IsNull() {
+	if !state.CustomResourcesTags.IsNull() {
 		for idx, tag := range apiResponse.CustomResourcesTags {
 			if tag == managedByPANWTag {
 				if len(apiResponse.CustomResourcesTags) == 1 {
@@ -209,11 +214,16 @@ func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx c
 	}
 	m.CustomResourcesTags = customResourcesTags
 
-	if m.InstanceName.IsNull() && apiResponse.InstanceName == "" {
+	if state.InstanceName.IsNull() && apiResponse.InstanceName == "" {
 		m.InstanceName = types.StringNull()
 	} else {
 		m.InstanceName = types.StringValue(apiResponse.InstanceName)
 	}
+
+	// For now, we're keeping outpost_id as null if not configured by the user
+	// as we do not have a means of retrieving the default outpost from the
+	// platform
+	m.OutpostID = types.StringValue(apiResponse.OutpostID)
 
 	m.AdditionalCapabilities = additionalCapabilities
 	m.ScanMode = types.StringValue(apiResponse.Scan.ScanMethod)
