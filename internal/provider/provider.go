@@ -171,6 +171,9 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		resources, 
 		platformResources.NewAuthenticationSettingsResource,
 		platformResources.NewAssetGroupResource,
+		platformResources.NewUserGroupResource,
+		platformResources.NewUserResource,
+		platformResources.NewScopeResource,
 	)
 	
 	tflog.Debug(ctx, "Registering AppSec Resources")
@@ -180,13 +183,6 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 	)
 
 	return resources
-	//return []func() resource.Resource{
-	//	cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
-	//	cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
-	//	appSecResources.NewApplicationSecurityRuleResource,
-	//	platformResources.NewAuthenticationSettingsResource,
-	//	platformResources.NewAssetGroupResource,
-	//}
 }
 
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {

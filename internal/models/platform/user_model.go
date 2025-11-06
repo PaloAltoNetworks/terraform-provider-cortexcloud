@@ -6,134 +6,69 @@ package models
 import (
 	"context"
 
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// UserModel is the model for the User data source.
+// UserModel is the model for the user resource.
 type UserModel struct {
-	Email        types.String `tfsdk:"email"`
-	FirstName    types.String `tfsdk:"first_name"`
-	LastName     types.String `tfsdk:"last_name"`
-	RoleName     types.String `tfsdk:"role_name"`
-	LastLoggedIn types.Int64  `tfsdk:"last_logged_in"`
-	UserType     types.String `tfsdk:"user_type"`
-	Groups       types.List   `tfsdk:"groups"`
-	Scope        *ScopeModel  `tfsdk:"scope"`
+	Email        types.String       `tfsdk:"user_email"`
+	FirstName    types.String       `tfsdk:"user_first_name"`
+	LastName     types.String       `tfsdk:"user_last_name"`
+	PhoneNumber  types.String       `tfsdk:"phone_number"`
+	Status       types.String       `tfsdk:"status"`
+	RoleName     types.String       `tfsdk:"role_name"`
+	LastLoggedIn types.Int64        `tfsdk:"last_logged_in"`
+	Hidden       types.Bool         `tfsdk:"hidden"`
+	UserType     types.String       `tfsdk:"user_type"`
+	Groups       []NestedGroupModel `tfsdk:"groups"`
 }
 
-// ScopeModel is the model for the Scope object.
-type ScopeModel struct {
-	Endpoints   *EndpointsModel   `tfsdk:"endpoints"`
-	CasesIssues *CasesIssuesModel `tfsdk:"cases_issues"`
-}
-
-// EndpointsModel is the model for the Endpoints object.
-type EndpointsModel struct {
-	EndpointGroups *EndpointGroupsModel `tfsdk:"endpoint_groups"`
-	EndpointTags   *EndpointTagsModel   `tfsdk:"endpoint_tags"`
-	Mode           types.String         `tfsdk:"mode"`
-}
-
-// EndpointGroupsModel is the model for the EndpointGroups object.
-type EndpointGroupsModel struct {
-	IDs  types.List   `tfsdk:"ids"`
-	Mode types.String `tfsdk:"mode"`
-}
-
-// EndpointTagsModel is the model for the EndpointTags object.
-type EndpointTagsModel struct {
-	IDs  types.List   `tfsdk:"ids"`
-	Mode types.String `tfsdk:"mode"`
-}
-
-// CasesIssuesModel is the model for the CasesIssues object.
-type CasesIssuesModel struct {
-	IDs  types.List   `tfsdk:"ids"`
-	Mode types.String `tfsdk:"mode"`
-}
-
-// ToGetRequest converts the UserModel to a GetUserRequest.
-func (m *UserModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *platformTypes.GetUserRequest {
-	return &platformTypes.GetUserRequest{
-		Email: m.Email.ValueString(),
+// ToEditRequest converts the model to an IamUserEditRequest for the SDK.
+func (m *UserModel) ToEditRequest() platformtypes.IamUserEditRequest {
+	var groups []string
+	for _, g := range m.Groups {
+		if !g.GroupID.IsNull() && !g.GroupID.IsUnknown() {
+			groups = append(groups, g.GroupID.ValueString())
+		}
+	}
+	return platformtypes.IamUserEditRequest{
+		FirstName:   m.FirstName.ValueStringPointer(),
+		LastName:    m.LastName.ValueStringPointer(),
+		RoleId:      m.RoleName.ValueStringPointer(),
+		PhoneNumber: m.PhoneNumber.ValueStringPointer(),
+		Status:      m.Status.ValueStringPointer(),
+		Hidden:      m.Hidden.ValueBoolPointer(),
+		UserGroups:  groups,
 	}
 }
 
-// RefreshFromRemote refreshes the UserModel with the response from the API.
-func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, resp *platformTypes.User) {
-	tflog.Debug(ctx, "Refreshing user model from remote")
-	m.Email = types.StringValue(resp.Email)
-	m.FirstName = types.StringValue(resp.FirstName)
-	m.LastName = types.StringValue(resp.LastName)
-	m.RoleName = types.StringValue(resp.RoleName)
-	m.LastLoggedIn = types.Int64Value(int64(resp.LastLoggedIn))
-	m.UserType = types.StringValue(resp.UserType)
-
-	tflog.Trace(ctx, "Converting groups to Terraform type")
-	groups, d := types.ListValueFrom(ctx, types.StringType, resp.Groups)
-	diags.Append(d...)
-	if diags.HasError() {
+// RefreshFromRemote populates the model from the SDK's IamUser object.
+func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformtypes.IamUser) {
+	if remote == nil {
+		diags.AddError("User not found", "The requested user does not exist.")
 		return
 	}
-	m.Groups = groups
+	m.Email = types.StringValue(remote.Email)
+	m.FirstName = types.StringValue(remote.FirstName)
+	m.LastName = types.StringValue(remote.LastName)
+	m.PhoneNumber = types.StringValue(remote.PhoneNumber)
+	m.Status = types.StringValue(remote.Status)
+	m.RoleName = types.StringValue(remote.RoleName)
+	m.LastLoggedIn = types.Int64Value(remote.LastLoggedIn)
+	m.Hidden = types.BoolValue(remote.Hidden)
+	m.UserType = types.StringValue(remote.UserType)
 
-	tflog.Trace(ctx, "Initializing scope models if nil")
-	if m.Scope == nil {
-		m.Scope = &ScopeModel{}
-	}
-	if m.Scope.Endpoints == nil {
-		m.Scope.Endpoints = &EndpointsModel{}
-	}
-	if m.Scope.Endpoints.EndpointGroups == nil {
-		m.Scope.Endpoints.EndpointGroups = &EndpointGroupsModel{}
-	}
-	if m.Scope.Endpoints.EndpointTags == nil {
-		m.Scope.Endpoints.EndpointTags = &EndpointTagsModel{}
-	}
-	if m.Scope.CasesIssues == nil {
-		m.Scope.CasesIssues = &CasesIssuesModel{}
-	}
-
-	tflog.Trace(ctx, "Converting endpoint group IDs to Terraform type")
-	if resp.Scope.Endpoints.EndpointGroups.IDs != nil {
-		endpointGroupsIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.Endpoints.EndpointGroups.IDs)
-		diags.Append(d...)
-		if diags.HasError() {
-			return
-		}
-		m.Scope.Endpoints.EndpointGroups.IDs = endpointGroupsIDs
+	if len(remote.Groups) == 0 {
+		m.Groups = nil
 	} else {
-		m.Scope.Endpoints.EndpointGroups.IDs = types.ListNull(types.StringType)
-	}
-	m.Scope.Endpoints.EndpointGroups.Mode = types.StringValue(resp.Scope.Endpoints.EndpointGroups.Mode)
-
-	tflog.Trace(ctx, "Converting endpoint tag IDs to Terraform type")
-	if resp.Scope.Endpoints.EndpointTags.IDs != nil {
-		endpointTagsIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.Endpoints.EndpointTags.IDs)
-		diags.Append(d...)
-		if diags.HasError() {
-			return
+		m.Groups = make([]NestedGroupModel, len(remote.Groups))
+		for i, g := range remote.Groups {
+			m.Groups[i] = NestedGroupModel{
+				GroupID:   types.StringValue(g.GroupID),
+				GroupName: types.StringValue(g.GroupName),
+			}
 		}
-		m.Scope.Endpoints.EndpointTags.IDs = endpointTagsIDs
-	} else {
-		m.Scope.Endpoints.EndpointTags.IDs = types.ListNull(types.StringType)
 	}
-	m.Scope.Endpoints.EndpointTags.Mode = types.StringValue(resp.Scope.Endpoints.EndpointTags.Mode)
-	m.Scope.Endpoints.Mode = types.StringValue(resp.Scope.Endpoints.Mode)
-
-	tflog.Trace(ctx, "Converting cases/issues IDs to Terraform type")
-	if resp.Scope.CasesIssues.IDs != nil {
-		casesIssuesIDs, d := types.ListValueFrom(ctx, types.StringType, resp.Scope.CasesIssues.IDs)
-		diags.Append(d...)
-		if diags.HasError() {
-			return
-		}
-		m.Scope.CasesIssues.IDs = casesIssuesIDs
-	} else {
-		m.Scope.CasesIssues.IDs = types.ListNull(types.StringType)
-	}
-	m.Scope.CasesIssues.Mode = types.StringValue(resp.Scope.CasesIssues.Mode)
 }
