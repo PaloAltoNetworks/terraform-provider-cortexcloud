@@ -30,7 +30,7 @@ type OutpostsDataSourceModel struct {
 }
 
 // ToListRequest creates a ListOutpostsRequest from the data source's filters.
-func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
+func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostsDataSourceModel")
 
 	var filters []filterTypes.Filter
@@ -99,17 +99,25 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 		))
 	}
 
-	return cloudOnboardingTypes.ListOutpostsRequest{
-		FilterData: filterTypes.FilterData{
-			Filter: filterTypes.NewAndFilter(
-				filters...,
-			),
-			Paging: filterTypes.PagingFilter{
-				From: 0,
-				To:   1000,
+	return cloudOnboardingTypes.NewListOutpostsRequest(
+		cloudOnboardingTypes.WithOutpostFilterData(
+			filterTypes.FilterData{
+				Filter: filterTypes.NewAndFilter(
+					filters...,
+				),
+				Paging: filterTypes.PagingFilter{
+					From: 0,
+					To:   1000,
+				},
+				Sort: []filterTypes.SortFilter{
+					{
+						Field: cortexEnums.SearchFieldInstanceName.String(),
+						Order: "ASC",
+					},
+				},
 			},
-		},
-	}
+		),
+	)
 }
 
 // RefreshFromRemote populates the model from a list of SDK Outpost objects.

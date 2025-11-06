@@ -23,24 +23,32 @@ type OutpostModel struct {
 }
 
 // ToListRequest creates a ListOutpostsRequest to find a single outpost by ID.
-func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
+func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostModel")
 
-	return cloudOnboardingTypes.ListOutpostsRequest{
-		FilterData: filterTypes.FilterData{
-			Paging: filterTypes.PagingFilter{
-				From: 0,
-				To:   1000,
-			},
-			Filter: filterTypes.NewAndFilter(
-				filterTypes.NewSearchFilter(
-					cortexEnums.SearchFieldOutpostID.String(),
-					cortexEnums.SearchTypeWildcard.String(),
-					m.ID.ValueString(),
+	return cloudOnboardingTypes.NewListOutpostsRequest(
+		cloudOnboardingTypes.WithOutpostFilterData(
+			filterTypes.FilterData{
+				Filter: filterTypes.NewAndFilter(
+					filterTypes.NewSearchFilter(
+						cortexEnums.SearchFieldOutpostID.String(),
+						cortexEnums.SearchTypeWildcard.String(),
+						m.ID.ValueString(),
+					),
 				),
-			),
-		},
-	}
+				Paging: filterTypes.PagingFilter{
+					From: 0,
+					To:   1000,
+				},
+				Sort: []filterTypes.SortFilter{
+					{
+						Field: cortexEnums.SearchFieldInstanceName.String(),
+						Order: "ASC",
+					},
+				},
+			},
+		),
+	)
 }
 
 // RefreshFromRemote populates the model from a single SDK Outpost object.

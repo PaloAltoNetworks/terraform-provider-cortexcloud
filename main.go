@@ -15,13 +15,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/provider"
 )
 
-// var (
-//
-//	buildVersion string = "unknown"
-//	buildTime    string = "unknown"
-//	goVersion    string = "unknown"
-//
-// )
 var (
 	GitCommit           = "NOCOMMIT"
 	CortexServerVersion = "UNKNOWN"
@@ -31,10 +24,6 @@ var (
 )
 
 func logBuildInfo() {
-	//if info, ok := debug.ReadBuildInfo(); ok {
-	//	goVersion = info.GoVersion
-	//}
-
 	log.Printf("{ \"GitCommit\": \"%s\", \"CortexServerVersion\": \"%s\", \"CortexServerVersion\": \"%s\", \"GoVersion\": \"%s\", \"BuildDate\": \"%s\"}", GitCommit, CortexServerVersion, CortexPAPIVersion, GoVersion, BuildDate)
 }
 

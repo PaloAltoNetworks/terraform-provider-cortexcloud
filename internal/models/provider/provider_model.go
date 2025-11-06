@@ -25,11 +25,11 @@ import (
 
 type CortexCloudProviderModel struct {
 	ConfigFile           types.String `tfsdk:"config_file"`
-	FQDN         types.String `tfsdk:"fqdn"`
-	APIURL         types.String `tfsdk:"api_url"`
-	APIKey         types.String `tfsdk:"api_key"`
-	APIKeyID       types.Int32  `tfsdk:"api_key_id"`
-	APIKeyType   types.String `tfsdk:"api_key_type"`
+	FQDN                 types.String `tfsdk:"fqdn"`
+	APIURL               types.String `tfsdk:"api_url"`
+	APIKey               types.String `tfsdk:"api_key"`
+	APIKeyID             types.Int32  `tfsdk:"api_key_id"`
+	APIKeyType           types.String `tfsdk:"api_key_type"`
 	SkipSSLVerify        types.Bool   `tfsdk:"skip_ssl_verify"`
 	SDKLogLevel          types.String `tfsdk:"sdk_log_level"`
 	RequestTimeout       types.Int32  `tfsdk:"request_timeout"`
@@ -165,11 +165,11 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 	}
 
 	config := struct {
-		FQDN               *string `json:"fqdn"`
-		APIURL 				*string `json:"api_url"`
+		FQDN                 *string `json:"fqdn"`
+		APIURL               *string `json:"api_url"`
 		APIKey               *string `json:"api_key"`
 		APIKeyID             *int32  `json:"api_key_id"`
-		APIKeyType             *string `json:"api_key_type"`
+		APIKeyType           *string `json:"api_key_type"`
 		SkipSSLVerify        *bool   `json:"skip_ssl_verify"`
 		SDKLogLevel          *string `json:"sdk_log_level"`
 		RequestTimeout       *int32  `json:"request_timeout"`
