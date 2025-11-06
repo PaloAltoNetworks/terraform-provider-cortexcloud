@@ -6,8 +6,10 @@ package models
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
@@ -30,8 +32,7 @@ type CloudIntegrationTemplateAzureModel struct {
 	Status                    types.String `tfsdk:"status"`
 	TrackingGUID              types.String `tfsdk:"tracking_guid"`
 	OutpostID                 types.String `tfsdk:"outpost_id"`
-	AutomatedDeploymentURL    types.String `tfsdk:"automated_deployment_url"`
-	ManualDeploymentURL       types.String `tfsdk:"manual_deployment_url"`
+	TerraformModuleURL       types.String `tfsdk:"terraform_module_url"`
 	ARMTemplateURL            types.String `tfsdk:"arm_template_url"`
 }
 
@@ -64,28 +65,33 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
 	// TODO: figure out how to handle this without the intermediate types
-	var scopeModifications scopeModificationsAzure
-	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModifications, basetypes.ObjectAsOptions{})...)
+	var scopeModificationsValue scopeModificationsAzure
+	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModificationsValue, basetypes.ObjectAsOptions{})...)
 
-	sm := cloudOnboardingTypes.ScopeModifications{}
-	if scopeModifications.Regions != nil {
-		sm.Regions = &cloudOnboardingTypes.ScopeModificationRegions{
-			Enabled: scopeModifications.Regions.Enabled,
-			Type: scopeModifications.Regions.Type,
-			Regions: scopeModifications.Regions.Regions,
+	scopeModifications := cloudOnboardingTypes.ScopeModifications{}
+	if scopeModificationsValue.Regions != nil {
+		scopeModifications.Regions = &cloudOnboardingTypes.ScopeModificationRegions{
+			Enabled: scopeModificationsValue.Regions.Enabled,
+			Type: scopeModificationsValue.Regions.Type,
+			Regions: scopeModificationsValue.Regions.Regions,
 		}
 	}
-	if scopeModifications.Subscriptions != nil {
-		sm.Accounts = &cloudOnboardingTypes.ScopeModificationGeneric{
-			Enabled: scopeModifications.Subscriptions.Enabled,
-			Type: scopeModifications.Subscriptions.Type,
-			SubscriptionIDs: scopeModifications.Subscriptions.SubscriptionIDs,
+	if scopeModificationsValue.Subscriptions != nil {
+		scopeModifications.Accounts = &cloudOnboardingTypes.ScopeModificationGeneric{
+			Enabled: scopeModificationsValue.Subscriptions.Enabled,
+			Type: scopeModificationsValue.Subscriptions.Type,
+			SubscriptionIDs: scopeModificationsValue.Subscriptions.SubscriptionIDs,
 		}
 	}
 
 	if diagnostics.HasError() {
 		return nil
 	}
+	
+	if !slices.Contains(customResourcesTags, managedByPANWTag) {
+		customResourcesTags = append(customResourcesTags, managedByPANWTag)
+	}
+
 
 	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
 		cloudOnboardingTypes.WithAccountDetails(&accountDetails),
@@ -96,7 +102,7 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 		cloudOnboardingTypes.WithInstanceName(m.InstanceName.ValueString()),
 		cloudOnboardingTypes.WithScanMode(m.ScanMode.ValueString()),
 		cloudOnboardingTypes.WithScope(m.Scope.ValueString()),
-		cloudOnboardingTypes.WithScopeModifications(sm),
+		cloudOnboardingTypes.WithScopeModifications(scopeModifications),
 	)
 }
 
@@ -132,18 +138,6 @@ func (m *CloudIntegrationTemplateAzureModel) ToGetRequest(ctx context.Context, d
 func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	ctx = tflog.SetField(ctx, "resource_operation", "SetGeneratedValues")
 
-	if response.Automated.TrackingGUID == nil {
-		m.TrackingGUID = types.StringNull()
-	} else {
-		m.TrackingGUID = types.StringValue(*response.Automated.TrackingGUID)
-	}
-
-	if response.Automated.Link == nil {
-		m.AutomatedDeploymentURL = types.StringNull()
-	} else {
-		m.AutomatedDeploymentURL = types.StringValue(*response.Automated.Link)
-	}
-
 	trackingGUID, err := response.GetTrackingGUIDFromAzureResponse()
 	if err != nil {
 		diagnostics.AddError(
@@ -155,59 +149,74 @@ func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Cont
 	tflog.Debug(context.Background(), "Setting tracking GUID")
 	m.TrackingGUID = types.StringValue(trackingGUID)
 
-	if response.Manual.ARM != nil {
-		tflog.Debug(context.Background(), "Setting manual deployment URL to Manual.ARM")
-		m.ManualDeploymentURL = types.StringValue(*response.Manual.ARM)
+		m.TerraformModuleURL = types.StringValue(*response.Manual.TF)
+
+	if response.Manual.TF != nil {
+		tflog.Debug(context.Background(), "Setting Terraform module URL")
+		m.TerraformModuleURL = types.StringValue(*response.Manual.TF)
 	} else {
-		tflog.Debug(context.Background(), "Setting manual deployment URL to nil")
-		m.ManualDeploymentURL = types.StringNull()
+		tflog.Debug(context.Background(), "Terraform module URL not found, setting Terraform deployment URL to nil")
+		m.TerraformModuleURL = types.StringNull()
+	}
+	
+	if response.Manual.ARM != nil {
+		tflog.Debug(context.Background(), "Setting ARM deployment URL")
+		m.ARMTemplateURL = types.StringValue(*response.Manual.ARM)
+	} else {
+		tflog.Debug(context.Background(), "ARM deployment URL not found, setting ARM deployment URL to nil")
+		m.ARMTemplateURL = types.StringNull()
 	}
 }
 
-func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.IntegrationInstance) {
+func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
-		//accountDetails            basetypes.ObjectValue
 		additionalCapabilities  basetypes.ObjectValue
-		//collectionConfiguration basetypes.ObjectValue
-		tags                    basetypes.SetValue
 		diags                   diag.Diagnostics
+		customResourcesTags = types.SetNull(types.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				"key": types.StringType,
+				"value": types.StringType,
+			},
+		})
 	)
 
-	//accountDetails, diags = types.ObjectValueFrom(ctx, m.AccountDetails.AttributeTypes(ctx), response.AccountDetails)
-	//diagnostics.Append(diags...)
-	//if diagnostics.HasError() {
-	//	return
-	//}
-
-	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), response.AdditionalCapabilities)
+	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), apiResponse.AdditionalCapabilities)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
-	//collectionConfiguration, diags = types.ObjectValueFrom(ctx, m.CollectionConfiguration.AttributeTypes(ctx), response.CollectionConfiguration)
-	//diagnostics.Append(diags...)
-	//if diagnostics.HasError() {
-	//	return
-	//}
+	if !m.CustomResourcesTags.IsNull() {
+		for idx, tag := range apiResponse.CustomResourcesTags {
+			if tag == managedByPANWTag {
+				if len(apiResponse.CustomResourcesTags) == 1 {
+					apiResponse.CustomResourcesTags = []cloudOnboardingTypes.Tag{}
+				} else {
+					apiResponse.CustomResourcesTags = append(
+						apiResponse.CustomResourcesTags[:idx],
+						apiResponse.CustomResourcesTags[idx+1:]...,
+					)
+				}
+			}
+		}
 
-	tags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), response.CustomResourcesTags)
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
-		return
+		customResourcesTags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), apiResponse.CustomResourcesTags)
+		diagnostics.Append(diags...)
+		if diagnostics.HasError() {
+			return
+		}
 	}
- 
-	//m.AccountDetails = accountDetails
+	m.CustomResourcesTags = customResourcesTags
+
+	if m.InstanceName.IsNull() && apiResponse.InstanceName == "" {
+		m.InstanceName = types.StringNull()
+	} else {
+		m.InstanceName = types.StringValue(apiResponse.InstanceName)
+	}
+
 	m.AdditionalCapabilities = additionalCapabilities
-	//m.CollectionConfiguration = collectionConfiguration
-	m.CustomResourcesTags = tags
-	m.InstanceName = types.StringValue(response.InstanceName)
-	m.ScanMode = types.StringValue(response.Scan.ScanMethod)
-	m.Status = types.StringValue(response.Status)
-	// For now, we're keeping outpost_id as null if not configured by the user
-	// as we do not have a means of retrieving the default outpost from the
-	// platform
-	m.OutpostID = types.StringValue(response.OutpostID)
+	m.ScanMode = types.StringValue(apiResponse.Scan.ScanMethod)
+	m.Status = types.StringValue(apiResponse.Status)
 }

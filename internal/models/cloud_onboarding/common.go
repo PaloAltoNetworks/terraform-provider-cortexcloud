@@ -4,7 +4,7 @@
 package models
 
 import (
-	//"github.com/hashicorp/terraform-plugin-framework/types"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 )
 
 type scopeModificationRegions struct {
@@ -12,3 +12,9 @@ type scopeModificationRegions struct {
 	Type    *string   `json:"type,omitempty" tfsdk:"type"`
 	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 }
+
+var managedByPANWTag = cloudOnboardingTypes.Tag{
+	Key: "managed_by",
+	Value: "paloaltonetworks",
+}
+
