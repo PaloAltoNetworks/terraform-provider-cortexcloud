@@ -165,6 +165,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewAssetGroupResource,
 		platformResources.NewUserGroupResource,
 		platformResources.NewUserResource,
+		platformResources.NewScopeResource,
 	}
 }
 

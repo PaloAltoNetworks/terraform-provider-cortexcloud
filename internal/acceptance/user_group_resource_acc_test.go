@@ -8,14 +8,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-)
-
-const (
-	AccTestUserGroup1Name               = "test-group-2"
-	AccTestUserGroup1NameUpdated        = "test-group-2-updated"
-	AccTestUserGroup1Description        = "This is a test user group."
-	AccTestUserGroup1DescriptionUpdated = "This is an updated test user group."
 )
 
 func TestAcc_UserGroupResource(t *testing.T) {
@@ -23,21 +17,27 @@ func TestAcc_UserGroupResource(t *testing.T) {
 
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 	resourceName := "cortexcloud_user_group.test"
+
+	suffix := acctest.RandString(6)
+	nameCreate := fmt.Sprintf("test-group-%s", suffix)
+	nameUpdate := fmt.Sprintf("test-group-%s-updated", suffix)
+
 	resourceConfigCreate := fmt.Sprintf(
 		`resource "cortexcloud_user_group" "test" {
-			group_name = %s
+			group_name  = %s
 			description = %s
 		}`,
-		strconv.Quote(AccTestUserGroup1Name),
-		strconv.Quote(AccTestUserGroup1Description),
+		strconv.Quote(nameCreate),
+		strconv.Quote("This is a test user group."),
 	)
+
 	resourceConfigUpdate := fmt.Sprintf(
 		`resource "cortexcloud_user_group" "test" {
-			group_name = %s
+			group_name  = %s
 			description = %s
 		}`,
-		strconv.Quote(AccTestUserGroup1NameUpdated),
-		strconv.Quote(AccTestUserGroup1DescriptionUpdated),
+		strconv.Quote(nameUpdate),
+		strconv.Quote("This is an updated test user group."),
 	)
 
 	t.Log("Running tests")
@@ -46,21 +46,24 @@ func TestAcc_UserGroupResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create and Read testing
+			// Create & Read
 			{
 				Config: providerConfig + resourceConfigCreate,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "group_name", AccTestUserGroup1Name),
-					resource.TestCheckResourceAttr(resourceName, "description", AccTestUserGroup1Description),
+					resource.TestCheckResourceAttr(resourceName, "group_name", nameCreate),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a test user group."),
 				),
 			},
-			// Update and Read testing
 			{
 				Config: providerConfig + resourceConfigUpdate,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "group_name", AccTestUserGroup1NameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", AccTestUserGroup1DescriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "group_name", nameUpdate),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is an updated test user group."),
 				),
+			},
+			{
+				Config:  providerConfig,
+				Destroy: true,
 			},
 		},
 	})
