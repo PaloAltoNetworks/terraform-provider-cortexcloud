@@ -3,12 +3,12 @@
 page_title: "cortexcloud_user Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Gets a Cortex Cloud user.
+  Provides visibility into a user's access to the Cortex Cloud platform.
 ---
 
 # cortexcloud_user (Data Source)
 
-Gets a Cortex Cloud user.
+Provides visibility into a user's access to the Cortex Cloud platform.
 
 
 
@@ -17,24 +17,57 @@ Gets a Cortex Cloud user.
 
 ### Required
 
-- `user_email` (String) The email of the user.
+- `email` (String) The email of the user.
 
 ### Read-Only
 
-- `groups` (Attributes List) The groups of the user. (see [below for nested schema](#nestedatt--groups))
-- `hidden` (Boolean) The hidden status of the user.
-- `last_logged_in` (Number) The last logged in timestamp of the user.
-- `phone_number` (String) The phone number of the user.
+- `first_name` (String) The first name of the user.
+- `groups` (List of String) The groups of the user.
+- `last_logged_in` (Number) The last logged in time of the user.
+- `last_name` (String) The last name of the user.
 - `role_name` (String) The role name of the user.
-- `status` (String) The status of the user.
-- `user_first_name` (String) The first name of the user.
-- `user_last_name` (String) The last name of the user.
-- `user_type` (String) The user type of the user.
+- `scope` (Attributes) The scope of the user. (see [below for nested schema](#nestedatt--scope))
+- `user_type` (String) The type of the user.
 
-<a id="nestedatt--groups"></a>
-### Nested Schema for `groups`
+<a id="nestedatt--scope"></a>
+### Nested Schema for `scope`
 
 Read-Only:
 
-- `group_id` (String) The ID of the nested group.
-- `group_name` (String) The name of the nested group.
+- `cases_issues` (Attributes) The cases issues scope of the user. (see [below for nested schema](#nestedatt--scope--cases_issues))
+- `endpoints` (Attributes) The endpoints scope of the user. (see [below for nested schema](#nestedatt--scope--endpoints))
+
+<a id="nestedatt--scope--cases_issues"></a>
+### Nested Schema for `scope.cases_issues`
+
+Read-Only:
+
+- `ids` (List of String) The ids of the cases issues.
+- `mode` (String) The mode of the cases issues.
+
+
+<a id="nestedatt--scope--endpoints"></a>
+### Nested Schema for `scope.endpoints`
+
+Read-Only:
+
+- `endpoint_groups` (Attributes) The endpoint groups scope of the user. (see [below for nested schema](#nestedatt--scope--endpoints--endpoint_groups))
+- `endpoint_tags` (Attributes) The endpoint tags scope of the user. (see [below for nested schema](#nestedatt--scope--endpoints--endpoint_tags))
+- `mode` (String) The mode of the endpoints.
+
+<a id="nestedatt--scope--endpoints--endpoint_groups"></a>
+### Nested Schema for `scope.endpoints.endpoint_groups`
+
+Read-Only:
+
+- `ids` (List of String) The ids of the endpoint groups.
+- `mode` (String) The mode of the endpoint groups.
+
+
+<a id="nestedatt--scope--endpoints--endpoint_tags"></a>
+### Nested Schema for `scope.endpoints.endpoint_tags`
+
+Read-Only:
+
+- `ids` (List of String) The ids of the endpoint tags.
+- `mode` (String) The mode of the endpoint tags.

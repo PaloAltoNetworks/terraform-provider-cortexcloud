@@ -17,44 +17,40 @@ Manages a cloud onboarding integration template for AWS.
 
 ### Required
 
-- `scan_mode` (String) Define what infrastructure the integration will use to scan cloud workloads. If set to `MANAGED`, scanning will be done in the Cortex Cloud environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: `MANAGED`, `OUTPOST`. 
+- `scan_mode` (String) Define what infrastructure the integration will use to scan cloud workloads. If set to"MANAGED", scanning will be done in the Cortex Cloudenvironment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Default value is "%s". Possible values are: "%s".
 
-~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.
-- `scope` (String) Define the scope for this integration instance. Possible values are: `ACCOUNT`, `ACCOUNT_GROUP`, `ORGANIZATION`
+NOTE: Scanning with an outpost may require additional CSP permissions and may incur additional costs.
+- `scope` (String) Define the scope for this integration instance. Must be one of `ACCOUNT`, `ORGANIZATION` or `ACCOUNT_GROUP`.
 
 ### Optional
 
-- `additional_capabilities` (Attributes) Define which additional security capabilities to enable. 
-
-~>**NOTE** that adding additional capabilities typically requires additional cloud provider permissions. For more information, refer to the [Cortex Cloud Posture Management documentation](https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions). (see [below for nested schema](#nestedatt--additional_capabilities))
+- `additional_capabilities` (Attributes) Define which additional security capabilities to enable. Note that adding additional capabilities typically requires additional cloud provider permissions. For more information, refer to the [Cortex Cloud Posture Management documentation](https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions). (see [below for nested schema](#nestedatt--additional_capabilities))
 - `collection_configuration` (Attributes) Configure log data collection. (see [below for nested schema](#nestedatt--collection_configuration))
 - `custom_resources_tags` (Attributes Set) Tags applied to any new resource created by Cortex Cloud in the cloud environment.
 
 The tag `managed_by` with the value `paloaltonetworks` will be applied by default. (see [below for nested schema](#nestedatt--custom_resources_tags))
-- `instance_name` (String) The name of the integration template. When the template is executed, integrations will appear in the console with this value.
-- `outpost_id` (String) The ID of the outpost that will be used for scanning. Must be configured if `scan_mode` is set to `OUTPOST`.
+- `instance_name` (String) Name of the integration instance. If left empty, the name will be auto-populated.
+- `outpost_id` (String) TODO
 - `scope_modifications` (Attributes) Define the scope of scans by including/excluding accounts or regions. (see [below for nested schema](#nestedatt--scope_modifications))
 
 ### Read-Only
 
-- `automated_deployment_url` (String) The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.
-
-~>**NOTE** This option requires you to already be logged into the AWS console.
-- `cloudformation_template_url` (String) The direct link to the CloudFormation template parsed from the `manual_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.
-- `manual_deployment_url` (String) The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.
-- `status` (String) Status of the template.
-- `tracking_guid` (String) The unique ID value assigned to this template after creation.
+- `automated_deployment_url` (String) TODO
+- `cloud_formation_template_url` (String) TODO
+- `manual_deployment_url` (String) TODO
+- `status` (String) Status of the integration.
+- `tracking_guid` (String) TODO (be sure to mention that this is the instance_id)
 
 <a id="nestedatt--additional_capabilities"></a>
 ### Nested Schema for `additional_capabilities`
 
 Optional:
 
-- `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
-- `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
-- `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
-- `registry_scanning_options` (Attributes) Additional configuration options forregistry scanning. Default value is `true`. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
-- `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
+- `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle.
+- `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data.
+- `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets.
+- `registry_scanning_options` (Attributes) Additional configuration options forregistry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected.
 
 <a id="nestedatt--additional_capabilities--registry_scanning_options"></a>
 ### Nested Schema for `additional_capabilities.registry_scanning_options`
@@ -81,9 +77,9 @@ Required:
 
 Optional:
 
-- `collection_method` (String) Method of audit log collection. Default value is `AUTOMATED`.
-- `data_events` (Boolean) Whether to collect data events as part of audit log collection. Default value is `false`.
-- `enabled` (Boolean) Whether to enable audit log collection. Default value is `true`.
+- `collection_method` (String) Method of audit log collection.
+- `data_events` (Boolean) Whether to collect data events as part of audit log collection.
+- `enabled` (Boolean) Whether to enable audit log collection.
 
 
 
@@ -109,12 +105,12 @@ Optional:
 
 Required:
 
-- `enabled` (Boolean) Whether to enable this scope modification. Cannot be set to `true` if scope is set to `ACCOUNT`. If enabled, the `type` and `account_ids` attributes must be configured as well.
+- `enabled` (Boolean) Whether to enable this scope modification.
 
 Optional:
 
-- `account_ids` (Set of String) Account IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.
-- `type` (String) Whether the specified account IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `INCLUDE`, `EXCLUDE`
+- `account_ids` (Set of String) Account IDs to include or exclude from scans
+- `type` (String) Whether the specified account IDs should be included in the scope or excluded from the scope.
 
 
 <a id="nestedatt--scope_modifications--regions"></a>
@@ -122,9 +118,9 @@ Optional:
 
 Required:
 
-- `enabled` (Boolean) Whether to enable this scope modification. If set to `true`, the `type` and `regions` attributes must be configured as well.
+- `enabled` (Boolean) TODO
 
 Optional:
 
-- `regions` (Set of String) Regions to include or exclude from scans. Must be configured with at least 1 value if `enabled` is set to `true`.
-- `type` (String) Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true`. Possible values are: `INCLUDE`, `EXCLUDE`
+- `regions` (Set of String) TODO
+- `type` (String) TODO
