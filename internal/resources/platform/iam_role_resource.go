@@ -176,7 +176,7 @@ func (r *iamRoleResource) Create(ctx context.Context, req resource.CreateRequest
 
 	roleID := ""
 	if created != nil {
-		roleID = created.RoleID // 由 SDK 从 data.message 解析而来
+		roleID = created.RoleID
 	}
 
 	listResp, listErr := r.client.ListAllRoles(ctx)
@@ -325,14 +325,12 @@ func (r *iamRoleResource) Update(ctx context.Context, req resource.UpdateRequest
 		},
 	}
 
-	// 2) 调用创建
 	createdRole, err := r.client.CreateRole(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating IAM Role", err.Error())
 		return
 	}
 
-	// 3) 用创建响应显式构造 RoleListItem，供 RefreshFromRemote 使用
 	item := &platformTypes.RoleListItem{
 		RoleID:      createdRole.RoleID,
 		PrettyName:  createdRole.PrettyName,
@@ -343,13 +341,11 @@ func (r *iamRoleResource) Update(ctx context.Context, req resource.UpdateRequest
 		UpdatedTs:   createdRole.UpdatedTs,
 	}
 
-	// 4) 同步到本地 state（注意：你的 IamRoleModel 的字段名是 ID 不是 Id）
 	plan.RefreshFromRemote(ctx, &resp.Diagnostics, item)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// （可选）如果你还希望把计划内的可写字段也保留，就以 plan 为准写入 State
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
