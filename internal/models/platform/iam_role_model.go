@@ -36,8 +36,7 @@ func (m *IamRoleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagno
 	m.Description = types.StringValue(r.Description)
 	m.IsCustom = types.BoolValue(r.IsCustom)
 
-	// 关键：无条件赋值，避免 Unknown
-	m.CreatedBy = types.StringValue(r.CreatedBy) // 即便是 "" 也写
-	m.CreatedTs = types.Int64Value(r.CreatedTs)  // 即便是 0 也写
-	m.UpdatedTs = types.Int64Value(r.UpdatedTs)  // 即便是 0 也写
+	m.CreatedBy = types.StringValue(r.CreatedBy)
+	m.CreatedTs = types.Int64Value(r.CreatedTs)
+	m.UpdatedTs = types.Int64Value(r.UpdatedTs)
 }
