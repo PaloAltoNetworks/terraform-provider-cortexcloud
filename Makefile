@@ -18,7 +18,7 @@ PROVIDER_VERSION 	?= 0.0.1
 # Linker values
 # TODO: parse the output from `go version -json -m .` within root dir
 GIT_COMMIT 					:= $(shell git rev-parse HEAD)
-CORTEX_SERVER_VERSION 		:= master-platform-v4.2.0-4877-g4886d-7fe3
+CORTEX_SERVER_VERSION 		:= xsiam--stable-platform-v4.3.0-5750717-gee47a284
 CORTEX_PAPI_VERSION 		:= 1.3
 BUILD_DATE 					?= $(shell TZ=UTC0 git show --quiet --date='format-local:%Y-%m-%dT%T%z' --format="%cd")
 GO_VERSION 					:= $(shell go version)
@@ -47,20 +47,20 @@ ARCH 			:= $(shell uname -m)
 
 define LDFLAGS
 -s -w \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(GIT_COMMIT)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(CORTEX_SERVER_VERSION)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(CORTEX_PAPI_VERSION)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(BUILD_DATE)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(GO_VERSION)'
+-X 'main.GitCommit=$(GIT_COMMIT)' \
+-X 'main.CortexServerVersion=$(CORTEX_SERVER_VERSION)' \
+-X 'main.CortexPAPIVersion=$(CORTEX_PAPI_VERSION)' \
+-X 'main.BuildDate=$(BUILD_DATE)' \
+-X 'main.GoVersion=$(GO_VERSION)'
 endef
 
 define TEST_LDFLAGS
 -s -w \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(TEST_GIT_COMMIT)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(TEST_CORTEX_SERVER_VERSION)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(TEST_CORTEX_PAPI_VERSION)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(TEST_BUILD_DATE)' \
--X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(TEST_GO_VERSION)'
+-X 'main.GitCommit=$(TEST_GIT_COMMIT)' \
+-X 'main.CortexServerVersion=$(TEST_CORTEX_SERVER_VERSION)' \
+-X 'main.CortexPAPIVersion=$(TEST_CORTEX_PAPI_VERSION)' \
+-X 'main.BuildDate=$(TEST_BUILD_DATE)' \
+-X 'main.GoVersion=$(TEST_GO_VERSION)'
 endef
 
 #------------------------------------------------------------------------------
