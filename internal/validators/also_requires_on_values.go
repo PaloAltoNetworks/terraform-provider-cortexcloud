@@ -14,17 +14,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// isEffectivelyNull checks if a value is null, or an object with only null attributes.
+// This is a recursive function.
+func isEffectivelyNull(val attr.Value) bool {
+	if val.IsNull() {
+		return true
+	}
+
+	// If a value is unknown, we cannot determine if it is effectively null,
+	// so we treat it as not null. The validation will be re-run when the
+	// value is known.
+	if val.IsUnknown() {
+		return false
+	}
+
+	obj, ok := val.(types.Object)
+	if !ok {
+		// For non-object types, if we are here, the value is not null or unknown.
+		return false
+	}
+
+	// For object types, recursively check if all attributes are effectively null.
+	for _, attrVal := range obj.Attributes() {
+		if !isEffectivelyNull(attrVal) {
+			return false
+		}
+	}
+
+	return true
+}
 
 var (
 	_ validator.String = AlsoRequiresOnValuesValidator{}
 	_ validator.Bool   = AlsoRequiresOnValuesValidator{}
-	//_ validator.Int32
+	_ validator.Object = AlsoRequiresOnValuesValidator{}
 )
 
 type AlsoRequiresOnValuesValidator struct {
 	OnStringValues  []string
 	OnBoolValues    []bool
+	OnObjectValues  []attr.Value
 	PathExpressions path.Expressions
 }
 
@@ -47,9 +79,16 @@ func AlsoRequiresOnStringValues(onValues []string, expressions ...path.Expressio
 	}
 }
 
-func AlsoRequiresOnBoolValues(onValues []bool, expressions ...path.Expression) validator.Bool {
+func AlsoRequiresOnBoolValue(onValue bool, expressions ...path.Expression) validator.Bool {
 	return AlsoRequiresOnValuesValidator{
-		OnBoolValues:    onValues,
+		OnBoolValues:    []bool{onValue},
+		PathExpressions: expressions,
+	}
+}
+
+func AlsoRequiresOnObjectValues(onValues []attr.Value, expressions ...path.Expression) validator.Object {
+	return AlsoRequiresOnValuesValidator{
+		OnObjectValues:  onValues,
 		PathExpressions: expressions,
 	}
 }
@@ -100,10 +139,11 @@ func (v AlsoRequiresOnValuesValidator) Validate(ctx context.Context, req AlsoReq
 				return
 			}
 
-			if mpVal.IsNull() {
+			if isEffectivelyNull(mpVal) {
 				resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
 					req.Path,
-					fmt.Sprintf("Attribute %q must have a non-null argument when the %q attribute is configured with values [ %s ]", mp, req.Path, req.ValuesMessage),
+					//fmt.Sprintf("Attribute %q must have a non-null argument when the %q attribute is configured with values [ %s ]", mp, req.Path, req.ValuesMessage),
+					fmt.Sprintf("The %q attribute must be configured when the %q attribute is configured with values [ %s ]", mp, req.Path, req.ValuesMessage),
 				))
 			}
 		}
@@ -154,6 +194,36 @@ func (v AlsoRequiresOnValuesValidator) ValidateBool(ctx context.Context, req val
 
 	for _, value := range v.OnBoolValues {
 		if value == req.ConfigValue.ValueBool() {
+			validateReq := AlsoRequiresOnValuesValidatorRequest{
+				Config:         req.Config,
+				ConfigValue:    req.ConfigValue,
+				Path:           req.Path,
+				PathExpression: req.PathExpression,
+				ValuesMessage:  strings.Join(valueMessageArr, ", "),
+			}
+			validateResp := &AlsoRequiresOnValuesValidatorResponse{}
+
+			v.Validate(ctx, validateReq, validateResp)
+			resp.Diagnostics.Append(validateResp.Diagnostics...)
+			return
+		}
+	}
+}
+
+// ValidateObject implements validator.Object.
+func (v AlsoRequiresOnValuesValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	// If attribute configuration is null, there is nothing else to validate
+	if req.ConfigValue.IsNull() {
+		return
+	}
+
+	valueMessageArr := []string{}
+	for _, val := range v.OnObjectValues {
+		valueMessageArr = append(valueMessageArr, fmt.Sprintf("`%s`", val.String()))
+	}
+
+	for _, value := range v.OnObjectValues {
+		if value.Equal(req.ConfigValue) {
 			validateReq := AlsoRequiresOnValuesValidatorRequest{
 				Config:         req.Config,
 				ConfigValue:    req.ConfigValue,

@@ -4,37 +4,17 @@
 package models
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 )
 
-type AdditionalCapabilitiesModel struct {
-	XsiamAnalytics                types.Bool                   `tfsdk:"xsiam_analytics"`
-	DataSecurityPostureManagement types.Bool                   `tfsdk:"data_security_posture_management"`
-	RegistryScanning              types.Bool                   `tfsdk:"registry_scanning"`
-	RegistryScanningOptions       RegistryScanningOptionsModel `tfsdk:"registry_scanning_options"`
+type scopeModificationRegions struct {
+	Enabled bool     `json:"enabled" tfsdk:"enabled"`
+	Type    *string   `json:"type,omitempty" tfsdk:"type"`
+	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 }
 
-type RegistryScanningOptionsModel struct {
-	Type types.String `tfsdk:"type"`
+var managedByPANWTag = cloudOnboardingTypes.Tag{
+	Key: "managed_by",
+	Value: "paloaltonetworks",
 }
 
-type CollectionConfigurationModel struct {
-	AuditLogs AuditLogsModel `tfsdk:"audit_logs"`
-}
-
-type AuditLogsModel struct {
-	Enabled types.Bool `tfsdk:"enabled"`
-}
-
-type TagModel struct {
-	Key   types.String `tfsdk:"key"`
-	Value types.String `tfsdk:"value"`
-}
-
-type ScopeModificationsModel struct {
-	Regions ScopeModificationsRegionsModel `tfsdk:"regions"`
-}
-
-type ScopeModificationsRegionsModel struct {
-	Enabled types.Bool `tfsdk:"enabled"`
-}

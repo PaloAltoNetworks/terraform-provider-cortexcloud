@@ -92,21 +92,16 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 									),
 								},
 							},
-							//"last_days": schema.Int32Attribute{
-							//	Description: "Number of days within which " +
-							//		"the tags on a registry image must have " +
-							//		"been created or updated for the image " +
-							//		"to be scanned. Minimum value is 0 and " +
-							//		"maximum value is 90. Cannot be " +
-							//		"configured if `type` is not set to " +
-							//		"`TAGS_MODIFIED_DAYS`.",
-							//	Optional: true,
-							//	Computed: true,
-							//	Validators: []validator.Int32{
-							//		int32validator.Between(0, 90),
-							//		int32validator.AlsoRequires(path.MatchRelative().AtParent().AtName("type")),
-							//	},
-							//},
+							"last_days": schema.Int32Attribute{
+								Description: "Number of days within which " +
+									"the tags on a registry image must have " +
+									"been created or updated for the image " +
+									"to be scanned. Minimum value is 0 and " +
+									"maximum value is 90. Cannot be " +
+									"configured if `type` is not set to " +
+									"`TAGS_MODIFIED_DAYS`.",
+								Computed: true,
+							},
 						},
 					},
 					"agentless_disk_scanning": schema.BoolAttribute{
@@ -155,6 +150,15 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 							"enabled": schema.BoolAttribute{
 								Description: "Whether to enable audit log " +
 									"collection.",
+								Computed: true,
+							},
+							"collection_method": schema.StringAttribute{
+								Description: "Method of audit log collection.",
+								Computed:    true,
+							},
+							"data_events": schema.BoolAttribute{
+								Description: "Whether to collect data " +
+									"events as part of audit log collection.",
 								Computed: true,
 							},
 						},
@@ -290,7 +294,7 @@ func (r *CloudIntegrationInstanceDataSource) Configure(ctx context.Context, req 
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "resource_type", "CloudIntegrationInstanceDataSource")
+	ctx = tflog.SetField(ctx, "data_source_type", "CloudIntegrationInstanceDataSource")
 	tflog.Debug(ctx, "Configuring SDK client")
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
@@ -307,8 +311,8 @@ func (r *CloudIntegrationInstanceDataSource) Configure(ctx context.Context, req 
 func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	ctx = tflog.SetField(ctx, "resource_type", "CloudIntegrationInstanceDataSource")
-	ctx = tflog.SetField(ctx, "resource_id_field", "id")
+	ctx = tflog.SetField(ctx, "data_source_type", "CloudIntegrationInstanceDataSource")
+	ctx = tflog.SetField(ctx, "data_source_id_field", "id")
 
 	// Populate data source configuration into model.
 	var config models.CloudIntegrationInstanceModel
@@ -317,7 +321,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "resource_id_value", config.ID.ValueString())
+	ctx = tflog.SetField(ctx, "data_source_id_value", config.ID.ValueString())
 
 	// Retrieve integration details from API.
 	if config.ID.IsNull() || config.ID.IsUnknown() {

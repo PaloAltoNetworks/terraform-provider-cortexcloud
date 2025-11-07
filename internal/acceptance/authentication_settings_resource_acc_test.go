@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"slices"
 	"testing"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	types "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -144,7 +146,10 @@ func TestAccAuthenticationSettingsResourceIDPSSO(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { 
+			testAccPreCheck(t) 
+			testAccAuthSettingsPreCheck(t) 
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -207,7 +212,10 @@ func TestAccAuthenticationSettingsResourceIDPMetadata(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { 
+			testAccPreCheck(t) 
+			testAccAuthSettingsPreCheck(t) 
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -263,6 +271,44 @@ func TestAccAuthenticationSettingsResourceIDPMetadata(t *testing.T) {
 		},
 		CheckDestroy: testAccCheckAuthSettingsDestroy,
 	})
+}
+
+// testAccAuthSettingsPreCheck checks if there's at least 1
+// authentication settings configuration in the tenant that
+// has no domain, and gracefully fails the test if not. This
+// default configuration is a necessary pre-condition for adding
+// additional configurations.
+func testAccAuthSettingsPreCheck(t *testing.T) error {
+	ctx := context.Background()
+	tfsdklog.Debug(ctx, "Confirming resource destruction")
+
+	platformClient, err := platform.NewClient(
+		platform.WithCortexAPIURL(testAPIURL),
+		platform.WithCortexAPIKey(testAPIKey),
+		platform.WithCortexAPIKeyID(testAPIKeyID),
+		platform.WithCortexAPIKeyType("standard"),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel("debug"),
+	)
+
+	if err != nil {
+		return fmt.Errorf("error creating SDK client for pre-condition check: %s", err.Error())
+	}
+
+	authSettings, err := platformClient.ListAuthSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("error listing authentication settings for pre-condition check: %s", err.Error())
+	}
+
+	hasSettingsWithNoDomain := slices.ContainsFunc(authSettings, func(settings types.AuthSettings) bool {
+		return settings.Domain == ""
+	})
+
+	if len(authSettings) < 1 || !hasSettingsWithNoDomain {
+		return fmt.Errorf("no default authentication settings configuration exists, need at least one configuration with an empty domain")
+	}
+
+	return nil
 }
 
 func testAccCheckAuthSettingsDestroy(s *terraform.State) error {
