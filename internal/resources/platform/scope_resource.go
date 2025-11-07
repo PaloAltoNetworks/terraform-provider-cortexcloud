@@ -5,11 +5,16 @@ package platform
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+
+	//"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
@@ -19,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -95,8 +101,14 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"default_filter_mode": schema.StringAttribute{
-						Description: "The default filter mode of the datasets rows scope.",
+						Description: fmt.Sprintf("The default filter mode of the datasets rows scope. Possible values are: \"%s\"", strings.Join([]string{ "no_scope", "see_all" }, "\", \"")),
 						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.OneOf([]string{
+								"no_scope",
+								"see_all",
+							}...),
+						},
 					},
 					"filters": schema.ListNestedAttribute{
 						Description: "The filters in the datasets rows scope.",
@@ -221,6 +233,8 @@ func (r *scopeResource) Configure(_ context.Context, req resource.ConfigureReque
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *scopeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
 	var plan models.ScopeModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -241,20 +255,22 @@ func (r *scopeResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	state := plan // start from plan, then hydrate computed fields from remote
-	state.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
+	//state := plan // start from plan, then hydrate computed fields from remote
+	plan.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Set Terraform ID as "entity_type:entity_id"
-	state.ID = types.StringValue(state.EntityType.ValueString() + ":" + state.EntityID.ValueString())
+	plan.ID = types.StringValue(fmt.Sprintf("%s:%s", plan.EntityType.ValueString(), plan.EntityID.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (r *scopeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
 	var state models.ScopeModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -280,6 +296,8 @@ func (r *scopeResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *scopeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
 	var plan models.ScopeModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -312,6 +330,8 @@ func (r *scopeResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 // Delete deletes the resource and removes it from the Terraform state on success.
 func (r *scopeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
 	var state models.ScopeModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -356,5 +376,7 @@ func (r *scopeResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 // ImportState imports the resource into the Terraform state.
 func (r *scopeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
