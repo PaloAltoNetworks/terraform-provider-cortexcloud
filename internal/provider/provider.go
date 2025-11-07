@@ -166,6 +166,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewUserGroupResource,
 		platformResources.NewUserResource,
 		platformResources.NewScopeResource,
+		platformResources.NewIamRoleResource,
 	}
 }
 
@@ -176,8 +177,9 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		cloudOnboardingDataSources.NewOutpostDataSource,
 		cloudOnboardingDataSources.NewOutpostsDataSource,
 		platformDataSources.NewUserDataSource,
-		platformDataSources.NewRoleDataSource,
+		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
+		platformDataSources.NewIamPermissionConfigDataSource,
 	}
 }
 
