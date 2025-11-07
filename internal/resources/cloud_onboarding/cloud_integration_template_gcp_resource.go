@@ -61,7 +61,7 @@ func (r *CloudIntegrationTemplateGcpResource) Metadata(ctx context.Context, req 
 func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Manages a cloud onboarding integration template for " +
-			"GCP.",
+			"AWS.",
 		Attributes: map[string]schema.Attribute{
 			"additional_capabilities": schema.SingleNestedAttribute{
 				Description: "Define which additional security capabilities to enable. " +
@@ -715,8 +715,10 @@ func (r *CloudIntegrationTemplateGcpResource) Read(ctx context.Context, req reso
 		tflog.Debug(ctx, "API returned multiple results")
 		resp.Diagnostics.AddWarning(
 			"Multiple Cloud Integration Templates Returned",
-			"Cortex Cloud returned multiple results for this resource. " +
-				"Please report this issue to the provider developers.",
+			"Multiple values returned for the following arguments: "+
+				"status, instance_name, account_name, outpost_id, creation_time\n\n"+
+				"The provider will attempt to populate these arguments during "+
+				"the next terraform refresh or apply operation.",
 		)
 		return
 	}

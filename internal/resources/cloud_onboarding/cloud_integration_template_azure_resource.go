@@ -701,7 +701,7 @@ func (r *CloudIntegrationTemplateAzureResource) Create(ctx context.Context, req 
 	}
 
 	// Fetch the created template and populate OutpostID
-	trackingGUID, trackingGuidErr := createResponse.GetTrackingGUIDFromAzureResponse()
+	trackingGUID, trackingGuidErr := createResponse.GetTrackingGUIDFromARMURL()
 	if trackingGUID != "" && trackingGuidErr == nil {
 		tflog.Debug(ctx, "Fetching created template")
 		plan.TrackingGUID = types.StringValue(trackingGUID)

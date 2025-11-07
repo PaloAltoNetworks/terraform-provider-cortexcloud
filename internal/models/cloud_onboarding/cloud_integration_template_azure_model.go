@@ -77,7 +77,7 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 		}
 	}
 	if scopeModificationsValue.Subscriptions != nil {
-		scopeModifications.Accounts = &cloudOnboardingTypes.ScopeModificationGeneric{
+		scopeModifications.Subscriptions = &cloudOnboardingTypes.ScopeModificationGeneric{
 			Enabled: scopeModificationsValue.Subscriptions.Enabled,
 			Type: scopeModificationsValue.Subscriptions.Type,
 			SubscriptionIDs: scopeModificationsValue.Subscriptions.SubscriptionIDs,
@@ -138,7 +138,7 @@ func (m *CloudIntegrationTemplateAzureModel) ToGetRequest(ctx context.Context, d
 func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	ctx = tflog.SetField(ctx, "resource_operation", "SetGeneratedValues")
 
-	trackingGUID, err := response.GetTrackingGUIDFromAzureResponse()
+	trackingGUID, err := response.GetTrackingGUIDFromARMURL()
 	if err != nil {
 		diagnostics.AddError(
 			"Error Parsing Tracking GUID",
@@ -148,8 +148,6 @@ func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Cont
 
 	tflog.Debug(context.Background(), "Setting tracking GUID")
 	m.TrackingGUID = types.StringValue(trackingGUID)
-
-		m.TerraformModuleURL = types.StringValue(*response.Manual.TF)
 
 	if response.Manual.TF != nil {
 		tflog.Debug(context.Background(), "Setting Terraform module URL")
