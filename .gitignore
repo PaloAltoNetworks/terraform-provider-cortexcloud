@@ -5,6 +5,7 @@ GEMINI.md
 .DS_Store
 test/
 .meta/
+.env*
 
 # Binaries
 *.exe
