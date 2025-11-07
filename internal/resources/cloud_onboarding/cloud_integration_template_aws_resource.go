@@ -774,10 +774,8 @@ func (r *CloudIntegrationTemplateAwsResource) Read(ctx context.Context, req reso
 		tflog.Debug(ctx, "API returned multiple results")
 		resp.Diagnostics.AddWarning(
 			"Multiple Cloud Integration Templates Returned",
-			"Multiple values returned for the following arguments: "+
-				"status, instance_name, account_name, outpost_id, creation_time\n\n"+
-				"The provider will attempt to populate these arguments during "+
-				"the next terraform refresh or apply operation.",
+			"Cortex Cloud returned multiple results for this resource. " +
+				"Please report this issue to the provider developers.",
 		)
 		return
 	}
