@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -92,7 +91,6 @@ var (
 )
 
 type CortexCloudSDKClients struct {
-	AppSec          *appsec.Client
 	CloudOnboarding *cloudonboarding.Client
 	Platform        *platform.Client
 }

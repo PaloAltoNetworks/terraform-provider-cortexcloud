@@ -6,17 +6,13 @@ package provider
 import (
 	"context"
 	"fmt"
-	//"strconv"
-	//"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
 	platformDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/platform"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
-	appSecResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/application_security"
 	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
 	platformResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/platform"
 
@@ -178,12 +174,6 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewIamRoleResource,
 	)
 	
-	tflog.Debug(ctx, "Registering AppSec Resources")
-	resources = append(
-		resources, 
-		appSecResources.NewApplicationSecurityRuleResource,
-	)
-
 	return resources
 }
 
@@ -275,26 +265,6 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	// client (or export)
 	ctx = tflog.SetField(ctx, "cortex_api_url", platformClient.APIURL())
 
-	tflog.Debug(ctx, "Initializing appsec client")
-	appSecClient, err := appsec.NewClient(
-		appsec.WithCortexFQDN(fqdn),
-		appsec.WithCortexAPIURL(apiURL),
-		appsec.WithCortexAPIKey(apiKey),
-		appsec.WithCortexAPIKeyID(apiKeyID),
-		appsec.WithCortexAPIKeyType(apiKeyType),
-		appsec.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
-		appsec.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//appsec.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
-		//appsec.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
-		appsec.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
-		appsec.WithLogger(log.TflogAdapter{}),
-		appsec.WithLogLevel(sdkLogLevel),
-	)
-	if err != nil {
-		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
-		return
-	}
-
 	tflog.Debug(ctx, "Initializing cloudonboarding client")
 	cloudOnboardingClient, err := cloudonboarding.NewClient(
 		cloudonboarding.WithCortexFQDN(fqdn),
@@ -318,7 +288,6 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	tflog.Debug(ctx, "Cortex Cloud API client setup complete")
 
 	// Attach SDK clients to model
-	clients.AppSec = appSecClient
 	clients.CloudOnboarding = cloudOnboardingClient
 	clients.Platform = platformClient
 
