@@ -9,19 +9,18 @@ import (
 	"slices"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-type CloudIntegrationTemplateAzureModel struct {
-	AccountDetails            types.Object `tfsdk:"account_details"`
+type CloudIntegrationTemplateGcpModel struct {
 	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
 	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
 	CustomResourcesTags       types.Set    `tfsdk:"custom_resources_tags"`
@@ -33,27 +32,21 @@ type CloudIntegrationTemplateAzureModel struct {
 	TrackingGUID              types.String `tfsdk:"tracking_guid"`
 	OutpostID                 types.String `tfsdk:"outpost_id"`
 	TerraformModuleURL       types.String `tfsdk:"terraform_module_url"`
-	ARMTemplateURL            types.String `tfsdk:"arm_template_url"`
 }
 
-type scopeModificationsAzure struct {
-	Subscriptions *scopeModificationSubscriptions `json:"subscriptions,omitempty" tfsdk:"subscriptions"`
+type scopeModificationsGcp struct {
+	Projects      *scopeModificationProjects `json:"projects,omitempty" tfsdk:"projects"`
 	Regions       *scopeModificationRegions `json:"regions,omitempty" tfsdk:"regions"`
 }
 
-type scopeModificationSubscriptions struct {
+type scopeModificationProjects struct {
 	Enabled    bool     `json:"enabled" tfsdk:"enabled"`
 	Type       *string   `json:"type,omitempty" tfsdk:"type"`
-	SubscriptionIDs *[]string `json:"subscription_ids,omitempty" tfsdk:"subscription_ids"`
+	ProjectIDs *[]string `json:"project_ids,omitempty" tfsdk:"project_ids"`
 }
 
-func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.CreateIntegrationTemplateRequest {
+func (m *CloudIntegrationTemplateGcpModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.CreateIntegrationTemplateRequest {
 	ctx = tflog.SetField(ctx, "resource_operation", "ToCreateRequest")
-
-	var accountDetails cloudOnboardingTypes.AccountDetails
-	if !m.AccountDetails.IsNull() {
-		diagnostics.Append(m.AccountDetails.As(ctx, &accountDetails, basetypes.ObjectAsOptions{})...)
-	}
 
 	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
@@ -65,7 +58,7 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
 	// TODO: figure out how to handle this without the intermediate types
-	var scopeModificationsValue scopeModificationsAzure
+	var scopeModificationsValue scopeModificationsGcp
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModificationsValue, basetypes.ObjectAsOptions{})...)
 
 	scopeModifications := cloudOnboardingTypes.ScopeModifications{}
@@ -76,27 +69,25 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 			Regions: scopeModificationsValue.Regions.Regions,
 		}
 	}
-	if scopeModificationsValue.Subscriptions != nil {
-		scopeModifications.Subscriptions = &cloudOnboardingTypes.ScopeModificationGeneric{
-			Enabled: scopeModificationsValue.Subscriptions.Enabled,
-			Type: scopeModificationsValue.Subscriptions.Type,
-			SubscriptionIDs: scopeModificationsValue.Subscriptions.SubscriptionIDs,
+	if scopeModificationsValue.Projects != nil {
+		scopeModifications.Projects = &cloudOnboardingTypes.ScopeModificationGeneric{
+			Enabled: scopeModificationsValue.Projects.Enabled,
+			Type: scopeModificationsValue.Projects.Type,
+			ProjectIDs: scopeModificationsValue.Projects.ProjectIDs,
 		}
 	}
 
 	if diagnostics.HasError() {
 		return nil
 	}
-	
+
 	if !slices.Contains(customResourcesTags, managedByPANWTag) {
 		customResourcesTags = append(customResourcesTags, managedByPANWTag)
 	}
 
-
 	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
-		cloudOnboardingTypes.WithAccountDetails(&accountDetails),
 		cloudOnboardingTypes.WithAdditionalCapabilities(additionalCapabilities),
-		cloudOnboardingTypes.WithCloudProvider(enums.CloudProviderAzure.String()),
+		cloudOnboardingTypes.WithCloudProvider(enums.CloudProviderGCP.String()),
 		cloudOnboardingTypes.WithCollectionConfiguration(collectionConfiguration),
 		cloudOnboardingTypes.WithCustomResourcesTags(customResourcesTags),
 		cloudOnboardingTypes.WithInstanceName(m.InstanceName.ValueString()),
@@ -106,7 +97,7 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 	)
 }
 
-func (m *CloudIntegrationTemplateAzureModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
+func (m *CloudIntegrationTemplateGcpModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
 	ctx = tflog.SetField(ctx, "resource_operation", "ToGetRequest")
 
 	filter := filterTypes.NewAndFilter(
@@ -135,10 +126,14 @@ func (m *CloudIntegrationTemplateAzureModel) ToGetRequest(ctx context.Context, d
 	)
 }
 
-func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
+func (m *CloudIntegrationTemplateGcpModel) SetGeneratedValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	ctx = tflog.SetField(ctx, "resource_operation", "SetGeneratedValues")
 
-	trackingGUID, err := response.GetTrackingGUIDFromARMURL()
+	if m.OutpostID.IsNull() || m.OutpostID.IsUnknown() {
+		m.OutpostID = types.StringNull()
+	}
+
+	trackingGUID, err := response.GetTrackingGUIDFromTerraformURL()
 	if err != nil {
 		diagnostics.AddError(
 			"Error Parsing Tracking GUID",
@@ -150,28 +145,20 @@ func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Cont
 	m.TrackingGUID = types.StringValue(trackingGUID)
 
 	if response.Manual.TF != nil {
-		tflog.Debug(context.Background(), "Setting Terraform module URL")
+		tflog.Debug(ctx, "Setting Terraform module URL to Manual.TF")
 		m.TerraformModuleURL = types.StringValue(*response.Manual.TF)
 	} else {
-		tflog.Debug(context.Background(), "Terraform module URL not found, setting Terraform deployment URL to nil")
+		tflog.Debug(ctx, "Setting Terraform module URL to nil")
 		m.TerraformModuleURL = types.StringNull()
-	}
-	
-	if response.Manual.ARM != nil {
-		tflog.Debug(context.Background(), "Setting ARM deployment URL")
-		m.ARMTemplateURL = types.StringValue(*response.Manual.ARM)
-	} else {
-		tflog.Debug(context.Background(), "ARM deployment URL not found, setting ARM deployment URL to nil")
-		m.ARMTemplateURL = types.StringNull()
 	}
 }
 
-func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
+func (m *CloudIntegrationTemplateGcpModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
-		additionalCapabilities  basetypes.ObjectValue
 		diags                   diag.Diagnostics
+		additionalCapabilities  basetypes.ObjectValue
 		customResourcesTags = types.SetNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				"key": types.StringType,
@@ -217,4 +204,5 @@ func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx
 	m.AdditionalCapabilities = additionalCapabilities
 	m.ScanMode = types.StringValue(apiResponse.Scan.ScanMethod)
 	m.Status = types.StringValue(apiResponse.Status)
+
 }

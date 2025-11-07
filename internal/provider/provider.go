@@ -164,6 +164,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		resources, 
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
+		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
 	)
 	
 	tflog.Debug(ctx, "Registering Platform Resources")

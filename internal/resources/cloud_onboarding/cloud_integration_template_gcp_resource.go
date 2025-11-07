@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	cortexTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
@@ -18,20 +17,20 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,46 +38,31 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource               = &CloudIntegrationTemplateAzureResource{}
-	_ resource.ResourceWithModifyPlan = &CloudIntegrationTemplateAzureResource{}
+	_ resource.Resource               = &CloudIntegrationTemplateGcpResource{}
+	_ resource.ResourceWithModifyPlan = &CloudIntegrationTemplateGcpResource{}
 )
 
-// NewCloudIntegrationTemplateAzureResource is a helper function to simplify the provider implementation.
-func NewCloudIntegrationTemplateAzureResource() resource.Resource {
-	return &CloudIntegrationTemplateAzureResource{}
+// NewCloudIntegrationTemplateGcpResource is a helper function to simplify the provider implementation.
+func NewCloudIntegrationTemplateGcpResource() resource.Resource {
+	return &CloudIntegrationTemplateGcpResource{}
 }
 
-// CloudIntegrationTemplateAzureResource is the resource implementation.
-type CloudIntegrationTemplateAzureResource struct {
+// CloudIntegrationTemplateGcpResource is the resource implementation.
+type CloudIntegrationTemplateGcpResource struct {
 	client *cloudonboarding.Client
 }
 
 // Metadata returns the resource type name.
-func (r *CloudIntegrationTemplateAzureResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_integration_template_azure"
+func (r *CloudIntegrationTemplateGcpResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_integration_template_gcp"
 }
 
 // Schema defines the schema for the resource.
-func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages a cloud onboarding integration template for Azure.",
+		Description: "Manages a cloud onboarding integration template for " +
+			"AWS.",
 		Attributes: map[string]schema.Attribute{
-			"account_details": schema.SingleNestedAttribute{
-				Description: "Additional details required for account onboarding.",
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"organization_id": schema.StringAttribute{
-						Required:    true,
-						Description: "Your Azure tenant ID." +
-							"\n\n~>**NOTE**: You must first approve Cortex " +
-							"Cloud as an enterprise application in your " +
-							"Azure tenant before attempting to create this " +
-							"resource. If you attempt to create a template " +
-							"for a tenant that has not approved the Cortex " +
-							"Cloud application, the API will return an error.",
-					},
-				},
-			},
 			"additional_capabilities": schema.SingleNestedAttribute{
 				Description: "Define which additional security capabilities to enable. " +
 				"\n\n~>**NOTE**: adding additional capabilities " +
@@ -384,24 +368,23 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 			},
 			"scope_modifications": schema.SingleNestedAttribute{
 				Description: "Define the scope of scans by including/excluding " +
-					"subscriptions or regions.",
+					"projects or regions.",
 				MarkdownDescription: "Define the scope of scans by including/excluding " +
-					"subscriptions or regions.",
+					"projects or regions.",
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"subscriptions": schema.SingleNestedAttribute{
-						Description: "Configuration for subscription-level " +
-							"scope modifications for Azure integrations.",
-						MarkdownDescription: "Configuration for " +
-							"subscription-level scope modifications for " +
-							"Azure integrations.",
+					"projects": schema.SingleNestedAttribute{
+						Description: "Configuration for project-level scope " +
+							"modifications for GCP integrations.",
+						MarkdownDescription: "Configuration for project-level scope " +
+							"modifications for GCP integrations.",
 						Optional: true,
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"ACCOUNT\". If enabled, the \"type\" and \"subscription_ids\" attributes must be configured as well.",
-								MarkdownDescription: "Whether to enable this scope modification. Cannot be set to `true` if scope is set to `ACCOUNT`. If enabled, the `type` and `subscription_ids` attributes must be configured as well.",
+								Description: "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"project\". If enabled, the \"type\" and \"project_ids\" attributes must be configured as well.",
+								MarkdownDescription: "Whether to enable this scope modification. Cannot be set to `true` if scope is set to `project`. If enabled, the `type` and `project_ids` attributes must be configured as well.",
 								Required:    true,
 								// TODO: add validation to prevent this from
 								// being configured if scope set to `ACCOUNT`
@@ -412,13 +395,13 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 									),
 									validators.AlsoRequiresOnBoolValue(
 										true,
-										path.MatchRelative().AtParent().AtName("subscription_ids"),
+										path.MatchRelative().AtParent().AtName("project_ids"),
 									),
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified subscription IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
-								MarkdownDescription: fmt.Sprintf("Whether the specified subscription IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
+								Description: fmt.Sprintf("Whether the specified project IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
+								MarkdownDescription: fmt.Sprintf("Whether the specified project IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
 								Optional:    true,
 								// TODO: add validation to prevent this from
 								// being configured if scope set to `ACCOUNT`
@@ -428,9 +411,9 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 									),
 								},
 							},
-							"subscription_ids": schema.SetAttribute{
-								Description: "Subscription IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
-								MarkdownDescription: "Subscription IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.",
+							"project_ids": schema.SetAttribute{
+								Description: "Project IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
+								MarkdownDescription: "Project IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.",
 								Optional:    true,
 								ElementType: types.StringType,
 								// TODO: add validation to prevent this from
@@ -445,7 +428,7 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 								map[string]attr.Type{
 									"enabled": types.BoolType,
 									"type":    types.StringType,
-									"subscription_ids": types.SetType{
+									"project_ids": types.SetType{
 										ElemType: types.StringType,
 									},
 								},
@@ -513,11 +496,11 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 				Default: objectdefault.StaticValue(
 					types.ObjectValueMust(
 						map[string]attr.Type{
-							"subscriptions": types.ObjectType{
+							"projects": types.ObjectType{
 								AttrTypes: map[string]attr.Type{
 									"enabled": types.BoolType,
 									"type":    types.StringType,
-									"subscription_ids": types.SetType{
+									"project_ids": types.SetType{
 										ElemType: types.StringType,
 									},
 								},
@@ -533,11 +516,11 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 							},
 						},
 						map[string]attr.Value{
-							"subscriptions": types.ObjectNull(
+							"projects": types.ObjectNull(
 								map[string]attr.Type{
 									"enabled": types.BoolType,
 									"type":    types.StringType,
-									"subscription_ids": types.SetType{
+									"project_ids": types.SetType{
 										ElemType: types.StringType,
 									},
 								},
@@ -597,26 +580,18 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"arm_template_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the Azure Resource Manager method of downloading the template. Opening this URL in your browser will begin a download of the created template as an ARM template, which you can then deploy to permit Cortex Cloud to scan your Azure resources.",
-				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the Azure Resource Manager method of downloading the template. Opening this URL in your browser will begin a download of the created template as an ARM template, which you can then deploy to permit Cortex Cloud to scan your Azure resources.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 		},
 	}
 }
 
 // Configure adds the provider-configured client to the resource.
-func (r *CloudIntegrationTemplateAzureResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured
 	if req.ProviderData == nil {
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_operation", "Configure")
 	tflog.Debug(ctx, "Configuring SDK client")
 
@@ -630,14 +605,14 @@ func (r *CloudIntegrationTemplateAzureResource) Configure(ctx context.Context, r
 	r.client = client.CloudOnboarding
 }
 
-func (r *CloudIntegrationTemplateAzureResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+func (r *CloudIntegrationTemplateGcpResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_operation", "ModifyPlan")
 	tflog.Debug(ctx, "Executing ModifyPlan")
 
 	// If the entire plan is null, the resource is planned for destruction
 	if req.Plan.Raw.IsNull() {
-		var state models.CloudIntegrationTemplateAzureModel
+		var state models.CloudIntegrationTemplateGcpModel
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -649,36 +624,16 @@ func (r *CloudIntegrationTemplateAzureResource) ModifyPlan(ctx context.Context, 
 	}
 }
 
-func fetchTemplateAzure(ctx context.Context, diagnostics *diag.Diagnostics, sdkClient *cloudonboarding.Client, model models.CloudIntegrationTemplateAzureModel) []cortexTypes.IntegrationInstance {
-	tflog.Debug(ctx, "Generating fetch API request payload")
-	request := model.ToGetRequest(ctx, diagnostics)
-	if diagnostics.HasError() {
-		return []cortexTypes.IntegrationInstance{}
-	}
-
-	tflog.Debug(ctx, "Executing API request")
-	response, err := sdkClient.ListIntegrationInstances(ctx, request)
-	if err != nil {
-		diagnostics.AddError(
-			"Error Fetching Cloud Integration Template",
-			err.Error(),
-		)
-		return []cortexTypes.IntegrationInstance{}
-	}
-
-	return response
-}
-
 // Create creates the resource and sets the initial Terraform state.
-func (r *CloudIntegrationTemplateAzureResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_operation", "Create")
 
 	// Retrieve values from plan
 	tflog.Debug(ctx, "Retrieving values from plan")
-	var plan models.CloudIntegrationTemplateAzureModel
+	var plan models.CloudIntegrationTemplateGcpModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -699,33 +654,7 @@ func (r *CloudIntegrationTemplateAzureResource) Create(ctx context.Context, req 
 		)
 		return
 	}
-
-	// Fetch the created template and populate OutpostID
-	trackingGUID, trackingGuidErr := createResponse.GetTrackingGUIDFromARMURL()
-	if trackingGUID != "" && trackingGuidErr == nil {
-		tflog.Debug(ctx, "Fetching created template")
-		plan.TrackingGUID = types.StringValue(trackingGUID)
-		response := fetchTemplateAzure(ctx, &resp.Diagnostics, r.client, plan)	
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(response) == 1 && response[0].OutpostID != "" {
-			plan.OutpostID = types.StringValue(response[0].OutpostID)
-		} else {
-			plan.OutpostID = types.StringNull()
-		}
-	} else {
-		if trackingGuidErr != nil {
-			tflog.Debug(ctx, fmt.Sprintf("No Tracking GUID found: %s", trackingGuidErr.Error()))
-		} else {
-			tflog.Debug(ctx, "No Tracking GUID found")
-		}
-
-		plan.TrackingGUID = types.StringNull()
-		plan.OutpostID = types.StringNull()
-	}
-
+	
 	// Map response body to schema and populate Computed attribute values
 	tflog.Debug(ctx, "Setting computed attributes")
 	plan.SetGeneratedValues(ctx, &resp.Diagnostics, createResponse)
@@ -742,16 +671,16 @@ func (r *CloudIntegrationTemplateAzureResource) Create(ctx context.Context, req 
 }
 
 // Read refreshes the Terraform state with the latest values.
-func (r *CloudIntegrationTemplateAzureResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
 	ctx = tflog.SetField(ctx, "resource_operation", "Read")
 
 	// Retrieve values from state
 	tflog.Debug(ctx, "Retrieving values from state")
-	var state models.CloudIntegrationTemplateAzureModel
+	var state models.CloudIntegrationTemplateGcpModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -759,9 +688,20 @@ func (r *CloudIntegrationTemplateAzureResource) Read(ctx context.Context, req re
 
 	ctx = tflog.SetField(ctx, "resource_id_value", state.TrackingGUID.ValueString())
 
-	tflog.Debug(ctx, "Fetching template")
-	response := fetchTemplateAzure(ctx, &resp.Diagnostics, r.client, state)	
+	// Retrieve integration details from API
+	tflog.Debug(ctx, "Generating API request payload")
+	request := state.ToGetRequest(ctx, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "Executing API request")
+	response, err := r.client.ListIntegrationInstances(ctx, request)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Cloud Integration Template",
+			err.Error(),
+		)
 		return
 	}
 
@@ -782,7 +722,7 @@ func (r *CloudIntegrationTemplateAzureResource) Read(ctx context.Context, req re
 		)
 		return
 	}
-
+	
 	// Refresh state values
 	tflog.Debug(ctx, "Refreshing configured attributes")
 	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response[0])
@@ -796,13 +736,13 @@ func (r *CloudIntegrationTemplateAzureResource) Read(ctx context.Context, req re
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *CloudIntegrationTemplateAzureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 	
-	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_azure")
+	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
-	ctx = tflog.SetField(ctx, "resource_operation", "Update")
-
+	ctx = tflog.SetField(ctx, "resource_operation", "Read")
+	
 	// The resource should require replacement upon modifying any of the 
 	// configurable attributes, but as a fallback we will remove the resource
 	// from the state.
@@ -810,6 +750,7 @@ func (r *CloudIntegrationTemplateAzureResource) Update(ctx context.Context, req 
 }
 
 // Delete deletes the resource and removes it from the Terraform state on success.
-func (r *CloudIntegrationTemplateAzureResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *CloudIntegrationTemplateGcpResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
+	resp.State.RemoveResource(ctx)
 }
