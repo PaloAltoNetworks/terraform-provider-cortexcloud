@@ -47,20 +47,20 @@ ARCH 			:= $(shell uname -m)
 
 define LDFLAGS
 -s -w \
--X 'main.GitCommit=$(GIT_COMMIT)' \
--X 'main.CortexServerVersion=$(CORTEX_SERVER_VERSION)' \
--X 'main.CortexPAPIVersion=$(CORTEX_PAPI_VERSION)' \
--X 'main.BuildDate=$(BUILD_DATE)' \
--X 'main.GoVersion=$(GO_VERSION)'
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(GIT_COMMIT)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(CORTEX_SERVER_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(CORTEX_PAPI_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(BUILD_DATE)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(GO_VERSION)'
 endef
 
 define TEST_LDFLAGS
 -s -w \
--X 'main.GitCommit=$(TEST_GIT_COMMIT)' \
--X 'main.CortexServerVersion=$(TEST_CORTEX_SERVER_VERSION)' \
--X 'main.CortexPAPIVersion=$(TEST_CORTEX_PAPI_VERSION)' \
--X 'main.BuildDate=$(TEST_BUILD_DATE)' \
--X 'main.GoVersion=$(TEST_GO_VERSION)'
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GitCommit=$(TEST_GIT_COMMIT)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexServerVersion=$(TEST_CORTEX_SERVER_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.CortexPAPIVersion=$(TEST_CORTEX_PAPI_VERSION)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.BuildDate=$(TEST_BUILD_DATE)' \
+-X 'github.com/PaloAltoNetworks/terraform-provider-cortexcloud/main.GoVersion=$(TEST_GO_VERSION)'
 endef
 
 #------------------------------------------------------------------------------
