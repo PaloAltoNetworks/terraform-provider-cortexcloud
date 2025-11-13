@@ -175,6 +175,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewUserGroupResource,
 		platformResources.NewUserResource,
 		platformResources.NewScopeResource,
+		platformResources.NewIamRoleResource,
 	)
 	
 	tflog.Debug(ctx, "Registering AppSec Resources")
@@ -194,8 +195,9 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		cloudOnboardingDataSources.NewOutpostDataSource,
 		cloudOnboardingDataSources.NewOutpostsDataSource,
 		platformDataSources.NewUserDataSource,
-		platformDataSources.NewRoleDataSource,
+		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
+		platformDataSources.NewIamPermissionConfigDataSource,
 	}
 }
 

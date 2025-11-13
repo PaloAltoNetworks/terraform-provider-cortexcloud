@@ -7,8 +7,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	//"runtime"
-	//"runtime/debug"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
