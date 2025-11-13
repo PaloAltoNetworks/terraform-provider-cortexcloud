@@ -19,6 +19,7 @@ builds:
         -X main.GitCommit={{ .Commit }}
         -X main.CortexServerVersion={{ .Version }}
         -X main.GoVersion={{ .Env.GOVERSION }}
+        -X main.CortexPAPIVersion={{ .Env.CORTEX_PAPI_VERSION }}
         -X main.BuildDate={{ .Date }}
     goos:
       - freebsd
