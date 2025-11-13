@@ -18,7 +18,7 @@ PROVIDER_VERSION 	?= 0.0.1
 # Linker values
 # TODO: parse the output from `go version -json -m .` within root dir
 GIT_COMMIT 					:= $(shell git rev-parse HEAD)
-CORTEX_SERVER_VERSION 		:= master-platform-v4.2.0-4877-g4886d-7fe3
+CORTEX_SERVER_VERSION 		:= xsiam--stable-platform-v4.3.0-5750717-gee47a284
 CORTEX_PAPI_VERSION 		:= 1.3
 BUILD_DATE 					?= $(shell TZ=UTC0 git show --quiet --date='format-local:%Y-%m-%dT%T%z' --format="%cd")
 GO_VERSION 					:= $(shell go version)
