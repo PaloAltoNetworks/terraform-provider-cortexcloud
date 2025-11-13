@@ -185,6 +185,16 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
+					"serverless_scanning": schema.BoolAttribute{
+						Description: "Whether to enable serverless scanning to detect and remediate vulnerabilities within serverless functions during the development lifecycle. Default value is \"true\".",
+						MarkdownDescription: "Whether to enable agentless disk " +
+							"scanning to remotely detect and remediate " +
+							"vulnerabilities during the development " +
+							"lifecycle. Default value is `true`.",
+						Optional: true,
+						Computed: true,
+						Default:  booldefault.StaticBool(true),
+					},
 				},
 				Default: objectdefault.StaticValue(
 					types.ObjectValueMust(
@@ -199,6 +209,7 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 							},
 							"agentless_disk_scanning": types.BoolType,
 							"xsiam_analytics":         types.BoolType,
+							"serverless_scanning":         types.BoolType,
 						},
 						map[string]attr.Value{
 							"data_security_posture_management": types.BoolValue(false),
@@ -215,6 +226,7 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 							),
 							"agentless_disk_scanning": types.BoolValue(true),
 							"xsiam_analytics":         types.BoolValue(true),
+							"serverless_scanning":         types.BoolValue(true),
 						},
 					),
 				),
