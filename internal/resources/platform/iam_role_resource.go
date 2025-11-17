@@ -174,56 +174,17 @@ func (r *iamRoleResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	roleID := ""
-	if created != nil {
-		roleID = created.RoleID
-	}
-
-	listResp, listErr := r.client.ListAllRoles(ctx)
-	if listErr != nil {
-		if roleID == "" {
-			resp.Diagnostics.AddError("Error Creating IAM Role", "empty role_id and ListAllRoles failed: "+listErr.Error())
-			return
-		}
-		resp.Diagnostics.AddError("Error Reading IAM Role after Create", listErr.Error())
+	if created == nil || created.RoleID == "" {
+		resp.Diagnostics.AddError("Error Creating IAM Role", "API response missing role_id")
 		return
 	}
 
-	var item *platformTypes.RoleListItem
-	if roleID != "" {
-		for i := range listResp.Data {
-			if listResp.Data[i].RoleID == roleID {
-				item = &listResp.Data[i]
-				break
-			}
-		}
-	}
+	plan.ID = types.StringValue(created.RoleID)
 
-	if item == nil {
-		targetName := plan.PrettyName.ValueString()
-		for i := range listResp.Data {
-			it := &listResp.Data[i]
-			if it.PrettyName == targetName {
-				if item == nil || it.CreatedTs > item.CreatedTs {
-					item = it
-				}
-			}
-		}
-	}
-
-	if item == nil {
-		if roleID == "" {
-			resp.Diagnostics.AddError("Error Creating IAM Role", "empty role_id in create response and cannot locate the role by pretty_name")
-		} else {
-			resp.Diagnostics.AddError("Error Reading IAM Role after Create", "cannot locate role by role_id: "+roleID)
-		}
-		return
-	}
-
-	plan.RefreshFromRemote(ctx, &resp.Diagnostics, item)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.CreatedBy = types.StringNull()
+	plan.CreatedTs = types.Int64Null()
+	plan.UpdatedTs = types.Int64Null()
+	plan.IsCustom = types.BoolNull()
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
