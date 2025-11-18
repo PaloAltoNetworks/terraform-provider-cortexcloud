@@ -1,7 +1,7 @@
 // Copyright (c) Palo Alto Networks, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cloud_onboarding
+package cloudonboarding
 
 import (
 	"context"
@@ -69,6 +69,7 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 				Attributes: map[string]schema.Attribute{
 					"organization_id": schema.StringAttribute{
 						Required:    true,
+						Sensitive: true,
 						Description: "Your Azure tenant ID." +
 							"\n\n~>**NOTE**: You must first approve Cortex " +
 							"Cloud as an enterprise application in your " +
