@@ -17,7 +17,7 @@ Manages a CSP outpost template.
 
 ### Required
 
-- `cloud_provider` (String) The cloud service provider. Possible values are: "AWS", "AZURE", "GCP", "OCI"
+- `cloud_provider` (String) The cloud service provider. Possible values are: "AWS", "AZURE", "GCP"
 
 ### Optional
 
@@ -27,7 +27,7 @@ The tag `managed_by` with the value `paloaltonetworks` will be applied by defaul
 
 ### Read-Only
 
-- `terraform_module_url` (String) The full URL returned by Cortex Cloud when selecting the Terraform method of downloading the template. Opening this URL in your browser will begin a download of the created template as a Terraform module, which you can then apply to permit Cortex Cloud to scan your Azure resources.
+- `terraform_module_url` (String) The full URL returned by Cortex Cloud when selecting the Terraform method of downloading the template. Opening this URL in your browser will begin a download of the created template as a Terraform module, which you can then apply to permit Cortex Cloud to scan your cloud environment.
 
 <a id="nestedatt--custom_resources_tags"></a>
 ### Nested Schema for `custom_resources_tags`
