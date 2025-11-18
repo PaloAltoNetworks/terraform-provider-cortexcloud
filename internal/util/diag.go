@@ -17,6 +17,13 @@ func AddUnexpectedResourceConfigureTypeError(diagnostics *diag.Diagnostics, expe
 	)
 }
 
+func AddUnexpectedEphemeralResourceConfigureTypeError(diagnostics *diag.Diagnostics, expectedType, recievedType any) {
+	diagnostics.AddError(
+		"Unexpected Resource Configure Type",
+		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, recievedType),
+	)
+}
+
 //func AddValueConversionAttributeError(diagnostics *diag.Diagnostics, attributePath path.Path) {
 //	diagnostics.AddAttributeError(
 //		attributePath,
