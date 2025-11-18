@@ -13,34 +13,34 @@ import (
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type CloudIntegrationTemplateGcpModel struct {
-	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
-	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
-	CustomResourcesTags       types.Set    `tfsdk:"custom_resources_tags"`
-	InstanceName              types.String `tfsdk:"instance_name"`
-	ScanMode                  types.String `tfsdk:"scan_mode"`
-	Scope                     types.String `tfsdk:"scope"`
-	ScopeModifications        types.Object `tfsdk:"scope_modifications"`
-	Status                    types.String `tfsdk:"status"`
-	TrackingGUID              types.String `tfsdk:"tracking_guid"`
-	OutpostID                 types.String `tfsdk:"outpost_id"`
-	TerraformModuleURL       types.String `tfsdk:"terraform_module_url"`
+	AdditionalCapabilities  types.Object `tfsdk:"additional_capabilities"`
+	CollectionConfiguration types.Object `tfsdk:"collection_configuration"`
+	CustomResourcesTags     types.Set    `tfsdk:"custom_resources_tags"`
+	InstanceName            types.String `tfsdk:"instance_name"`
+	ScanMode                types.String `tfsdk:"scan_mode"`
+	Scope                   types.String `tfsdk:"scope"`
+	ScopeModifications      types.Object `tfsdk:"scope_modifications"`
+	Status                  types.String `tfsdk:"status"`
+	TrackingGUID            types.String `tfsdk:"tracking_guid"`
+	OutpostID               types.String `tfsdk:"outpost_id"`
+	TerraformModuleURL      types.String `tfsdk:"terraform_module_url"`
 }
 
 type scopeModificationsGcp struct {
-	Projects      *scopeModificationProjects `json:"projects,omitempty" tfsdk:"projects"`
-	Regions       *scopeModificationRegions `json:"regions,omitempty" tfsdk:"regions"`
+	Projects *scopeModificationProjects `json:"projects,omitempty" tfsdk:"projects"`
+	Regions  *scopeModificationRegions  `json:"regions,omitempty" tfsdk:"regions"`
 }
 
 type scopeModificationProjects struct {
-	Enabled    bool     `json:"enabled" tfsdk:"enabled"`
+	Enabled    bool      `json:"enabled" tfsdk:"enabled"`
 	Type       *string   `json:"type,omitempty" tfsdk:"type"`
 	ProjectIDs *[]string `json:"project_ids,omitempty" tfsdk:"project_ids"`
 }
@@ -65,14 +65,14 @@ func (m *CloudIntegrationTemplateGcpModel) ToCreateRequest(ctx context.Context, 
 	if scopeModificationsValue.Regions != nil {
 		scopeModifications.Regions = &cloudOnboardingTypes.ScopeModificationRegions{
 			Enabled: scopeModificationsValue.Regions.Enabled,
-			Type: scopeModificationsValue.Regions.Type,
+			Type:    scopeModificationsValue.Regions.Type,
 			Regions: scopeModificationsValue.Regions.Regions,
 		}
 	}
 	if scopeModificationsValue.Projects != nil {
 		scopeModifications.Projects = &cloudOnboardingTypes.ScopeModificationGeneric{
-			Enabled: scopeModificationsValue.Projects.Enabled,
-			Type: scopeModificationsValue.Projects.Type,
+			Enabled:    scopeModificationsValue.Projects.Enabled,
+			Type:       scopeModificationsValue.Projects.Type,
 			ProjectIDs: scopeModificationsValue.Projects.ProjectIDs,
 		}
 	}
@@ -157,11 +157,11 @@ func (m *CloudIntegrationTemplateGcpModel) RefreshConfiguredPropertyValues(ctx c
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
-		diags                   diag.Diagnostics
-		additionalCapabilities  basetypes.ObjectValue
-		customResourcesTags = types.SetNull(types.ObjectType{
+		diags                  diag.Diagnostics
+		additionalCapabilities basetypes.ObjectValue
+		customResourcesTags    = types.SetNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"key": types.StringType,
+				"key":   types.StringType,
 				"value": types.StringType,
 			},
 		})

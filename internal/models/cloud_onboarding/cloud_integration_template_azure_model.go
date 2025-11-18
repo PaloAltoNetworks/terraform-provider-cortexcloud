@@ -9,10 +9,10 @@ import (
 	"slices"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,29 +21,29 @@ import (
 )
 
 type CloudIntegrationTemplateAzureModel struct {
-	AccountDetails            types.Object `tfsdk:"account_details"`
-	AdditionalCapabilities    types.Object `tfsdk:"additional_capabilities"`
-	CollectionConfiguration   types.Object `tfsdk:"collection_configuration"`
-	CustomResourcesTags       types.Set    `tfsdk:"custom_resources_tags"`
-	InstanceName              types.String `tfsdk:"instance_name"`
-	ScanMode                  types.String `tfsdk:"scan_mode"`
-	Scope                     types.String `tfsdk:"scope"`
-	ScopeModifications        types.Object `tfsdk:"scope_modifications"`
-	Status                    types.String `tfsdk:"status"`
-	TrackingGUID              types.String `tfsdk:"tracking_guid"`
-	OutpostID                 types.String `tfsdk:"outpost_id"`
-	TerraformModuleURL       types.String `tfsdk:"terraform_module_url"`
-	ARMTemplateURL            types.String `tfsdk:"arm_template_url"`
+	AccountDetails          types.Object `tfsdk:"account_details"`
+	AdditionalCapabilities  types.Object `tfsdk:"additional_capabilities"`
+	CollectionConfiguration types.Object `tfsdk:"collection_configuration"`
+	CustomResourcesTags     types.Set    `tfsdk:"custom_resources_tags"`
+	InstanceName            types.String `tfsdk:"instance_name"`
+	ScanMode                types.String `tfsdk:"scan_mode"`
+	Scope                   types.String `tfsdk:"scope"`
+	ScopeModifications      types.Object `tfsdk:"scope_modifications"`
+	Status                  types.String `tfsdk:"status"`
+	TrackingGUID            types.String `tfsdk:"tracking_guid"`
+	OutpostID               types.String `tfsdk:"outpost_id"`
+	TerraformModuleURL      types.String `tfsdk:"terraform_module_url"`
+	ARMTemplateURL          types.String `tfsdk:"arm_template_url"`
 }
 
 type scopeModificationsAzure struct {
 	Subscriptions *scopeModificationSubscriptions `json:"subscriptions,omitempty" tfsdk:"subscriptions"`
-	Regions       *scopeModificationRegions `json:"regions,omitempty" tfsdk:"regions"`
+	Regions       *scopeModificationRegions       `json:"regions,omitempty" tfsdk:"regions"`
 }
 
 type scopeModificationSubscriptions struct {
-	Enabled    bool     `json:"enabled" tfsdk:"enabled"`
-	Type       *string   `json:"type,omitempty" tfsdk:"type"`
+	Enabled         bool      `json:"enabled" tfsdk:"enabled"`
+	Type            *string   `json:"type,omitempty" tfsdk:"type"`
 	SubscriptionIDs *[]string `json:"subscription_ids,omitempty" tfsdk:"subscription_ids"`
 }
 
@@ -72,14 +72,14 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 	if scopeModificationsValue.Regions != nil {
 		scopeModifications.Regions = &cloudOnboardingTypes.ScopeModificationRegions{
 			Enabled: scopeModificationsValue.Regions.Enabled,
-			Type: scopeModificationsValue.Regions.Type,
+			Type:    scopeModificationsValue.Regions.Type,
 			Regions: scopeModificationsValue.Regions.Regions,
 		}
 	}
 	if scopeModificationsValue.Subscriptions != nil {
 		scopeModifications.Subscriptions = &cloudOnboardingTypes.ScopeModificationGeneric{
-			Enabled: scopeModificationsValue.Subscriptions.Enabled,
-			Type: scopeModificationsValue.Subscriptions.Type,
+			Enabled:         scopeModificationsValue.Subscriptions.Enabled,
+			Type:            scopeModificationsValue.Subscriptions.Type,
 			SubscriptionIDs: scopeModificationsValue.Subscriptions.SubscriptionIDs,
 		}
 	}
@@ -87,11 +87,10 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 	if diagnostics.HasError() {
 		return nil
 	}
-	
+
 	if !slices.Contains(customResourcesTags, managedByPANWTag) {
 		customResourcesTags = append(customResourcesTags, managedByPANWTag)
 	}
-
 
 	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
 		cloudOnboardingTypes.WithAccountDetails(&accountDetails),
@@ -156,7 +155,7 @@ func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Cont
 		tflog.Debug(context.Background(), "Terraform module URL not found, setting Terraform deployment URL to nil")
 		m.TerraformModuleURL = types.StringNull()
 	}
-	
+
 	if response.Manual.ARM != nil {
 		tflog.Debug(context.Background(), "Setting ARM deployment URL")
 		m.ARMTemplateURL = types.StringValue(*response.Manual.ARM)
@@ -170,11 +169,11 @@ func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
-		additionalCapabilities  basetypes.ObjectValue
-		diags                   diag.Diagnostics
-		customResourcesTags = types.SetNull(types.ObjectType{
+		additionalCapabilities basetypes.ObjectValue
+		diags                  diag.Diagnostics
+		customResourcesTags    = types.SetNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"key": types.StringType,
+				"key":   types.StringType,
 				"value": types.StringType,
 			},
 		})

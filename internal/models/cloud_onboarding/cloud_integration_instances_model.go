@@ -56,7 +56,7 @@ var (
 		"registry_scanning":                types.BoolType,
 		"registry_scanning_options": types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"type": types.StringType,
+				"type":      types.StringType,
 				"last_days": types.Int32Type,
 			},
 		},

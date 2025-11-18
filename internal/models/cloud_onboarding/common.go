@@ -8,13 +8,12 @@ import (
 )
 
 type scopeModificationRegions struct {
-	Enabled bool     `json:"enabled" tfsdk:"enabled"`
+	Enabled bool      `json:"enabled" tfsdk:"enabled"`
 	Type    *string   `json:"type,omitempty" tfsdk:"type"`
 	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 }
 
 var managedByPANWTag = cloudOnboardingTypes.Tag{
-	Key: "managed_by",
+	Key:   "managed_by",
 	Value: "paloaltonetworks",
 }
-

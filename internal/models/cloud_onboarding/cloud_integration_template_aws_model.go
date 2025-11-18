@@ -13,8 +13,8 @@ import (
 	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -37,12 +37,12 @@ type CloudIntegrationTemplateAwsModel struct {
 }
 
 type scopeModificationsAws struct {
-	Accounts      *scopeModificationAccounts `json:"accounts,omitempty" tfsdk:"accounts"`
-	Regions       *scopeModificationRegions `json:"regions,omitempty" tfsdk:"regions"`
+	Accounts *scopeModificationAccounts `json:"accounts,omitempty" tfsdk:"accounts"`
+	Regions  *scopeModificationRegions  `json:"regions,omitempty" tfsdk:"regions"`
 }
 
 type scopeModificationAccounts struct {
-	Enabled    bool     `json:"enabled" tfsdk:"enabled"`
+	Enabled    bool      `json:"enabled" tfsdk:"enabled"`
 	Type       *string   `json:"type,omitempty" tfsdk:"type"`
 	AccountIDs *[]string `json:"account_ids,omitempty" tfsdk:"account_ids"`
 }
@@ -67,14 +67,14 @@ func (m *CloudIntegrationTemplateAwsModel) ToCreateRequest(ctx context.Context, 
 	if scopeModificationsValue.Regions != nil {
 		scopeModifications.Regions = &cloudOnboardingTypes.ScopeModificationRegions{
 			Enabled: scopeModificationsValue.Regions.Enabled,
-			Type: scopeModificationsValue.Regions.Type,
+			Type:    scopeModificationsValue.Regions.Type,
 			Regions: scopeModificationsValue.Regions.Regions,
 		}
 	}
 	if scopeModificationsValue.Accounts != nil {
 		scopeModifications.Accounts = &cloudOnboardingTypes.ScopeModificationGeneric{
-			Enabled: scopeModificationsValue.Accounts.Enabled,
-			Type: scopeModificationsValue.Accounts.Type,
+			Enabled:    scopeModificationsValue.Accounts.Enabled,
+			Type:       scopeModificationsValue.Accounts.Type,
 			AccountIDs: scopeModificationsValue.Accounts.AccountIDs,
 		}
 	}
@@ -171,11 +171,11 @@ func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx c
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
-		diags                   diag.Diagnostics
-		additionalCapabilities  basetypes.ObjectValue
-		customResourcesTags = types.SetNull(types.ObjectType{
+		diags                  diag.Diagnostics
+		additionalCapabilities basetypes.ObjectValue
+		customResourcesTags    = types.SetNull(types.ObjectType{
 			AttrTypes: map[string]attr.Type{
-				"key": types.StringType,
+				"key":   types.StringType,
 				"value": types.StringType,
 			},
 		})
