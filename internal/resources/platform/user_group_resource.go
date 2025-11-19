@@ -10,6 +10,7 @@ import (
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -94,19 +94,19 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Description: "The timestamp of when the user group was last updated.",
 				Computed:    true,
 			},
-			"users": schema.ListAttribute{
+			"users": schema.SetAttribute{
 				Description: "The users in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"group_type": schema.StringAttribute{
 				Description: "The type of the user group.",
 				Computed:    true,
 			},
-			"nested_groups": schema.ListNestedAttribute{
+			"nested_groups": schema.SetNestedAttribute{
 				Description: "The nested groups in the user group.",
 				Optional:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -126,12 +126,12 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 					},
 				},
 			},
-			"idp_groups": schema.ListAttribute{
+			"idp_groups": schema.SetAttribute{
 				Description: "The IDP groups in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
