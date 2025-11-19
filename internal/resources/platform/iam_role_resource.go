@@ -58,12 +58,12 @@ func (r *iamRoleResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "The description of the role.",
 				Optional:    true,
 			},
-			"component_permissions": schema.ListAttribute{
+			"component_permissions": schema.SetAttribute{
 				Description: "The component permissions for the role.",
 				Required:    true,
 				ElementType: types.StringType,
 			},
-			"dataset_permissions": schema.ListNestedAttribute{
+			"dataset_permissions": schema.SetNestedAttribute{
 				Description: "The dataset permissions for the role.",
 				Optional:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -76,7 +76,7 @@ func (r *iamRoleResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Description: "Whether to grant access to all datasets in the category.",
 							Required:    true,
 						},
-						"permissions": schema.ListAttribute{
+						"permissions": schema.SetAttribute{
 							Description: "The permissions for the dataset.",
 							Required:    true,
 							ElementType: types.StringType,

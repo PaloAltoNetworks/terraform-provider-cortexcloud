@@ -12,8 +12,8 @@ type IamRoleModel struct {
 	ID                   types.String `tfsdk:"id"`
 	PrettyName           types.String `tfsdk:"pretty_name"`
 	Description          types.String `tfsdk:"description"`
-	ComponentPermissions types.List   `tfsdk:"component_permissions"`
-	DatasetPermissions   types.List   `tfsdk:"dataset_permissions"`
+	ComponentPermissions types.Set    `tfsdk:"component_permissions"`
+	DatasetPermissions   types.Set    `tfsdk:"dataset_permissions"`
 	IsCustom             types.Bool   `tfsdk:"is_custom"`
 	CreatedBy            types.String `tfsdk:"created_by"`
 	CreatedTs            types.Int64  `tfsdk:"created_ts"`
@@ -23,7 +23,7 @@ type IamRoleModel struct {
 type DatasetPermissionModel struct {
 	Category    types.String `tfsdk:"category"`
 	AccessAll   types.Bool   `tfsdk:"access_all"`
-	Permissions types.List   `tfsdk:"permissions"`
+	Permissions types.Set    `tfsdk:"permissions"`
 }
 
 // RefreshFromRemote maps RoleListItem → state fields.
