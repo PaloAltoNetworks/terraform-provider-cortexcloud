@@ -88,7 +88,7 @@ func (r *RoleDataSource) Configure(ctx context.Context, req datasource.Configure
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
+		util.AddUnexpectedDataSourceConfigurationTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
 		return
 	}
 

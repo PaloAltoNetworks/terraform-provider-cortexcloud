@@ -610,7 +610,7 @@ func (r *CloudIntegrationTemplateGcpResource) Configure(ctx context.Context, req
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
+		util.AddUnexpectedResourceConfigurationTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
 		return
 	}
 

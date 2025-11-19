@@ -70,7 +70,7 @@ func (d *OutpostDataSource) Configure(ctx context.Context, req datasource.Config
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
+		util.AddUnexpectedDataSourceConfigurationTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
 		return
 	}
 	d.client = client.CloudOnboarding

@@ -16,6 +16,13 @@ func AddUnexpectedResourceConfigurationTypeError(diagnostics *diag.Diagnostics, 
 	)
 }
 
+func AddUnexpectedDataSourceConfigurationTypeError(diagnostics *diag.Diagnostics, expectedType, receivedType any) {
+	diagnostics.AddError(
+		"Unexpected Data Source Configuration Type",
+		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, receivedType),
+	)
+}
+
 func AddUnexpectedEphemeralResourceConfigurationTypeError(diagnostics *diag.Diagnostics, expectedType, receivedType any) {
 	diagnostics.AddError(
 		"Unexpected Ephemeral Resource Configuration Type",
