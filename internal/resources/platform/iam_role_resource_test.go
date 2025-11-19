@@ -68,6 +68,7 @@ func TestUnitIamRoleResource(t *testing.T) {
 			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
+			// Step 1: Create
 			{
 				Config: fmt.Sprintf(`
 					provider "cortexcloud" {
@@ -85,6 +86,14 @@ func TestUnitIamRoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "id", "test-role-id"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "pretty_name", "test-role"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "description", "test role description"),
+				),
+			},
+			// Step 2: Refresh
+			{
+				ResourceName: "cortexcloud_iam_role.test",
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "id", "test-role-id"), // ID 保持不变
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "is_custom", "true"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "created_by", "test-user"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "created_ts", "1678886400000"),

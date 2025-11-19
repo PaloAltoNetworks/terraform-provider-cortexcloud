@@ -10,6 +10,7 @@ import (
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -94,19 +94,19 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Description: "The timestamp of when the user group was last updated.",
 				Computed:    true,
 			},
-			"users": schema.ListAttribute{
+			"users": schema.SetAttribute{
 				Description: "The users in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"group_type": schema.StringAttribute{
 				Description: "The type of the user group.",
 				Computed:    true,
 			},
-			"nested_groups": schema.ListNestedAttribute{
+			"nested_groups": schema.SetNestedAttribute{
 				Description: "The nested groups in the user group.",
 				Optional:    true,
 				NestedObject: schema.NestedAttributeObject{
@@ -121,16 +121,17 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 						"group_name": schema.StringAttribute{
 							Description: "The name of the nested group.",
 							Computed:    true,
+							Optional:    true,
 						},
 					},
 				},
 			},
-			"idp_groups": schema.ListAttribute{
+			"idp_groups": schema.SetAttribute{
 				Description: "The IDP groups in the user group.",
 				ElementType: types.StringType,
 				Optional:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -153,6 +154,7 @@ func (r *userGroupResource) Configure(_ context.Context, req resource.ConfigureR
 }
 
 // Create creates the resource and sets the initial Terraform state.
+// user_group_resource.go
 func (r *userGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan models.UserGroupModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -168,18 +170,33 @@ func (r *userGroupResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	plan.ID = types.StringValue(groupID)
-	plan.PrettyRoleName = types.StringNull()
-	plan.CreatedBy = types.StringNull()
-	plan.CreatedTS = types.Int64Null()
-	plan.UpdatedTS = types.Int64Null()
-	plan.GroupType = types.StringNull()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	groups, err := r.client.ListUserGroups(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading user groups after creation", err.Error())
+		return
+	}
+
+	var remote *platformtypes.UserGroup
+	for i := range groups {
+		if groups[i].GroupID == groupID {
+			remote = &groups[i]
+			break
+		}
+	}
+
+	if remote == nil {
+		resp.Diagnostics.AddError("Error locating newly created user group",
+			"The user group was created successfully, but could not be found in the list.")
+		return
+	}
+
+	plan.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.

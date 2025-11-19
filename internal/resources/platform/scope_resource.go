@@ -79,7 +79,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 						Description: "The mode of the assets scope.",
 						Required:    true,
 					},
-					"asset_groups": schema.ListNestedAttribute{
+					"asset_groups": schema.SetNestedAttribute{
 						Optional: true,
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
@@ -101,7 +101,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				Attributes: map[string]schema.Attribute{
 					"default_filter_mode": schema.StringAttribute{
-						Description: fmt.Sprintf("The default filter mode of the datasets rows scope. Possible values are: \"%s\"", strings.Join([]string{ "no_scope", "see_all" }, "\", \"")),
+						Description: fmt.Sprintf("The default filter mode of the datasets rows scope. Possible values are: \"%s\"", strings.Join([]string{"no_scope", "see_all"}, "\", \"")),
 						Required:    true,
 						Validators: []validator.String{
 							stringvalidator.OneOf([]string{
@@ -110,7 +110,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							}...),
 						},
 					},
-					"filters": schema.ListNestedAttribute{
+					"filters": schema.SetNestedAttribute{
 						Description: "The filters in the datasets rows scope.",
 						Optional:    true,
 						NestedObject: schema.NestedAttributeObject{
@@ -140,7 +140,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								Description: "The mode of the endpoint groups scope.",
 								Required:    true,
 							},
-							"tags": schema.ListNestedAttribute{
+							"tags": schema.SetNestedAttribute{
 								Description: "The tags in the endpoint groups scope.",
 								Optional:    true,
 								NestedObject: schema.NestedAttributeObject{
@@ -166,7 +166,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								Description: "The mode of the endpoint tags scope.",
 								Required:    true,
 							},
-							"tags": schema.ListNestedAttribute{
+							"tags": schema.SetNestedAttribute{
 								Description: "The tags in the endpoint tags scope.",
 								Optional:    true,
 								NestedObject: schema.NestedAttributeObject{
@@ -194,7 +194,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 						Description: "The mode of the cases issues scope.",
 						Required:    true,
 					},
-					"tags": schema.ListNestedAttribute{
+					"tags": schema.SetNestedAttribute{
 						Description: "The tags in the cases issues scope.",
 						Optional:    true,
 						NestedObject: schema.NestedAttributeObject{

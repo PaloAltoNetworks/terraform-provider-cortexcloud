@@ -85,7 +85,7 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Description: "The user type of the user.",
 				Computed:    true,
 			},
-			"groups": schema.ListNestedAttribute{
+			"groups": schema.SetNestedAttribute{
 				Description: "The groups of the user.",
 				Optional:    true,
 				NestedObject: schema.NestedAttributeObject{

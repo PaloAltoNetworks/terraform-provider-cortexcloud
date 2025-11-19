@@ -62,6 +62,7 @@ var (
 		},
 		"agentless_disk_scanning": types.BoolType,
 		"xsiam_analytics":         types.BoolType,
+		"serverless_scanning":     types.BoolType,
 	}
 	customResourcesTagsAttrTypes = types.SetType{
 		ElemType: types.ObjectType{
