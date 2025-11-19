@@ -17,12 +17,12 @@ Manages an IAM role.
 
 ### Required
 
-- `component_permissions` (List of String) The component permissions for the role.
+- `component_permissions` (Set of String) The component permissions for the role.
 - `pretty_name` (String) The name of the role.
 
 ### Optional
 
-- `dataset_permissions` (Attributes List) The dataset permissions for the role. (see [below for nested schema](#nestedatt--dataset_permissions))
+- `dataset_permissions` (Attributes Set) The dataset permissions for the role. (see [below for nested schema](#nestedatt--dataset_permissions))
 - `description` (String) The description of the role.
 
 ### Read-Only
@@ -40,4 +40,4 @@ Required:
 
 - `access_all` (Boolean) Whether to grant access to all datasets in the category.
 - `category` (String) The category of the dataset.
-- `permissions` (List of String) The permissions for the dataset.
+- `permissions` (Set of String) The permissions for the dataset.

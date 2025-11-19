@@ -21,7 +21,7 @@ Manages a Cortex Cloud user.
 
 ### Optional
 
-- `groups` (Attributes List) The groups of the user. (see [below for nested schema](#nestedatt--groups))
+- `groups` (Attributes Set) The groups of the user. (see [below for nested schema](#nestedatt--groups))
 - `hidden` (Boolean) The hidden status of the user.
 - `phone_number` (String) The phone number of the user.
 - `status` (String) The status of the user.
