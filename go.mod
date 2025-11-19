@@ -20,6 +20,7 @@ replace (
 require (
 	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v0.0.0-00010101000000-000000000000
+	github.com/PaloAltoNetworks/cortex-cloud-go/cwp v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/enums v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/log v0.0.0-00010101000000-000000000000
 	github.com/PaloAltoNetworks/cortex-cloud-go/platform v0.0.0-00010101000000-000000000000
@@ -34,6 +35,7 @@ require (
 )
 
 require (
+	dario.cat/mergo v1.0.2 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/errors v0.0.0 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client v0.0.0-00010101000000-000000000000 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v0.0.0-00010101000000-000000000000 // indirect

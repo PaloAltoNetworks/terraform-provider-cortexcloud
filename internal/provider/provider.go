@@ -6,11 +6,13 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	//"strconv"
 	//"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
@@ -19,6 +21,9 @@ import (
 	appSecResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/application_security"
 	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
 	platformResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/platform"
+
+	cwpDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cwp"
+	cwpResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cwp"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -161,15 +166,15 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 	resources := []func() resource.Resource{}
 	tflog.Debug(ctx, "Registering Cloud Onboarding Resources")
 	resources = append(
-		resources, 
+		resources,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
 	)
-	
+
 	tflog.Debug(ctx, "Registering Platform Resources")
 	resources = append(
-		resources, 
+		resources,
 		platformResources.NewAuthenticationSettingsResource,
 		platformResources.NewAssetGroupResource,
 		platformResources.NewUserGroupResource,
@@ -177,18 +182,24 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewScopeResource,
 		platformResources.NewIamRoleResource,
 	)
-	
+
 	tflog.Debug(ctx, "Registering AppSec Resources")
 	resources = append(
-		resources, 
+		resources,
 		appSecResources.NewApplicationSecurityRuleResource,
+	)
+
+	tflog.Debug(ctx, "Registering CWP Resources")
+	resources = append(
+		resources,
+		cwpResources.NewPolicyResource,
 	)
 
 	return resources
 }
 
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	tflog.Debug(ctx, "Registering Data Sources")	
+	tflog.Debug(ctx, "Registering Data Sources")
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
@@ -198,6 +209,8 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 		platformDataSources.NewIamPermissionConfigDataSource,
+		cwpDataSources.NewPolicyDataSource,
+		cwpDataSources.NewPoliciesDataSource,
 	}
 }
 
@@ -315,12 +328,37 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	tflog.Debug(ctx, "Initializing CWP client")
+	cwpClient, err := cwp.NewClient(
+		cwp.WithCortexFQDN(fqdn),
+		cwp.WithCortexAPIURL(apiURL),
+		cwp.WithCortexAPIKey(apiKey),
+		cwp.WithCortexAPIKeyID(apiKeyID),
+		cwp.WithCortexAPIKeyType(apiKeyType),
+		cwp.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		cwp.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		// cwp.WithRequestRetryInterval(time.Duration(providerConfig.RequestRetryInterval.ValueInt32())*time.Second),
+		cwp.WithLogger(log.TflogAdapter{}),
+		cwp.WithLogLevel(sdkLogLevel),
+		cwp.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create CWP Client",
+			"An unexpected error occurred when creating the CWP client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"CWP Client Error: "+err.Error(),
+		)
+		return
+	}
+
 	tflog.Debug(ctx, "Cortex Cloud API client setup complete")
 
 	// Attach SDK clients to model
 	clients.AppSec = appSecClient
 	clients.CloudOnboarding = cloudOnboardingClient
 	clients.Platform = platformClient
+	clients.CWP = cwpClient
 
 	// Assign clients model pointer to ProviderData to allow resources and
 	// data sources to access SDK functions

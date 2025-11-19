@@ -13,6 +13,7 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -95,6 +96,7 @@ type CortexCloudSDKClients struct {
 	AppSec          *appsec.Client
 	CloudOnboarding *cloudonboarding.Client
 	Platform        *platform.Client
+	CWP             *cwp.Client
 }
 
 func (m *CortexCloudProviderModel) Validate(ctx context.Context, diags *diag.Diagnostics) {
