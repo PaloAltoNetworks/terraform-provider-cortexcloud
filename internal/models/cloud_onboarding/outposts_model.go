@@ -109,12 +109,6 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 					From: 0,
 					To:   1000,
 				},
-				Sort: []filterTypes.SortFilter{
-					{
-						Field: cortexEnums.SearchFieldInstanceName.String(),
-						Order: "ASC",
-					},
-				},
 			},
 		),
 	)
