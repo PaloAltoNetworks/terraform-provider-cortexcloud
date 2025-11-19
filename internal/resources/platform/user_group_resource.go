@@ -121,6 +121,7 @@ func (r *userGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 						"group_name": schema.StringAttribute{
 							Description: "The name of the nested group.",
 							Computed:    true,
+							Optional:    true,
 						},
 					},
 				},
@@ -153,6 +154,7 @@ func (r *userGroupResource) Configure(_ context.Context, req resource.ConfigureR
 }
 
 // Create creates the resource and sets the initial Terraform state.
+// user_group_resource.go
 func (r *userGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan models.UserGroupModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -168,18 +170,33 @@ func (r *userGroupResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	plan.ID = types.StringValue(groupID)
-	plan.PrettyRoleName = types.StringNull()
-	plan.CreatedBy = types.StringNull()
-	plan.CreatedTS = types.Int64Null()
-	plan.UpdatedTS = types.Int64Null()
-	plan.GroupType = types.StringNull()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	groups, err := r.client.ListUserGroups(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading user groups after creation", err.Error())
+		return
+	}
+
+	var remote *platformtypes.UserGroup
+	for i := range groups {
+		if groups[i].GroupID == groupID {
+			remote = &groups[i]
+			break
+		}
+	}
+
+	if remote == nil {
+		resp.Diagnostics.AddError("Error locating newly created user group",
+			"The user group was created successfully, but could not be found in the list.")
+		return
+	}
+
+	plan.RefreshFromRemote(ctx, &resp.Diagnostics, remote)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// r.Read(ctx, resource.ReadRequest{State: resp.State}, &resource.ReadResponse{State: resp.State, Diagnostics: resp.Diagnostics})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // Read refreshes the Terraform state with the latest data.
