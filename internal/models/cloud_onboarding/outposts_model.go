@@ -37,7 +37,7 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 	if !m.CloudProvider.IsNull() && !m.CloudProvider.IsUnknown() {
 		filters = append(filters, filterTypes.NewSearchFilter(
 			cortexEnums.SearchFieldProvider.String(),
-			cortexEnums.SearchTypeEqualTo.String(),
+			cortexEnums.SearchTypeWildcard.String(),
 			m.CloudProvider.ValueString(),
 		))
 	}
@@ -108,12 +108,6 @@ func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag
 				Paging: filterTypes.PagingFilter{
 					From: 0,
 					To:   1000,
-				},
-				Sort: []filterTypes.SortFilter{
-					{
-						Field: cortexEnums.SearchFieldInstanceName.String(),
-						Order: "ASC",
-					},
 				},
 			},
 		),

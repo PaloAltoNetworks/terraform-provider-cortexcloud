@@ -190,6 +190,7 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
 		cloudOnboardingDataSources.NewOutpostDataSource,
 		cloudOnboardingDataSources.NewOutpostsDataSource,
+		cloudOnboardingDataSources.NewOutpostTemplateDataSource,
 	)
 
 	tflog.Debug(ctx, "Registering Platform Data Sources")
