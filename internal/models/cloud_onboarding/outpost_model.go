@@ -32,19 +32,13 @@ func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostic
 				Filter: filterTypes.NewAndFilter(
 					filterTypes.NewSearchFilter(
 						cortexEnums.SearchFieldOutpostID.String(),
-						cortexEnums.SearchTypeWildcard.String(),
+						cortexEnums.SearchTypeEqualTo.String(),
 						m.ID.ValueString(),
 					),
 				),
 				Paging: filterTypes.PagingFilter{
 					From: 0,
 					To:   1000,
-				},
-				Sort: []filterTypes.SortFilter{
-					{
-						Field: cortexEnums.SearchFieldInstanceName.String(),
-						Order: "ASC",
-					},
 				},
 			},
 		),

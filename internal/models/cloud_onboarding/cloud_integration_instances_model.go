@@ -158,12 +158,6 @@ func (m *CloudIntegrationInstancesDataSourceModel) ToListRequest(ctx context.Con
 					From: 0,
 					To:   1000,
 				},
-				Sort: []filterTypes.SortFilter{
-					{
-						Field: cortexEnums.SearchFieldInstanceName.String(),
-						Order: "ASC",
-					},
-				},
 			},
 		),
 	)
