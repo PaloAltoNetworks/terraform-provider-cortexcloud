@@ -165,6 +165,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
+		cloudOnboardingResources.NewOutpostTemplateResource,
 	)
 
 	tflog.Debug(ctx, "Registering Platform Resources")
@@ -190,7 +191,6 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
 		cloudOnboardingDataSources.NewOutpostDataSource,
 		cloudOnboardingDataSources.NewOutpostsDataSource,
-		cloudOnboardingDataSources.NewOutpostTemplateDataSource,
 	)
 
 	tflog.Debug(ctx, "Registering Platform Data Sources")
