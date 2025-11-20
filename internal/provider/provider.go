@@ -15,8 +15,10 @@ import (
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
 	platformResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/platform"
+	cloudOnboardingEphemeralResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/ephemeral/cloud_onboarding"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,7 +27,8 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ provider.Provider = &CortexCloudProvider{}
+	_ provider.Provider                       = &CortexCloudProvider{}
+	_ provider.ProviderWithEphemeralResources = &CortexCloudProvider{}
 )
 
 // New is a helper function to simplify provider server and testing implementation.
@@ -155,17 +158,18 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 
 func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.Resource {
 	resources := []func() resource.Resource{}
+
 	tflog.Debug(ctx, "Registering Cloud Onboarding Resources")
 	resources = append(
-		resources, 
+		resources,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
 	)
-	
+
 	tflog.Debug(ctx, "Registering Platform Resources")
 	resources = append(
-		resources, 
+		resources,
 		platformResources.NewAuthenticationSettingsResource,
 		platformResources.NewAssetGroupResource,
 		platformResources.NewUserGroupResource,
@@ -173,22 +177,41 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewScopeResource,
 		platformResources.NewIamRoleResource,
 	)
-	
+
 	return resources
 }
 
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	tflog.Debug(ctx, "Registering Data Sources")	
-	return []func() datasource.DataSource{
+	datasources := []func() datasource.DataSource{}
+
+	tflog.Debug(ctx, "Registering Cloud Onboarding Data Sources")
+	datasources = append(datasources,
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
 		cloudOnboardingDataSources.NewOutpostDataSource,
 		cloudOnboardingDataSources.NewOutpostsDataSource,
+	)
+
+	tflog.Debug(ctx, "Registering Platform Data Sources")
+	datasources = append(datasources,
 		platformDataSources.NewUserDataSource,
 		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 		platformDataSources.NewIamPermissionConfigDataSource,
-	}
+	)
+
+	return datasources
+}
+
+func (p *CortexCloudProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+	ephemeralResources := []func() ephemeral.EphemeralResource{}
+
+	tflog.Debug(ctx, "Registering Cloud Onboarding Ephemeral Resources")
+	ephemeralResources = append(ephemeralResources,
+		cloudOnboardingEphemeralResources.NewOutpostTemplateEphemeralResource,
+	)
+
+	return ephemeralResources
 }
 
 func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -295,4 +318,5 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	// data sources to access SDK functions
 	resp.DataSourceData = &clients
 	resp.ResourceData = &clients
+	resp.EphemeralResourceData = &clients
 }

@@ -146,7 +146,7 @@ func (r *userGroupResource) Configure(_ context.Context, req resource.ConfigureR
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
+		util.AddUnexpectedResourceConfigurationTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
 		return
 	}
 

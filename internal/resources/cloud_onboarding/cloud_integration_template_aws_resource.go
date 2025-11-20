@@ -1,7 +1,7 @@
 // Copyright (c) Palo Alto Networks, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cloud_onboarding
+package cloudonboarding
 
 import (
 	"context"
@@ -628,7 +628,7 @@ func (r *CloudIntegrationTemplateAwsResource) Configure(ctx context.Context, req
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
+		util.AddUnexpectedResourceConfigurationTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
 		return
 	}
 

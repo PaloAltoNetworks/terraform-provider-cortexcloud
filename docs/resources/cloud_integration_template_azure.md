@@ -48,7 +48,7 @@ The tag `managed_by` with the value `paloaltonetworks` will be applied by defaul
 
 Required:
 
-- `organization_id` (String) Your Azure tenant ID.
+- `organization_id` (String, Sensitive) Your Azure tenant ID.
 
 ~>**NOTE**: You must first approve Cortex Cloud as an enterprise application in your Azure tenant before attempting to create this resource. If you attempt to create a template for a tenant that has not approved the Cortex Cloud application, the API will return an error.
 
@@ -62,6 +62,7 @@ Optional:
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
 - `registry_scanning_options` (Attributes) Additional configuration options forregistry scanning. Default value is `true`. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
 
 <a id="nestedatt--additional_capabilities--registry_scanning_options"></a>

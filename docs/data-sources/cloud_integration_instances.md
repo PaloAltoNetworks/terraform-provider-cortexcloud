@@ -63,6 +63,7 @@ Read-Only:
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets.
 - `registry_scanning_options` (Attributes) Options for registry scanning. (see [below for nested schema](#nestedatt--instances--additional_capabilities--registry_scanning_options))
+- `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected.
 
 <a id="nestedatt--instances--additional_capabilities--registry_scanning_options"></a>

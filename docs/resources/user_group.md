@@ -22,10 +22,10 @@ Manages a Cortex Cloud user group.
 ### Optional
 
 - `description` (String) The description of the user group.
-- `idp_groups` (List of String) The IDP groups in the user group.
-- `nested_groups` (Attributes List) The nested groups in the user group. (see [below for nested schema](#nestedatt--nested_groups))
+- `idp_groups` (Set of String) The IDP groups in the user group.
+- `nested_groups` (Attributes Set) The nested groups in the user group. (see [below for nested schema](#nestedatt--nested_groups))
 - `role_id` (String) The role id associated with the user group.
-- `users` (List of String) The users in the user group.
+- `users` (Set of String) The users in the user group.
 
 ### Read-Only
 
@@ -43,6 +43,6 @@ Required:
 
 - `group_id` (String) The ID of the nested group.
 
-Read-Only:
+Optional:
 
 - `group_name` (String) The name of the nested group.

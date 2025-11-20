@@ -74,7 +74,7 @@ func (r *GroupDataSource) Configure(ctx context.Context, req datasource.Configur
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
+		util.AddUnexpectedDataSourceConfigurationTypeError(&resp.Diagnostics, "*http.Client", req.ProviderData)
 		return
 	}
 

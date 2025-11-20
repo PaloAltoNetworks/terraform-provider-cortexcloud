@@ -7,20 +7,25 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	//"github.com/hashicorp/terraform-plugin-framework/path"
 )
 
-func AddUnexpectedResourceConfigureTypeError(diagnostics *diag.Diagnostics, expectedType, recievedType any) {
+func AddUnexpectedResourceConfigurationTypeError(diagnostics *diag.Diagnostics, expectedType, receivedType any) {
 	diagnostics.AddError(
-		"Unexpected Resource Configure Type",
-		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, recievedType),
+		"Unexpected Resource Configuration Type",
+		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, receivedType),
 	)
 }
 
-//func AddValueConversionAttributeError(diagnostics *diag.Diagnostics, attributePath path.Path) {
-//	diagnostics.AddAttributeError(
-//		attributePath,
-//		"Value Conversion Error",
-//		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, recievedType),
-//	)
-//}
+func AddUnexpectedDataSourceConfigurationTypeError(diagnostics *diag.Diagnostics, expectedType, receivedType any) {
+	diagnostics.AddError(
+		"Unexpected Data Source Configuration Type",
+		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, receivedType),
+	)
+}
+
+func AddUnexpectedEphemeralResourceConfigurationTypeError(diagnostics *diag.Diagnostics, expectedType, receivedType any) {
+	diagnostics.AddError(
+		"Unexpected Ephemeral Resource Configuration Type",
+		fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", expectedType, receivedType),
+	)
+}

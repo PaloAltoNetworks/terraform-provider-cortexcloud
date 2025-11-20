@@ -106,7 +106,7 @@ func (d *userDataSource) Configure(_ context.Context, req datasource.ConfigureRe
 
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
+		util.AddUnexpectedDataSourceConfigurationTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
 		return
 	}
 

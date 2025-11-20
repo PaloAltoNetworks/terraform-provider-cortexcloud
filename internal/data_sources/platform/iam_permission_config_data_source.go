@@ -120,7 +120,7 @@ func (d *iamPermissionConfigDataSource) Configure(ctx context.Context, req datas
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
+		util.AddUnexpectedDataSourceConfigurationTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
 		return
 	}
 

@@ -118,7 +118,7 @@ func (r *AssetGroupResource) Configure(ctx context.Context, req resource.Configu
 	client, ok := req.ProviderData.(*providerModels.CortexCloudSDKClients)
 
 	if !ok {
-		util.AddUnexpectedResourceConfigureTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
+		util.AddUnexpectedResourceConfigurationTypeError(&resp.Diagnostics, "*providerModels.CortexCloudSDKClients", req.ProviderData)
 		return
 	}
 

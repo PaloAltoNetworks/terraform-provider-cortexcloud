@@ -40,7 +40,7 @@ Required:
 
 Optional:
 
-- `asset_groups` (Attributes List) (see [below for nested schema](#nestedatt--assets--asset_groups))
+- `asset_groups` (Attributes Set) (see [below for nested schema](#nestedatt--assets--asset_groups))
 
 <a id="nestedatt--assets--asset_groups"></a>
 ### Nested Schema for `assets.asset_groups`
@@ -64,7 +64,7 @@ Required:
 
 Optional:
 
-- `tags` (Attributes List) The tags in the cases issues scope. (see [below for nested schema](#nestedatt--cases_issues--tags))
+- `tags` (Attributes Set) The tags in the cases issues scope. (see [below for nested schema](#nestedatt--cases_issues--tags))
 
 <a id="nestedatt--cases_issues--tags"></a>
 ### Nested Schema for `cases_issues.tags`
@@ -88,7 +88,7 @@ Required:
 
 Optional:
 
-- `filters` (Attributes List) The filters in the datasets rows scope. (see [below for nested schema](#nestedatt--datasets_rows--filters))
+- `filters` (Attributes Set) The filters in the datasets rows scope. (see [below for nested schema](#nestedatt--datasets_rows--filters))
 
 <a id="nestedatt--datasets_rows--filters"></a>
 ### Nested Schema for `datasets_rows.filters`
@@ -117,7 +117,7 @@ Required:
 
 Optional:
 
-- `tags` (Attributes List) The tags in the endpoint groups scope. (see [below for nested schema](#nestedatt--endpoints--endpoint_groups--tags))
+- `tags` (Attributes Set) The tags in the endpoint groups scope. (see [below for nested schema](#nestedatt--endpoints--endpoint_groups--tags))
 
 <a id="nestedatt--endpoints--endpoint_groups--tags"></a>
 ### Nested Schema for `endpoints.endpoint_groups.tags`
@@ -141,7 +141,7 @@ Required:
 
 Optional:
 
-- `tags` (Attributes List) The tags in the endpoint tags scope. (see [below for nested schema](#nestedatt--endpoints--endpoint_tags--tags))
+- `tags` (Attributes Set) The tags in the endpoint tags scope. (see [below for nested schema](#nestedatt--endpoints--endpoint_tags--tags))
 
 <a id="nestedatt--endpoints--endpoint_tags--tags"></a>
 ### Nested Schema for `endpoints.endpoint_tags.tags`
