@@ -108,6 +108,14 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 						Description: "TODO",
 						Computed:    true,
 					},
+					"serverless_scanning": schema.BoolAttribute{
+						Description: "Whether to enable serverless scanning to detect and remediate vulnerabilities within serverless functions during the development lifecycle. Default value is \"true\".",
+						MarkdownDescription: "Whether to enable agentless disk " +
+							"scanning to remotely detect and remediate " +
+							"vulnerabilities during the development " +
+							"lifecycle. Default value is `true`.",
+						Computed: true,
+					},
 					"xsiam_analytics": schema.BoolAttribute{
 						Description: "Whether to enable XSIAM analytics to " +
 							"analyze your endpoint data to develop a " +
