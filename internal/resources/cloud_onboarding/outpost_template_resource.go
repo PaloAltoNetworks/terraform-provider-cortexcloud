@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -126,17 +128,34 @@ func (r *OutpostTemplateResource) ModifyPlan(ctx context.Context, req resource.M
 	ctx = tflog.SetField(ctx, "resource_operation", "ModifyPlan")
 	tflog.Debug(ctx, "Executing ModifyPlan")
 
-	// If the entire plan is null, the resource is planned for destruction
-	if req.Plan.Raw.IsNull() {
-		var state models.OutpostTemplateModel
-		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		//resp.Diagnostics.AddWarning(
-		//	"Manual Deletion Required for Cloud Integration Template Resources",
-		//	fmt.Sprintf("Destroying this resource will only remove it from the Terraform state. You may manually delete the template in the Cortex UI by navigating to Settings > Data Sources, right-clicking the record with the ID value \"%s\", and clicking \"Delete\". If you do not see the template in Data Sources, adjust the table filters to include rows with a status of \"PENDING\".", state.TrackingGUID.ValueString()),
-		//)
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	var (
+		cloudProviderPath = path.Root("cloud_provider")
+		cloudProviderState basetypes.StringValue
+		cloudProviderPlan basetypes.StringValue
+		customResourceTagsPath = path.Root("custom_resources_tags")
+		customResourcesTagsState basetypes.SetValue
+		customResourcesTagsPlan basetypes.SetValue
+	)
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, cloudProviderPath, &cloudProviderState)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, cloudProviderPath, &cloudProviderPlan)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, customResourceTagsPath, &customResourcesTagsState)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, customResourceTagsPath, &customResourcesTagsPlan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+
+	if !cloudProviderState.Equal(cloudProviderPlan) {
+		resp.RequiresReplace = append(resp.RequiresReplace, cloudProviderPath)
+	}
+	
+	if !customResourcesTagsState.Equal(customResourcesTagsPlan) {
+		resp.RequiresReplace = append(resp.RequiresReplace, customResourceTagsPath)
 	}
 }
 
@@ -159,7 +178,7 @@ func (r *OutpostTemplateResource) Create(ctx context.Context, req resource.Creat
 	createResponse, err := r.client.CreateOutpostTemplate(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Outpost Template Data Source",
+			"Error Creating Outpost Template Resource",
 			err.Error(),
 		)
 		return
@@ -167,7 +186,7 @@ func (r *OutpostTemplateResource) Create(ctx context.Context, req resource.Creat
 
 	if createResponse == nil || createResponse.Manual.TF == nil {
 		resp.Diagnostics.AddError(
-			"Error Creating Outpost Template Data Source",
+			"Error Creating Outpost Template Resource",
 			"SDK returned empty or invalid response. Please report this issue to the provider developers.",
 		)
 		return
@@ -183,31 +202,6 @@ func (r *OutpostTemplateResource) Create(ctx context.Context, req resource.Creat
 // Read refreshes the Terraform state with the latest values.
 func (r *OutpostTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
-
-	//ctx = tflog.SetField(ctx, "resource_type", "outpost_template")
-	//ctx = tflog.SetField(ctx, "resource_operation", "Read")
-	//
-	//// Retrieve values from plan
-	//tflog.Debug(ctx, "Retrieving values from plan")
-	//var config models.OutpostTemplateModel
-	//resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-	//
-	//// Retrieve values from state
-	//tflog.Debug(ctx, "Retrieving values from state")
-	//var state models.OutpostTemplateModel
-	//resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-
-	//if !plan.CloudProvider.Equal(state.CloudProvider) || !plan.CustomResourcesTags.Equal(state.CustomResourcesTags) {
-	//	resp.State.RemoveResource(ctx)
-	//}
-
-	//return
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
