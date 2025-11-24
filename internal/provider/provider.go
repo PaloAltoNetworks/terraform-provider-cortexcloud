@@ -148,10 +148,6 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 					"%%USERPROFILE%%`, or the Windows directory. Can also be configured " +
 					"using the `CORTEX_TF_CRASH_STACK_DIR` environment variable.",
 			},
-			"check_environment": schema.BoolAttribute{
-				Optional:    true,
-				Description: "TODO",
-			},
 		},
 	}
 }
@@ -219,26 +215,26 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	tflog.Debug(ctx, "Starting provider configuration")
 
 	// Retrieve configuration values from provider block
-	var providerConfig models.CortexCloudProviderModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &providerConfig)...)
+	var providerConfig *models.CortexCloudProviderModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, providerConfig)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Parse config file
-	(&providerConfig).ParseConfigFile(ctx, &resp.Diagnostics)
+	providerConfig.ParseConfigFile(ctx, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Parse environment variables
-	(&providerConfig).ParseEnvVars(ctx, &resp.Diagnostics)
+	providerConfig.ParseEnvVars(ctx, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Validate provider configuration
-	(&providerConfig).Validate(ctx, &resp.Diagnostics)
+	providerConfig.Validate(ctx, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -273,7 +269,6 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		platform.WithCortexAPIKeyType(apiKeyType),
 		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//platform.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
 		//platform.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
 		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		platform.WithLogger(log.TflogAdapter{}),
@@ -298,7 +293,6 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		cloudonboarding.WithCortexAPIKeyType(apiKeyType),
 		cloudonboarding.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		cloudonboarding.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//cloudonboarding.WithCheckEnvironment(providerConfig.CheckEnvironment.ValueBool()),
 		//cloudonboarding.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
 		cloudonboarding.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		cloudonboarding.WithLogger(log.TflogAdapter{}),

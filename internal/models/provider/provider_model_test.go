@@ -46,7 +46,6 @@ func TestConfigurationPrecedence(t *testing.T) {
 		APIKey:           types.StringValue("key-from-provider-block"),
 		APIKeyID:         types.Int32Value(123),
 		APIKeyType:       types.StringValue("standard"),
-		CheckEnvironment: types.BoolValue(true), // Must be true to enable env var parsing
 	}
 
 	// Config File (middle precedence)
@@ -120,28 +119,3 @@ func TestConfigurationPrecedence(t *testing.T) {
 		t.Errorf("ApiKeyId precedence incorrect: got %d, want %d", model.APIKeyID.ValueInt32(), expectedApiKeyId)
 	}
 }
-
-//// TestParseEnvVars_Disabled verifies that environment variables are ignored when
-//// the check_environment attribute is set to false.
-//func TestParseEnvVars_Disabled(t *testing.T) {
-//	// 1. Setup
-//	providerBlockValues := CortexCloudProviderModel{
-//		FQDN:     types.StringValue("http://provider.block"),
-//		CheckEnvironment: types.BoolValue(false), // Explicitly disable env var parsing
-//	}
-//
-//	// Set an env var that should be ignored.
-//	t.Setenv(FQDNEnvVars[0], "http://should.be.ignored")
-//
-//	// 2. Execution
-//	ctx := context.Background()
-//	var diags diag.Diagnostics
-//	model := providerBlockValues
-//	model.ParseEnvVars(ctx, &diags)
-//
-//	// 3. Assertion
-//	expectedApiUrl := "http://provider.block"
-//	if model.FQDN.ValueString() != expectedApiUrl {
-//		t.Errorf("ApiUrl should not have been updated from env var, got %s, want %s", model.FQDN.ValueString(), expectedApiUrl)
-//	}
-//}
