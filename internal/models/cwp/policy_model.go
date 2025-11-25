@@ -92,7 +92,6 @@ func (m *PolicyModel) ToUpdateRequest() cwpTypes.UpdatePolicyRequest {
 	// Create an UpdatePolicyRequest by directly setting the embedded Policy fields
 	// This works because Go's struct embedding allows direct field access
 	req := cwpTypes.UpdatePolicyRequest{}
-	req.Id = m.ID.ValueString()
 	req.Revision = int(m.Revision.ValueInt64())
 	req.CreatedAt = m.CreatedAt.ValueString()
 	req.ModifiedAt = m.ModifiedAt.ValueString()
@@ -123,7 +122,7 @@ func (m *PolicyModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnos
 		return
 	}
 
-	m.ID = types.StringValue(remote.Id)
+	m.ID = types.StringValue(remote.ID)
 	m.Revision = types.Int64Value(int64(remote.Revision))
 	m.CreatedAt = types.StringValue(remote.CreatedAt)
 	m.ModifiedAt = types.StringValue(remote.ModifiedAt)
