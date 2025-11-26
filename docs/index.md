@@ -4,9 +4,7 @@ description: |-
     Terraform provider for Cortex Cloud by Palo Alto Networks.
 ---
 
-# Cortex Cloud Provide
-
-1. **This is a test**
+# Cortex Cloud Provider
 
 Cortex&reg; Cloud is the industry-leading cloud security platform by Palo Alto Networks&reg;. The `cortexcloud` provider allows for the configuration and management of resources in your Cortex Cloud tenant.
 
