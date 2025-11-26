@@ -184,5 +184,8 @@ func (d *iamPermissionConfigDataSource) Read(ctx context.Context, req datasource
 		})
 	}
 
+	state.DatasetGroups = datasetGroups
+	state.RbacPermissions = rbacPermissions
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
