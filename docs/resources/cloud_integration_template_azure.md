@@ -10,7 +10,212 @@ description: |-
 
 Manages a cloud onboarding integration template for Azure.
 
+## Example Usage
 
+```terraform
+# AWS account onboarding template that is automatically deployed using the AWS 
+# Terraform Provider.
+# 
+# This template will be created with the following configuration:
+#   - Instance name of `AWS Account`
+#   - All AWS regions in scope
+#   - All additional capabilities enabled
+#       - Registry scanning configured to scan only container images that were
+#         created or modified in the last 7 days within the discovered ECR 
+#         repositories
+#   - Audit log collection enabled 
+#       - Using a custom (user-defined) collection method
+#   - No additional tags will be applied to Cortex Cloud resources other
+#     than the "managed_by" tag with the value "paloaltonetworks", which is
+#     applied by default
+#
+# After creation, this template will be deployed as a CloudFormation stack in 
+# the target AWS environment. See AWS Terraform provider documentation page for
+# the `aws_cloudformation_stack` resource for more information.
+resource "cortexcloud_cloud_integration_template_aws" "account_auto_deploy" {
+    scope = "ACCOUNT"
+    instance_name = "AWS Account"
+    scan_mode = "MANAGED"
+    scope_modifications = {
+        regions = {
+            enabled = false
+        }
+    }
+    additional_capabilities = {
+        data_security_posture_management = true
+        registry_scanning = true
+        registry_scanning_options = {
+            type = "TAGS_MODIFIED_DAYS" 
+            last_days = 7
+        }
+        xsiam_analytics = true
+        agentless_disk_scanning = true
+    }
+    collection_configuration = {
+        audit_logs = {
+            enabled = true
+            collection_method = "CUSTOM"
+        }
+    }
+}
+
+# Using the value of the template resource's `cloudformation_template_url` 
+# attribute as the argument for the CloudFormation stack resource's
+# `template_url` attribute.
+#
+# Note: the `CAPABILITY_NAMED_IAM` capability is required in order to
+# successfully deploy the CloudFormation stack.
+resource "aws_cloudformation_stack" "cortex_cloud_account_integration" {
+    name = "cortex-cloud"
+    template_url = "${resource.cortexcloud_cloud_integration_template_aws.account_auto_deploy.cloudformation_template_url}"
+    capabilities = [ "CAPABILITY_NAMED_IAM" ] // Required
+}
+```
+
+```terraform
+# AWS account onboarding template.
+#
+# This template will be created with the following configuration:
+#   - Instance name of "AWS Account"
+#   - Scoped to the us-east-1 region 
+#   - All additional capabilities enabled
+#       - Registry scanning configured to initially scan all discovered 
+#         container images, including all versions (tags), in all discovered
+#         ECR repositories
+#   - Audit log collection enabled 
+#       - Using the automated collection method
+#       - Data event logs will not be collected
+#   - The "environment" tag with the value "production" will be applied to all 
+#     resources created by Cortex Cloud in the target AWS environment
+#       - An additional "managed_by" tag with the value "paloaltonetworks" is
+#         applied by default for all onboarded CSP environments
+resource "cortexcloud_cloud_integration_template_aws" "account" {
+    scope = "ACCOUNT"
+    instance_name = "AWS Account"
+    scan_mode = "MANAGED"
+    scope_modifications = {
+        regions = {
+            enabled = true
+            type = "INCLUDE"
+            regions = [ "us-east-1" ]
+        }
+    }
+    additional_capabilities = {
+        data_security_posture_management = true
+        registry_scanning = true
+        registry_scanning_options = {
+            type = "ALL" 
+        }
+        xsiam_analytics = true
+        agentless_disk_scanning = true
+    }
+    collection_configuration = {
+        audit_logs = {
+            enabled = true
+            collection_method = "AUTOMATED"
+            data_events = false
+        }
+    }
+    custom_resources_tags = [
+        {
+            key = "environment"
+            value = "production"
+        },
+    ]
+}
+```
+
+```terraform
+# AWS account template with only required values defined.
+#
+# This template will be created with the following configuration:
+#   - No instance name
+#   - All AWS regions in scope
+#   - All additional capabilities except Data Security Posture Management 
+#     enabled
+#       - Registry scanning configured to initially scan all discovered 
+#         container images, including all versions (tags), in all discovered
+#         ECR repositories
+#   - Audit log collection enabled 
+#       - Using the automated collection method
+#       - Data event logs will not be collected
+#   - No additional tags will be applied to Cortex Cloud resources other
+#     than the "managed_by" tag with the value "paloaltonetworks", which is
+#     applied by default
+#
+# These default values are equivaluent to the default values that are used when 
+# creating this type of template in the Cortex Cloud console. See schema 
+# section for more information.
+resource "cortexcloud_cloud_integration_template_aws" "account_minimum_config" {
+    scope = "ACCOUNT"
+    scan_mode = "MANAGED"
+}
+```
+
+```terraform
+# AWS organization onboarding template.
+#
+# This template will be created with the following configuration:
+#   - Instance name of "AWS Organization"
+#   - Scoped to the us-east-1 region 
+#   - all additional capabilities enabled
+#       - registry scanning configured to initially scan all discovered 
+#         registries 
+#   - audit log collection enabled 
+#       - using the automated collection method
+#       - Data event logs will not be collected
+#   - apply the `environment` tag with the value `production` to all resources
+#     created by Cortex in the target AWS environment
+resource "cortexcloud_cloud_integration_template_aws" "organization" {
+    scope = "ORGANIZATION"
+    instance_name = "AWS Organization"
+    scan_mode = "MANAGED"
+    scope_modifications = {
+        accounts = {
+            enabled = true
+            type = "EXCLUDE"
+            account_ids = [ 
+              "012345678901",
+              "345678901234",
+            ]
+        }
+        regions = {
+            enabled = true
+            type = "EXCLUDE"
+            regions = [ 
+              "us-west-1",
+              "ca-central-1",
+            ]
+        }
+    }
+    additional_capabilities = {
+        data_security_posture_management = true
+        registry_scanning = true
+        registry_scanning_options = {
+            type = "LATEST_TAG" 
+        }
+        xsiam_analytics = true
+        agentless_disk_scanning = true
+    }
+    collection_configuration = {
+        audit_logs = {
+            enabled = true
+            collection_method = "AUTOMATED"
+            data_events = true
+        }
+    }
+    custom_resources_tags = [
+        {
+            key = "cost_center"
+            value = "555123"
+        },
+        {
+            key = "department"
+            value = "marketing"
+        },
+    ]
+}
+```
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
