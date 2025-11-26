@@ -13,126 +13,53 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// TODO: keep removing duplicate logic in favor of SDK calls
-// TODO: add support for `CORTEX_TF_*` env var names
+// TODO: removing any remaining validation steps that are already being performed (or should be performed, if not exclusive to TF) in the SDK's configuration logic
+
+const (
+	APIURLEnvVar               = "CORTEXCLOUD_API_URL"
+	APIKeyEnvVar               = "CORTEXCLOUD_API_KEY"
+	APIKeyIDEnvVar             = "CORTEXCLOUD_API_KEY_ID"
+	APIKeyTypeEnvVar           = "CORTEXCLOUD_API_KEY_TYPE"
+	SDKLogLevelEnvVar          = "CORTEXCLOUD_SDK_LOG_LEVEL"
+	SkipSSLVerifyEnvVar        = "CORTEXCLOUD_SKIP_SSL_VERIFY"
+	RequestTimeoutEnvVar       = "CORTEXCLOUD_REQUEST_TIMEOUT"
+	RequestMaxRetriesEnvVar    = "CORTEXCLOUD_REQUEST_MAX_RETRIES"
+	RequestMaxRetryDelayEnvVar = "CORTEXCLOUD_REQUEST_MAX_RETRY_DELAY"
+	CrashStackDirEnvVar        = "CORTEXCLOUD_CRASH_STACK_DIR"
+)
 
 type CortexCloudProviderModel struct {
-	ConfigFile           types.String `tfsdk:"config_file"`
-	FQDN                 types.String `tfsdk:"fqdn"`
 	APIURL               types.String `tfsdk:"api_url"`
 	APIKey               types.String `tfsdk:"api_key"`
 	APIKeyID             types.Int32  `tfsdk:"api_key_id"`
 	APIKeyType           types.String `tfsdk:"api_key_type"`
+	ConfigFile           types.String `tfsdk:"config_file"`
 	SkipSSLVerify        types.Bool   `tfsdk:"skip_ssl_verify"`
 	SDKLogLevel          types.String `tfsdk:"sdk_log_level"`
 	RequestTimeout       types.Int32  `tfsdk:"request_timeout"`
-	RequestRetryInterval types.Int32  `tfsdk:"request_retry_interval"`
+	RequestMaxRetries    types.Int32  `tfsdk:"request_max_retries"`
+	RequestMaxRetryDelay types.Int32  `tfsdk:"request_max_retry_delay"`
 	CrashStackDir        types.String `tfsdk:"crash_stack_dir"`
 }
-
-var (
-	FQDNEnvVars = []string{
-		"CORTEX_CLOUD_FQDN",
-		"CORTEXCLOUD_FQDN",
-		"CORTEX_FQDN",
-	}
-	APIURLEnvVars = []string{
-		"CORTEX_CLOUD_API_URL",
-		"CORTEXCLOUD_API_URL",
-		"CORTEX_API_URL",
-	}
-	APIKeyEnvVars = []string{
-		"CORTEX_CLOUD_API_KEY",
-		"CORTEXCLOUD_API_KEY",
-		"CORTEX_API_KEY",
-	}
-	APIKeyTypeEnvVars = []string{
-		"CORTEX_CLOUD_API_KEY_TYPE",
-		"CORTEXCLOUD_API_KEY_TYPE",
-		"CORTEX_API_KEY_TYPE",
-	}
-	APIKeyIDEnvVars = []string{
-		"CORTEX_CLOUD_API_KEY_ID",
-		"CORTEXCLOUD_API_KEY_ID",
-		"CORTEX_API_KEY_ID",
-	}
-	SkipSSLVerifyEnvVars = []string{
-		"CORTEX_CLOUD_SKIP_SSL_VERIFY",
-		"CORTEXCLOUD_SKIP_SSL_VERIFY",
-		"CORTEX_SKIP_SSL_VERIFY",
-	}
-	SDKLogLevelEnvVars = []string{
-		"CORTEX_CLOUD_SDK_LOG_LEVEL",
-		"CORTEXCLOUD_SDK_LOG_LEVEL",
-		"CORTEX_SDK_LOG_LEVEL",
-	}
-	RequestTimeoutEnvVars = []string{
-		"CORTEX_CLOUD_REQUEST_TIMEOUT",
-		"CORTEXCLOUD_REQUEST_TIMEOUT",
-		"CORTEX_REQUEST_TIMEOUT",
-	}
-	RequestRetryIntervalEnvVars = []string{
-		"CORTEX_CLOUD_REQUEST_RETRY_INTERVAL",
-		"CORTEXCLOUD_REQUEST_RETRY_INTERVAL",
-		"CORTEX_REQUEST_RETRY_INTERVAL",
-	}
-	CrashStackDirEnvVars = []string{
-		"CORTEX_CLOUD_CRASH_STACK_DIR",
-		"CORTEXCLOUD_CRASH_STACK_DIR",
-		"CORTEX_CRASH_STACK_DIR",
-	}
-)
 
 type CortexCloudSDKClients struct {
 	CloudOnboarding *cloudonboarding.Client
 	Platform        *platform.Client
 }
 
-func (m *CortexCloudProviderModel) Validate(ctx context.Context, diags *diag.Diagnostics) {
-	tflog.Debug(ctx, "Validating provider configuration")
-
-	cortexFQDN := m.FQDN
-	cortexAPIURL := m.APIURL
-	cortexAPIKey := m.APIKey
-	cortexAPIKeyID := m.APIKeyID
-
-	urlIsConfigured := (!cortexAPIURL.IsNull() && !cortexAPIURL.IsUnknown() && cortexAPIURL.ValueString() != "")
-	fqdnIsConfigured := (!cortexFQDN.IsNull() && !cortexFQDN.IsUnknown() && cortexFQDN.ValueString() != "")
-	if !urlIsConfigured && !fqdnIsConfigured {
-		diags.AddError(
-			"Invalid Provider Configuration",
-			`must define at least one of "fqdn" or "api_url" (preference will be given to "api_url" if both are defined)`,
-		)
-	}
-
-	if cortexAPIKey.IsNull() || cortexAPIKey.IsUnknown() || cortexAPIKey.ValueString() == "" {
-		diags.AddAttributeError(
-			path.Root("api_key"),
-			"Invalid Provider Configuration",
-			"value cannot be null or empty",
-		)
-	}
-
-	if cortexAPIKeyID.IsNull() || cortexAPIKeyID.IsUnknown() || int(cortexAPIKeyID.ValueInt32()) == 0 {
-		diags.AddAttributeError(
-			path.Root("api_key_id"),
-			"Invalid Provider Configuration",
-			"value cannot be null or zero",
-		)
-	}
-}
-
 // ParseConfigFile reads the JSON file at the filepath specified in the
-// provider block `config_file` argument and overwrites the provider
-// configuration values with the config file values.
+// provider block's `config_file` argument and overwrites the provider
+// configuration values with their respective non-nil config file values.
 func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnostics *diag.Diagnostics) {
 	if m.ConfigFile.IsNull() {
+		tflog.Debug(ctx, "No config file specified -- Skipping parsing.")
 		return
 	}
 
@@ -162,7 +89,6 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 	}
 
 	config := struct {
-		FQDN                 *string `json:"fqdn"`
 		APIURL               *string `json:"api_url"`
 		APIKey               *string `json:"api_key"`
 		APIKeyID             *int32  `json:"api_key_id"`
@@ -170,7 +96,8 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 		SkipSSLVerify        *bool   `json:"skip_ssl_verify"`
 		SDKLogLevel          *string `json:"sdk_log_level"`
 		RequestTimeout       *int32  `json:"request_timeout"`
-		RequestRetryInterval *int32  `json:"request_retry_interval"`
+		RequestMaxRetries    *int32  `json:"request_max_retries"`
+		RequestMaxRetryDelay *int32  `json:"request_max_retry_delay"`
 		CrashStackDir        *string `json:"crash_stack_dir"`
 	}{}
 
@@ -183,137 +110,140 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 		return
 	}
 
-	tflog.Debug(ctx, "Config file successfully parsed -- overwriting provider block configuration")
+	tflog.Debug(ctx, "Config file successfully parsed")
 
-	if config.FQDN != nil {
-		m.FQDN = types.StringValue(*config.FQDN)
-	}
-	if config.APIURL != nil {
+	if config.APIURL != nil && *config.APIURL != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_url from config file: "%s" => "%s"`, m.APIURL.ValueString(), *config.APIURL))
 		m.APIURL = types.StringValue(*config.APIURL)
 	}
-	if config.APIKey != nil {
+	if config.APIKey != nil && *config.APIKey != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key from config file: "%s" => "%s"`, m.APIKey.ValueString(), *config.APIKey))
 		m.APIKey = types.StringValue(*config.APIKey)
 	}
 	if config.APIKeyID != nil {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key_id from config file: "%d" => "%d"`, m.APIKeyID.ValueInt32(), *config.APIKeyID))
 		m.APIKeyID = types.Int32Value(*config.APIKeyID)
 	}
-	if config.APIKeyType != nil {
+	if config.APIKeyType != nil && *config.APIKeyType != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key_type from config file: "%s" => "%s"`, m.APIKeyType.ValueString(), *config.APIKeyType))
 		m.APIKeyType = types.StringValue(*config.APIKeyType)
 	}
 	if config.SkipSSLVerify != nil {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting skip_ssl_verify from config file: "%t" => "%t"`, m.SkipSSLVerify.ValueBool(), *config.SkipSSLVerify))
 		m.SkipSSLVerify = types.BoolValue(*config.SkipSSLVerify)
 	}
-	if config.SDKLogLevel != nil {
+	if config.SDKLogLevel != nil && *config.SDKLogLevel != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting sdk_log_level from config file: "%s" => "%s"`, m.SDKLogLevel.ValueString(), *config.SDKLogLevel))
 		m.SDKLogLevel = types.StringValue(*config.SDKLogLevel)
 	}
 	if config.RequestTimeout != nil {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_timeout from config file: "%d" => "%d"`, m.RequestTimeout.ValueInt32(), *config.RequestTimeout))
 		m.RequestTimeout = types.Int32Value(*config.RequestTimeout)
 	}
-	if config.RequestRetryInterval != nil {
-		m.RequestRetryInterval = types.Int32Value(*config.RequestRetryInterval)
+	if config.RequestMaxRetries != nil {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_max_retries from config file: "%d" => "%d"`, m.RequestMaxRetries.ValueInt32(), *config.RequestMaxRetries))
+		m.RequestMaxRetries = types.Int32Value(*config.RequestMaxRetries)
 	}
-	if config.CrashStackDir != nil {
+	if config.RequestMaxRetryDelay != nil {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_max_retry_delay from config file: "%d" => "%d"`, m.RequestMaxRetryDelay.ValueInt32(), *config.RequestMaxRetryDelay))
+		m.RequestMaxRetryDelay = types.Int32Value(*config.RequestMaxRetryDelay)
+	}
+	if config.CrashStackDir != nil && *config.CrashStackDir != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting crash_stack_dir from config file: "%s" => "%s"`, m.CrashStackDir.ValueString(), *config.CrashStackDir))
 		m.CrashStackDir = types.StringValue(*config.CrashStackDir)
 	}
 }
 
-// ParseEnvVars
 func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics *diag.Diagnostics) {
-	tflog.Debug(ctx, "Parsing environment variables for provider configuration")
+	tflog.Debug(ctx, "Parsing environment variables")
 
-	// String types
-	if val, ok := MultiEnvGet(FQDNEnvVars); ok {
-		if val != m.FQDN.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting fqdn with value from environment variable (%s)", val))
-			m.FQDN = types.StringValue(val)
-		}
+	if envAPIURL, ok := os.LookupEnv(APIURLEnvVar); ok && envAPIURL != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_url from %s: "%s" => "%s"`, APIURLEnvVar, m.APIURL.ValueString(), envAPIURL))
+		m.APIURL = types.StringValue(envAPIURL)
 	}
-	if val, ok := MultiEnvGet(APIURLEnvVars); ok {
-		if val != m.APIURL.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting api_url with value from environment variable (%s)", val))
-			m.APIURL = types.StringValue(val)
-		}
+	if envAPIKey, ok := os.LookupEnv(APIKeyEnvVar); ok && envAPIKey != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key from %s: "%s" => "%s"`, APIKeyEnvVar, m.APIKey.ValueString(), envAPIKey))
+		m.APIKey = types.StringValue(envAPIKey)
 	}
-	if val, ok := MultiEnvGet(APIKeyEnvVars); ok {
-		if val != m.APIKey.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting api_key with value from environment variable (%s)", val))
-			m.APIKey = types.StringValue(val)
-		}
-	}
-	if val, ok := MultiEnvGet(APIKeyTypeEnvVars); ok {
-		if val != m.APIKeyType.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting api_key_type with value from environment variable (%s)", val))
-			m.APIKeyType = types.StringValue(val)
-		}
-	}
-	if val, ok := MultiEnvGet(SDKLogLevelEnvVars); ok {
-		if val != m.SDKLogLevel.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting sdk_log_level with value from environment variable (%s)", val))
-			m.SDKLogLevel = types.StringValue(val)
-		}
-	}
-	if val, ok := MultiEnvGet(CrashStackDirEnvVars); ok {
-		if val != m.CrashStackDir.ValueString() {
-			tflog.Debug(ctx, fmt.Sprintf("Overwriting crash_stack_dir with value from environment variable (%s)", val))
-			m.CrashStackDir = types.StringValue(val)
-		}
-	}
-
-	// Integer types
-	if val, ok := MultiEnvGet(APIKeyIDEnvVars); ok {
-		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
-			parsedVal := int32(i)
-			if m.APIKeyID.IsNull() || parsedVal != m.APIKeyID.ValueInt32() {
-				tflog.Debug(ctx, fmt.Sprintf("Overwriting api_key_id with value from environment variable (%d)", parsedVal))
-				m.APIKeyID = types.Int32Value(parsedVal)
-			}
+	if envAPIKeyID, ok := os.LookupEnv(APIKeyIDEnvVar); ok && envAPIKeyID != "" {
+		if val, err := strconv.ParseInt(envAPIKeyID, 10, 32); err == nil {
+			tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key_id from %s: "%d" => "%d"`, APIKeyIDEnvVar, m.APIKeyID.ValueInt32(), val))
+			m.APIKeyID = types.Int32Value(int32(val))
 		} else {
-			diagnostics.AddAttributeWarning(path.Root("api_key_id"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to integer\nError: %s", val, err.Error()))
+			diagnostics.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as int32: %s", APIKeyIDEnvVar, err.Error()),
+			)
 		}
 	}
-	if val, ok := MultiEnvGet(RequestTimeoutEnvVars); ok {
-		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
-			parsedVal := int32(i)
-			if m.RequestTimeout.IsNull() || parsedVal != m.RequestTimeout.ValueInt32() {
-				tflog.Debug(ctx, fmt.Sprintf("Overwriting request_timeout with value from environment variable (%d)", parsedVal))
-				m.RequestTimeout = types.Int32Value(parsedVal)
-			}
+	if envAPIKeyType, ok := os.LookupEnv(APIKeyTypeEnvVar); ok && envAPIKeyType != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting api_key_type from %s: "%s" => "%s"`, APIKeyTypeEnvVar, m.APIKeyType.ValueString(), envAPIKeyType))
+		m.APIKeyType = types.StringValue(envAPIKeyType)
+	}
+	if envSkipSSLVerify, ok := os.LookupEnv(SkipSSLVerifyEnvVar); ok && envSkipSSLVerify != "" {
+		if val, err := strconv.ParseBool(envSkipSSLVerify); err == nil {
+			tflog.Debug(ctx, fmt.Sprintf(`Overwriting skip_ssl_verify from %s: "%t" => "%t"`, SkipSSLVerifyEnvVar, m.SkipSSLVerify.ValueBool(), val))
+			m.SkipSSLVerify = types.BoolValue(val)
 		} else {
-			diagnostics.AddAttributeWarning(path.Root("request_timeout"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to integer\nError: %s", val, err.Error()))
+			diagnostics.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as bool: %s", SkipSSLVerifyEnvVar, err.Error()),
+			)
 		}
 	}
-	if val, ok := MultiEnvGet(RequestRetryIntervalEnvVars); ok {
-		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
-			parsedVal := int32(i)
-			if m.RequestRetryInterval.IsNull() || parsedVal != m.RequestRetryInterval.ValueInt32() {
-				tflog.Debug(ctx, fmt.Sprintf("Overwriting request_retry_interval with value from environment variable (%d)", parsedVal))
-				m.RequestRetryInterval = types.Int32Value(parsedVal)
-			}
+	if envSDKLogLevel, ok := os.LookupEnv(SDKLogLevelEnvVar); ok && envSDKLogLevel != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting sdk_log_level from %s: "%s" => "%s"`, SDKLogLevelEnvVar, m.SDKLogLevel.ValueString(), envSDKLogLevel))
+		m.SDKLogLevel = types.StringValue(envSDKLogLevel)
+	}
+	if envRequestTimeout, ok := os.LookupEnv(RequestTimeoutEnvVar); ok && envRequestTimeout != "" {
+		if val, err := strconv.ParseInt(envRequestTimeout, 10, 32); err == nil {
+			tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_timeout from %s: "%d" => "%d"`, RequestTimeoutEnvVar, m.RequestTimeout.ValueInt32(), val))
+			m.RequestTimeout = types.Int32Value(int32(val))
 		} else {
-			diagnostics.AddAttributeWarning(path.Root("request_retry_interval"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to integer\nError: %s", val, err.Error()))
+			diagnostics.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as int32: %s", RequestTimeoutEnvVar, err.Error()),
+			)
 		}
 	}
-
-	// Boolean types
-	if val, ok := MultiEnvGet(SkipSSLVerifyEnvVars); ok {
-		if b, err := strconv.ParseBool(val); err == nil {
-			if m.SkipSSLVerify.IsNull() || b != m.SkipSSLVerify.ValueBool() {
-				tflog.Debug(ctx, fmt.Sprintf("Overwriting skip_ssl_verify with value from environment variable (%t)", b))
-				m.SkipSSLVerify = types.BoolValue(b)
-			}
+	if envRequestMaxRetries, ok := os.LookupEnv(RequestMaxRetriesEnvVar); ok && envRequestMaxRetries != "" {
+		if val, err := strconv.ParseInt(envRequestMaxRetries, 10, 32); err == nil {
+			tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_max_retries from %s: "%d" => "%d"`, RequestMaxRetriesEnvVar, m.RequestMaxRetries.ValueInt32(), val))
+			m.RequestMaxRetries = types.Int32Value(int32(val))
 		} else {
-			diagnostics.AddAttributeWarning(path.Root("skip_ssl_verify"), "Environment Variable Parsing Error", fmt.Sprintf("Failed to parse value from environment variable \"%s\" to boolean\nError: %s", val, err.Error()))
+			diagnostics.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as int32: %s", RequestMaxRetriesEnvVar, err.Error()),
+			)
 		}
+	}
+	if envRequestMaxRetryDelay, ok := os.LookupEnv(RequestMaxRetryDelayEnvVar); ok && envRequestMaxRetryDelay != "" {
+		if val, err := strconv.ParseInt(envRequestMaxRetryDelay, 10, 32); err == nil {
+			tflog.Debug(ctx, fmt.Sprintf(`Overwriting request_max_retry_delay from %s: "%d" => "%d"`, RequestMaxRetryDelayEnvVar, m.RequestMaxRetryDelay.ValueInt32(), val))
+			m.RequestMaxRetryDelay = types.Int32Value(int32(val))
+		} else {
+			diagnostics.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as int32: %s", RequestMaxRetryDelayEnvVar, err.Error()),
+			)
+		}
+	}
+	if envCrashStackDir, ok := os.LookupEnv(CrashStackDirEnvVar); ok && envCrashStackDir != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting crash_stack_dir from %s: "%s" => "%s"`, CrashStackDirEnvVar, m.CrashStackDir.ValueString(), envCrashStackDir))
+		m.CrashStackDir = types.StringValue(envCrashStackDir)
 	}
 }
 
-// MultiEnvGet is a helper function that returns the value of the first
-// environment variable in the given list that returns a non-empty value.
-func MultiEnvGet(ks []string) (string, bool) {
-	for _, k := range ks {
-		if v := os.Getenv(k); v != "" {
-			return v, true
-		}
+func (m *CortexCloudProviderModel) Validate(ctx context.Context, diags *diag.Diagnostics) {
+	tflog.Debug(ctx, "Validating provider configuration")
+
+	if m.APIURL.IsNull() || m.APIURL.IsUnknown() || m.APIURL.ValueString() == "" {
+		util.AddMissingRequiredProviderConfigurationValue(diags, "api_url", "Cortex Cloud API URL", APIURLEnvVar)
 	}
-	return "", false
+	if m.APIKey.IsNull() || m.APIKey.IsUnknown() || m.APIKey.ValueString() == "" {
+		util.AddMissingRequiredProviderConfigurationValue(diags, "api_key", "Cortex Cloud API Key", APIKeyEnvVar)
+	}
+	if m.APIKeyID.IsNull() || m.APIKeyID.IsUnknown() || m.APIKeyID.ValueInt32() == 0 {
+		util.AddMissingRequiredProviderConfigurationValue(diags, "api_key_id", "Cortex Cloud API Key ID", APIKeyIDEnvVar)
+	}
 }
