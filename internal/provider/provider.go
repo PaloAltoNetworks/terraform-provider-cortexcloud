@@ -12,10 +12,10 @@ import (
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
 	platformDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/platform"
+	cloudOnboardingEphemeralResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/ephemeral/cloud_onboarding"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
 	platformResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/platform"
-	cloudOnboardingEphemeralResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/ephemeral/cloud_onboarding"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -63,90 +63,91 @@ func (p *CortexCloudProvider) Metadata(_ context.Context, _ provider.MetadataReq
 func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"config_file": schema.StringAttribute{
-				Optional:    true,
-				Description: "Local path to provider configuration JSON file.",
-			},
-			"fqdn": schema.StringAttribute{
-				Optional: true,
-				Description: fmt.Sprintf("The FQDN of your Cortex Cloud "+
-					"tenant. Can also be configured using the `%s`"+
-					"environment variable.", "CORTEX_FQDN"),
-				//"environment variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
-			},
 			"api_url": schema.StringAttribute{
 				Optional: true,
 				Description: fmt.Sprintf("The API URL of your Cortex Cloud tenant. "+
-					"You can retrieve this from the Cortex Cloud console by "+
-					"navigating to Settings > Configurations > Integrations > "+
-					"API Keys and clicking the \"Copy API URL\" button. Can "+
-					"also be configured using the `%s` environment "+
-					"variable.", "CORTEX_API_URL"),
-				//"variable.", client.CORTEXCLOUD_API_URL_ENV_VAR),
+					"\n\n\tThis can be retrieved from the Cortex Cloud console by navigating to `Settings > Configurations`, selecting `API Keys` under the `Integrations` section, and clicking the `Copy API URL` button. "+
+					"\n\n\tCan also be configured using the `%s` environment variable.",
+					models.APIURLEnvVar),
 			},
 			"api_key": schema.StringAttribute{
 				Optional:  true,
 				Sensitive: true,
-				Description: "The API key for the user in Cortex Cloud that the " +
-					"provider will use. You can create this from the Cortex Cloud " +
-					"console by navigating to Settings > Configurations > Integrations " +
-					"> API Keys. Can also be configured using the `CORTEX_API_KEY` " +
-					"environment variable. \n\nWARNING: If you are running the provider " +
-					"with Terraform with the `TF_LOG` environment variable set to `DEBUG`, " +
-					"the provider will output this value in the debug logs.",
+				Description: fmt.Sprintf("Your Cortex Cloud API key. "+
+					"\n\n\tCreate a new API key in the Cortex Cloud console by navigating to `Settings > Configurations`, selecting `API Keys` under the `Integrations` section, and clicking the `New Key` button. "+
+					"\n\n\tCan also be configured using the `%s` environment variable."+
+					"\n\n>[!WARNING]\n>Once you reach the screen displaying your new API key, you will not be able to view this screen again after closing the window. Ensure that you copy the key value before closing the window.",
+					models.APIKeyEnvVar),
 			},
 			"api_key_id": schema.Int32Attribute{
 				Optional:  true,
 				Sensitive: true,
-				Description: "The ID of the API key provided in the \"api_key\" " +
-					"argument. You can retrieve this from the Cortex Cloud console " +
-					"by navigating to Settings > Configurations > Integrations > " +
-					"API Keys. Can also be configured using the `CORTEX_API_KEY_ID` " +
-					"environment variable.",
+				Description: fmt.Sprintf("Your Cortex Cloud API key. "+
+					"\n\n\tFor existing API keys, this can be retrieved from the Cortex Cloud console by navigating to `Settings > Configurations`, selecting `API Keys` under the `Integrations` section, and finding the row associated with your API key. The key ID value will be in the `ID` column. "+
+					"\n\n\tCan also be configured using the `%s` environment variable.",
+					models.APIKeyIDEnvVar),
 			},
 			"api_key_type": schema.StringAttribute{
 				Optional: true,
-				Description: "The type of API key provided. Defaults to " +
-					"`standard`. Must be set to `advanced` if configuring " +
-					"the provider with an advanced API key. When using an " +
-					"advanced API key, requests to the Cortex API must " +
-					"include a nonce (64 byte random string) and a timestamp" +
-					"populated in the request headers to prevent replay " +
-					"attacks.",
+				Description: fmt.Sprintf("The type of your provided Cortex Cloud API key. "+
+					"\n\n\tAdvanced API keys are hashed using a nonce, a random string, and a timestamp to prevent replay attacks. "+
+					"\n\n\tPossible values are: `standard`, `advanced`"+
+					"\n\n\tDefaults to `standard`. "+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.APIKeyTypeEnvVar),
+			},
+			"config_file": schema.StringAttribute{
+				Optional:    true,
+				Description: "The path to a JSON file containing the provider configuration values.\n",
 			},
 			"sdk_log_level": schema.StringAttribute{
-				Optional:    true,
-				Description: "TODO",
+				Optional: true,
+				Description: fmt.Sprintf("The log level for the Cortex Cloud Go SDK. "+
+					"\n\n\tAll communications between the provider and the Cortex Cloud API are handled by the Cortex Cloud Go SDK. Logs from the SDK will be included in the logging output of the provider. "+
+					"\n\n\tPossible values are: `info`, `warn`, `error`, `debug` "+
+					"\n\n\tDefaults to `info`. "+
+					"\n\n\tCan also be configured using the `%s` environment variable."+
+					"\n\n>[!NOTE]\n>SDK logs will only be visible in the provider logs if the [Terraform log level](https://developer.hashicorp.com/terraform/internals/debugging) is set to `DEBUG` or `TRACE`."+
+					"\n\n>[!WARNING]\n>Setting this value to `debug` will cause the SDK to log all API requests and responses, which include sensitive values such as your API key.\n",
+					models.SDKLogLevelEnvVar),
 			},
 			"skip_ssl_verify": schema.BoolAttribute{
-				Optional:    true,
-				Description: "TODO",
+				Optional: true,
+				Description: fmt.Sprintf("Toggles SSL certificate verification for requests against the Cortex Cloud API."+
+					"\n\n\tDefaults to `false`. "+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.SkipSSLVerifyEnvVar),
 			},
 			"request_timeout": schema.Int32Attribute{
 				Optional: true,
-				Description: "Time (in seconds) to wait for requests to the Cortex " +
-					"Cloud API to return before timing out. If omitted, the default value " +
-					"is `60`. Can also be configured using the `CORTEX_TF_REQUEST_TIMEOUT` " +
-					"environment variable.",
+				Description: fmt.Sprintf("The amount of time (in seconds) the provider will wait for a response to for a given request to the Cortex Cloud API before timing out. "+
+					"\n\n\tDefaults to `30`. "+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.RequestTimeoutEnvVar),
 			},
-			"request_retry_interval": schema.Int32Attribute{
+			"request_max_retries": schema.Int32Attribute{
 				Optional: true,
-				Description: "Time (in seconds) to wait between API requests in " +
-					"the event of an HTTP 429 (Too Many Requests) response. If omitted, " +
-					"the default value is `3`. Can also be configured using the " +
-					"`CORTEX_TF_REQUEST_RETRY_INTERVAL` environment variable.",
+				Description: fmt.Sprintf("The number of times the provider will retry a request to the Cortex Cloud API if it recieves a retryable HTTP response code (401, 429, 502, 503, or 504)."+
+					"\n\n\tDefaults to `3`."+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.RequestMaxRetriesEnvVar),
+			},
+			"request_max_retry_delay": schema.Int32Attribute{
+				Optional: true,
+				Description: fmt.Sprintf("The maximum amount of time (in seconds) the provider will wait before retrying a failed request to the Cortex Cloud API. "+
+					"\n\n\tThe delay between retries is calculated using an exponential backoff to give the system enough time to recover, along with jitter (±25%% randomization) to prevent the thundering herd problem. The final calculated amount of seconds will be capped at this value."+
+					"\n\n\tDefaults to `60`."+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.RequestMaxRetryDelayEnvVar),
 			},
 			"crash_stack_dir": schema.StringAttribute{
 				Optional: true,
-				Description: "The location on the filesystem where the crash stack " +
-					"contents will be written in the event of the provider encountering " +
-					"an unexpected error. If omitted, the default value is an empty " +
-					"string, which will be interpreted as `$TMPDIR` on Unix systems (or " +
-					"`/tmp` if `$TMPDIR` is empty). On Windows systems, an empty string " +
-					"will be interpreted as the the first of the following values that is " +
-					"non-empty, in order of evaluation: `%%TMP%%`, `%%TEMP%%`, " +
-					"%%USERPROFILE%%`, or the Windows directory. Can also be configured " +
-					"using the `CORTEX_TF_CRASH_STACK_DIR` environment variable.",
+				Description: fmt.Sprintf("The directory where text files containing the stack dump (also known as a stack trace) will be written whenever the provider encounters a runtime error or panics."+
+					"\n\n\tIf an unhandled runtime error occurs during provider execution, a diagnostic message will be displayed that includes the path to a .txt file containing the full crash stack. We kindly encourage users to report any such occurances to the Cortex Cloud Terraform provider development team and include this file."+
+					"\n\n\tDefaults to the value of the `TMPDIR` environment variable on Unix systems (or `/tmp` if `TMPDIR` is empty/not configured)."+
+					"\n\n\tOn Windows systems, the default value will be interpreted as the first non-empty value in the following set of environment variables, in order of evaluation: `%%TMP%%`, `%%TEMP%%`, `%%USERPROFILE%%`. If none of these variables are set, the value will be set to the Windows directory (`C:\\Users\\<YourUsername>\\AppData\\Local\\Temp`)."+
+					"\n\n\tCan also be configured using the `%s` environment variable.\n",
+					models.CrashStackDirEnvVar),
 			},
 		},
 	}
@@ -216,7 +217,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 
 	// Retrieve configuration values from provider block
 	var providerConfig *models.CortexCloudProviderModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, providerConfig)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &providerConfig)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -239,64 +240,41 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
-	fqdn := providerConfig.FQDN.ValueString()
-	apiURL := providerConfig.APIURL.ValueString()
-	apiKey := providerConfig.APIKey.ValueString()
-	apiKeyID := int(providerConfig.APIKeyID.ValueInt32())
-	apiKeyType := providerConfig.APIKeyType.ValueString()
-	sdkLogLevel := providerConfig.SDKLogLevel.ValueString()
-
-	tflog.Debug(ctx, fmt.Sprintf("Using %s API key against API URL: %s", apiKeyType, apiURL))
-
-	// Set logger fields
-	ctx = tflog.SetField(ctx, "cortex_fqdn", fqdn)
-	ctx = tflog.SetField(ctx, "cortex_api_key", apiKey)
-	ctx = tflog.SetField(ctx, "cortex_api_key_id", apiKeyID)
-	ctx = tflog.SetField(ctx, "cortex_api_key_type", apiKeyType)
-
-	// TODO: create config param for conditionally applying the following masks
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "cortex_api_key", "cortex_api_key_id")
-
 	// Initialize SDK clients
 	clients := models.CortexCloudSDKClients{}
 
 	tflog.Debug(ctx, "Initializing platform client")
 	platformClient, err := platform.NewClient(
-		platform.WithCortexFQDN(fqdn),
-		platform.WithCortexAPIURL(apiURL),
-		platform.WithCortexAPIKey(apiKey),
-		platform.WithCortexAPIKeyID(apiKeyID),
-		platform.WithCortexAPIKeyType(apiKeyType),
+		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		platform.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
 		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
 		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//platform.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
+		platform.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		platform.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
 		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		platform.WithLogger(log.TflogAdapter{}),
-		platform.WithLogLevel(sdkLogLevel),
+		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
-	// Set the API URL logger field
-	// TODO: define a way to retrieve this value without first creating a
-	// client (or export)
-	ctx = tflog.SetField(ctx, "cortex_api_url", platformClient.APIURL())
-
 	tflog.Debug(ctx, "Initializing cloudonboarding client")
 	cloudOnboardingClient, err := cloudonboarding.NewClient(
-		cloudonboarding.WithCortexFQDN(fqdn),
-		cloudonboarding.WithCortexAPIURL(apiURL),
-		cloudonboarding.WithCortexAPIKey(apiKey),
-		cloudonboarding.WithCortexAPIKeyID(apiKeyID),
-		cloudonboarding.WithCortexAPIKeyType(apiKeyType),
-		cloudonboarding.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
-		cloudonboarding.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
-		//cloudonboarding.WithRetryMaxDelay(providerConfig.RetryMaxDelay),
-		cloudonboarding.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
-		cloudonboarding.WithLogger(log.TflogAdapter{}),
-		cloudonboarding.WithLogLevel(sdkLogLevel),
+		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		platform.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		platform.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		platform.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
