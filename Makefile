@@ -111,6 +111,10 @@ copyright:
 docs:
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
+	@echo "Applying documentation patches..."
+	@patch -u docs/index.md -i docs/index.md.patch --no-backup-if-mismatch
+	@echo "Appending release notes to documentation..."
+	@cat RELEASE_NOTES.md >> docs/index.md
 	@echo ""
 	@echo "Done!"
 
@@ -120,7 +124,7 @@ test: test-unit test-acc
 # Run unit tests
 test-unit:
 	@echo "Running unit tests..."
-	@go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance/ | grep models/provider)
+	@TF_ACC=0 go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance | grep models/provider)
 
 # Run acceptance tests
 test-acc: build
