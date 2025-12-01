@@ -12,9 +12,11 @@ Cortex&reg; Cloud is the industry-leading cloud security platform by Palo Alto N
 
 ```terraform
 terraform {
-  required_providers = {
-    source  = "PaloAltoNetworks/cortexcloud"
-    version = "0.0.1"
+  required_providers {
+    cortexcloud = {
+      source  = "paloaltonetworks/cortexcloud"
+      version = "0.0.1"
+    }
   }
 }
 
