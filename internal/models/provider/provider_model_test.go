@@ -41,12 +41,11 @@ func createTempConfigFile(t *testing.T, content map[string]any) string {
 func TestConfigurationPrecedence(t *testing.T) {
 	// Provider Block (lowest precedence)
 	providerBlockValues := CortexCloudProviderModel{
-		FQDN:             types.StringValue("provider.block"),
-		APIURL:           types.StringValue("https://api-provider.block"),
-		APIKey:           types.StringValue("key-from-provider-block"),
-		APIKeyID:         types.Int32Value(123),
-		APIKeyType:       types.StringValue("standard"),
-		CheckEnvironment: types.BoolValue(true), // Must be true to enable env var parsing
+		FQDN:       types.StringValue("provider.block"),
+		APIURL:     types.StringValue("https://api-provider.block"),
+		APIKey:     types.StringValue("key-from-provider-block"),
+		APIKeyID:   types.Int32Value(123),
+		APIKeyType: types.StringValue("standard"),
 	}
 
 	// Config File (middle precedence)

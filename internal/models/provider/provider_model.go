@@ -34,7 +34,6 @@ type CortexCloudProviderModel struct {
 	RequestTimeout       types.Int32  `tfsdk:"request_timeout"`
 	RequestRetryInterval types.Int32  `tfsdk:"request_retry_interval"`
 	CrashStackDir        types.String `tfsdk:"crash_stack_dir"`
-	CheckEnvironment     types.Bool   `tfsdk:"check_environment"`
 }
 
 var (
@@ -217,18 +216,10 @@ func (m *CortexCloudProviderModel) ParseConfigFile(ctx context.Context, diagnost
 	if config.CrashStackDir != nil {
 		m.CrashStackDir = types.StringValue(*config.CrashStackDir)
 	}
-	if config.CheckEnvironment != nil {
-		m.CheckEnvironment = types.BoolValue(*config.CheckEnvironment)
-	}
 }
 
 // ParseEnvVars
 func (m *CortexCloudProviderModel) ParseEnvVars(ctx context.Context, diagnostics *diag.Diagnostics) {
-	if m.CheckEnvironment.IsNull() || !m.CheckEnvironment.ValueBool() {
-		tflog.Debug(ctx, "Skipping environment variable parsing (check_environment = false)")
-		return
-	}
-
 	tflog.Debug(ctx, "Parsing environment variables for provider configuration")
 
 	// String types
