@@ -80,7 +80,10 @@ type TagModel struct {
 // ToEditRequest converts the model to an EditScopeRequestData for the SDK.
 func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 	// ---------- Assets ----------
-	var assets *platformtypes.EditAssets
+	var assets *platformtypes.EditAssets = &platformtypes.EditAssets{
+		Mode:          "no_scope",
+		AssetGroupIDs: make([]int, 0),
+	}
 	if m.Assets != nil {
 		assetGroupIDs := make([]int, 0, len(m.Assets.AssetGroups))
 		for _, ag := range m.Assets.AssetGroups {
@@ -95,7 +98,10 @@ func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 	}
 
 	// ---------- DatasetsRows ----------
-	var datasetsRows *platformtypes.EditDatasetsRows
+	var datasetsRows *platformtypes.EditDatasetsRows = &platformtypes.EditDatasetsRows{
+		Filters:           make([]platformtypes.Filter, 0),
+		DefaultFilterMode: "no_scope",
+	}
 	if m.DatasetsRows != nil {
 		filters := make([]platformtypes.Filter, 0, len(m.DatasetsRows.Filters))
 		for _, f := range m.DatasetsRows.Filters {
@@ -111,9 +117,21 @@ func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 	}
 
 	// ---------- Endpoints ----------
-	var endpoints *platformtypes.EditEndpoints
+	var endpoints *platformtypes.EditEndpoints = &platformtypes.EditEndpoints{
+		EndpointGroups: &platformtypes.EditEndpointGroups{
+			Names: make([]string, 0),
+			Mode:  "no_scope",
+		},
+		EndpointTags: &platformtypes.EditEndpointTags{
+			Names: make([]string, 0),
+			Mode:  "no_scope",
+		},
+	}
 	if m.Endpoints != nil {
-		var endpointGroups *platformtypes.EditEndpointGroups
+		var endpointGroups *platformtypes.EditEndpointGroups = &platformtypes.EditEndpointGroups{
+			Names: make([]string, 0),
+			Mode:  "no_scope",
+		}
 		if m.Endpoints.EndpointGroups != nil {
 			names := make([]string, 0, len(m.Endpoints.EndpointGroups.Tags))
 			for _, t := range m.Endpoints.EndpointGroups.Tags {
@@ -127,7 +145,10 @@ func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 			}
 		}
 
-		var endpointTags *platformtypes.EditEndpointTags
+		var endpointTags *platformtypes.EditEndpointTags = &platformtypes.EditEndpointTags{
+			Names: make([]string, 0),
+			Mode:  "no_scope",
+		}
 		if m.Endpoints.EndpointTags != nil {
 			names := make([]string, 0, len(m.Endpoints.EndpointTags.Tags))
 			for _, t := range m.Endpoints.EndpointTags.Tags {
@@ -148,7 +169,10 @@ func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 	}
 
 	// ---------- CasesIssues ----------
-	var casesIssues *platformtypes.EditCasesIssues
+	var casesIssues *platformtypes.EditCasesIssues = &platformtypes.EditCasesIssues{
+		Names: make([]string, 0),
+		Mode:  "no_scope",
+	}
 	if m.CasesIssues != nil {
 		names := make([]string, 0, len(m.CasesIssues.Tags))
 		for _, t := range m.CasesIssues.Tags {
@@ -246,7 +270,7 @@ func (m *ScopeModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnost
 			}
 
 			if mode == "any" {
-				et.Tags = nil
+				et.Tags = make([]TagModel, 0)
 			} else if len(remote.Endpoints.EndpointTags.Tags) > 0 {
 				tags := make([]TagModel, 0, len(remote.Endpoints.EndpointTags.Tags))
 				for _, t := range remote.Endpoints.EndpointTags.Tags {
@@ -278,7 +302,7 @@ func (m *ScopeModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnost
 			}
 			ci.Tags = tags
 		} else {
-			ci.Tags = nil
+			ci.Tags = make([]TagModel, 0)
 		}
 		m.CasesIssues = ci
 	}
