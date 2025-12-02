@@ -56,6 +56,9 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"entity_type": schema.StringAttribute{
 				Description: "The type of the entity.",
@@ -148,6 +151,9 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 										"tag_id": schema.StringAttribute{
 											Description: "The ID of the tag.",
 											Computed:    true,
+											PlanModifiers: []planmodifier.String{
+												stringplanmodifier.UseStateForUnknown(),
+											},
 										},
 										"tag_name": schema.StringAttribute{
 											Description: "The name of the tag.",
@@ -174,6 +180,9 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 										"tag_id": schema.StringAttribute{
 											Description: "The ID of the tag.",
 											Computed:    true,
+											PlanModifiers: []planmodifier.String{
+												stringplanmodifier.UseStateForUnknown(),
+											},
 										},
 										"tag_name": schema.StringAttribute{
 											Description: "The name of the tag.",
@@ -202,6 +211,9 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								"tag_id": schema.StringAttribute{
 									Description: "The ID of the tag.",
 									Computed:    true,
+									PlanModifiers: []planmodifier.String{
+										stringplanmodifier.UseStateForUnknown(),
+									},
 								},
 								"tag_name": schema.StringAttribute{
 									Description: "The name of the tag.",
