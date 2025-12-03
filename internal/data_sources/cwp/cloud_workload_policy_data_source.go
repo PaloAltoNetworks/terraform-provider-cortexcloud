@@ -148,22 +148,28 @@ func (d *policyDataSource) Configure(_ context.Context, req datasource.Configure
 
 // Read refreshes the Terraform state with the latest data.
 func (d *policyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state models.PolicyModel
+	defer util.PanicHandler(&resp.Diagnostics)
+
+	// Fetch state
+	var state models.CloudWorkloadPolicyModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policy, err := d.client.GetPolicyByID(ctx, state.ID.ValueString())
+	// Execute API request
+	policy, err := d.client.GetCloudWorkloadPolicyByID(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting policy", err.Error())
 		return
 	}
 
-	state.RefreshFromRemote(ctx, &resp.Diagnostics, &policy)
+	// Refresh state with API response
+	state.RefreshFromRemote(ctx, &resp.Diagnostics, policy)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Set state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

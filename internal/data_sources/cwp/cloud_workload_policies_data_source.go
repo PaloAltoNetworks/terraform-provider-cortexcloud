@@ -33,12 +33,6 @@ type policiesDataSource struct {
 	client *cwpSdk.Client
 }
 
-// PoliciesDataSourceModel is the model for the policies data source.
-type PoliciesDataSourceModel struct {
-	PolicyTypes []string             `tfsdk:"policy_types"`
-	Policies    []models.PolicyModel `tfsdk:"policies"`
-}
-
 // Metadata returns the data source type name.
 func (d *policiesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cwp_policies"
@@ -167,32 +161,32 @@ func (d *policiesDataSource) Configure(_ context.Context, req datasource.Configu
 
 // Read refreshes the Terraform state with the latest data.
 func (d *policiesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config PoliciesDataSourceModel
+	defer util.PanicHandler(&resp.Diagnostics)
+
+	// Fetch config
+	var config models.CloudWorkloadPoliciesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policies, err := d.client.ListPolicies(ctx, config.PolicyTypes)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading policies", err.Error())
+	var policyTypes []string
+	resp.Diagnostics.Append(config.PolicyTypes.ElementsAs(ctx, &policyTypes, false)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var state PoliciesDataSourceModel
-	state.PolicyTypes = config.PolicyTypes
-
-	if len(policies) == 0 {
-		state.Policies = nil
-	} else {
-		state.Policies = make([]models.PolicyModel, len(policies))
-		for i, policy := range policies {
-			state.Policies[i].RefreshFromRemote(ctx, &resp.Diagnostics, &policy)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		}
+	// Execute API request
+	policies, err := d.client.ListCloudWorkloadPolicies(ctx, policyTypes)
+	if err != nil {
+		resp.Diagnostics.AddError("Error reading policies", err.Error())
+		return
+	} else if policies == nil {
+		resp.Diagnostics.AddError("Error reading policies", "API returned nil")
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, *policies)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }

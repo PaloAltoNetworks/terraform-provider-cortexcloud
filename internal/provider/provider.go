@@ -166,37 +166,36 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 	resources := []func() resource.Resource{}
 	tflog.Debug(ctx, "Registering Cloud Onboarding Resources")
 	resources = append(
-		resources, 
+		resources,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
 	)
-	
+
 	tflog.Debug(ctx, "Registering Platform Resources")
 	resources = append(
-		resources, 
+		resources,
 		platformResources.NewAuthenticationSettingsResource,
 		platformResources.NewAssetGroupResource,
 	)
-	
+
 	tflog.Debug(ctx, "Registering AppSec Resources")
 	resources = append(
-		resources, 
+		resources,
 		appSecResources.NewApplicationSecurityRuleResource,
 	)
 
+	tflog.Debug(ctx, "Registering CWP Resources")
+	resources = append(
+		resources,
+		cwpResources.NewPolicyResource,
+	)
+
 	return resources
-	//return []func() resource.Resource{
-	//	cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
-	//	cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
-	//	appSecResources.NewApplicationSecurityRuleResource,
-	//	platformResources.NewAuthenticationSettingsResource,
-	//	platformResources.NewAssetGroupResource,
-	//}
 }
 
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	tflog.Debug(ctx, "Registering Data Sources")	
+	tflog.Debug(ctx, "Registering Data Sources")
 	return []func() datasource.DataSource{
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
