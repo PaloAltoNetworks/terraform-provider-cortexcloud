@@ -19,12 +19,16 @@ import (
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	//"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -77,16 +81,22 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"assets": schema.SingleNestedAttribute{
 				Description: "The assets scope.",
 				Optional:    true,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
 						Description: "The mode of the assets scope.",
 						Required:    true,
+						// TODO: validate: is mode type enum
 					},
 					"asset_groups": schema.SetNestedAttribute{
+						// TODO: add logic to fetch IDs for the configured asset group names if the ID value is not configured by the user
+						// TODO: validate: length at least 1 if mode is 'select asset groups'
 						Optional: true,
+						Computed: true,
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"asset_group_id": schema.Int64Attribute{
+									// TODO: validate: is positive int
 									Required:    true,
 									Description: "Asset group ID.",
 								},
@@ -96,8 +106,46 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								},
 							},
 						},
+						Default: setdefault.StaticValue(
+							types.SetValueMust(
+								types.ObjectType{
+									AttrTypes: map[string]attr.Type{
+										"asset_group_id": types.Int64Type,
+										"asset_group_name": types.StringType,
+									},
+								},
+								[]attr.Value{},
+							),
+						),
 					},
 				},
+				Default: objectdefault.StaticValue(
+					types.ObjectValueMust(
+						map[string]attr.Type{
+							"mode": types.StringType,
+							"asset_groups": types.SetType{
+								ElemType: types.ObjectType{
+									AttrTypes: map[string]attr.Type{
+										"asset_group_id": types.Int64Type,
+										"asset_group_name": types.StringType,
+									},
+								},
+							},
+						},
+						map[string]attr.Value{
+							"mode": types.StringValue("no_scope"),
+							"asset_groups": types.SetValueMust(
+								types.ObjectType{
+									AttrTypes: map[string]attr.Type{
+										"asset_group_id": types.Int64Type,
+										"asset_group_name": types.StringType,
+									},
+								},
+								[]attr.Value{},
+							),
+						},
+					),
+				),
 			},
 			"datasets_rows": schema.SingleNestedAttribute{
 				Description: "The datasets rows scope.",
