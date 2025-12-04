@@ -5,9 +5,9 @@ import (
 )
 
 type IamPermissionConfigModel struct {
-	ID              types.String `tfsdk:"id"`
-	RbacPermissions types.List   `tfsdk:"rbac_permissions"`
-	DatasetGroups   types.List   `tfsdk:"dataset_groups"`
+	ID              types.String          `tfsdk:"id"`
+	RbacPermissions []RbacPermissionModel `tfsdk:"rbac_permissions"`
+	DatasetGroups   []DatasetGroupModel   `tfsdk:"dataset_groups"`
 }
 
 type RbacPermissionModel struct {
