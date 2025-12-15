@@ -1,0 +1,39 @@
+# Gemini
+GEMINI.md
+
+# Misc
+.DS_Store
+test/
+.meta/
+.env*
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# env file
+.env
+.env.acctest
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# TF
+main.tf
+terraform.tfstate
+terraform.tfvars
+.terraform.lock.hcl
+/terraform.tfstate.backup
