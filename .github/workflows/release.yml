@@ -32,10 +32,16 @@ jobs:
           go-version: '1.25'
 
       - name: Import GPG key
+        id: import_gpg
         uses: paultyng/ghaction-import-gpg@53deb67fe3b05af114ad9488a4da7b782455d588 #v2.1
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
+
+      - name: Verify GPG fingerprint
+        run: |
+          echo "fingerprint=${{ steps.import_gpg.outputs.fingerprint }}"
+          gpg --list-secret-keys --keyid-format=long  
 
       - name: Export GOVERSION
         run: echo "GOVERSION=$(go env GOVERSION)" >> $GITHUB_ENV
