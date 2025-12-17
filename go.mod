@@ -18,7 +18,6 @@ require (
 )
 
 require (
-	github.com/PaloAltoNetworks/cortex-cloud-go v1.0.1 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/errors v1.0.2 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client v1.0.2 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v1.0.2 // indirect
