@@ -37,6 +37,9 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
 
+      - name: Export GOVERSION
+        run: echo "GOVERSION=$(go env GOVERSION)" >> $GITHUB_ENV
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a #v6.4
         with:
@@ -45,4 +48,5 @@ jobs:
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          GOVERSION: ${{ env.GOVERSION }}
+          CORTEX_PAPI_VERSION: v1.3
