@@ -16,7 +16,6 @@ on:
   push:
     tags:
       - 'v*'
-
 permissions:
   contents: write
 
@@ -48,6 +47,15 @@ jobs:
 
       - name: Export GOVERSION
         run: echo "GOVERSION=$(go env GOVERSION)" >> $GITHUB_ENV
+
+      - name: Verify GH_PAT is present
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.GH_PAT }}" ]; then
+            echo "ERROR: secrets.GH_PAT is empty or not available to this workflow run."
+            exit 1
+          fi
+          echo "GH_PAT is present."
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a #v6.4
