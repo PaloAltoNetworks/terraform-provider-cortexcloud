@@ -13,7 +13,7 @@ PROVIDER_HOSTNAME 	?= registry.terraform.io
 PROVIDER_NAMESPACE 	?= PaloAltoNetworks
 PROVIDER_NAME 		?= cortexcloud
 PROVIDER_BINARY 	?= terraform-provider-${PROVIDER_NAME}
-PROVIDER_VERSION 	?= 0.0.1
+PROVIDER_VERSION 	?= 1.0.1
 
 # Linker values
 GIT_COMMIT 					:= $(shell git rev-parse HEAD)
