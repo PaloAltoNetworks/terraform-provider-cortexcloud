@@ -13,7 +13,7 @@ PROVIDER_HOSTNAME 	?= registry.terraform.io
 PROVIDER_NAMESPACE 	?= PaloAltoNetworks
 PROVIDER_NAME 		?= cortexcloud
 PROVIDER_BINARY 	?= terraform-provider-${PROVIDER_NAME}
-PROVIDER_VERSION 	?= 1.0.1
+PROVIDER_VERSION 	?= 1.0.3
 
 # Linker values
 GIT_COMMIT 					:= $(shell git rev-parse HEAD)
@@ -111,7 +111,8 @@ docs:
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
 	@echo "Applying documentation patches..."
-	@patch -u docs/index.md -i docs/index.md.patch --no-backup-if-mismatch
+	@patch -u docs/index.md -i docs/patch/index.md.patch --no-backup-if-mismatch
+	@patch docs/resources/asset_group.md -i docs/patch/resources/asset_group.md.patch --no-backup-if-mismatch
 	@echo "Appending release notes to documentation..."
 	@cat RELEASE_NOTES.md >> docs/index.md
 	@echo ""
@@ -123,7 +124,7 @@ test: test-unit test-acc
 # Run unit tests
 test-unit:
 	@echo "Running unit tests..."
-	@TF_ACC=0 go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance | grep models/provider)
+	@TF_ACC=0 go test -v -race $$(go list ./... | grep -v /vendor/ | grep -v /acceptance)
 
 # Run acceptance tests
 test-acc: build

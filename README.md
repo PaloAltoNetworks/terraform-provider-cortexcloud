@@ -1,6 +1,6 @@
 # Cortex Cloud Provider
 
-Cortex&reg; Cloud is the industry-leading unified cloud security platform by Palo Alto Networks&reg;. The `cortexcloud` provider allows for the configuration and management of resources in your Cortex Cloud tenant.
+This is the official Terraform Provider for the Palo Alto Networks Cortex Cloud platform.
 
 ## Example Usage
 
@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.1"
+      version = "1.0.3"
     }
   }
 }
@@ -17,8 +17,9 @@ terraform {
 # Configure the Cortex Cloud provider
 provider "cortexcloud" {
   api_url       = "https://api-cortexcloud.xdr.us.paloaltonetworks.com"
-  api_key       = "REPLACE_WITH_YOUR_API_KEY"
+  api_key       = "your-api-key-here"
   api_key_id    = 100
+  api_key_type  = "advanced" # Possible values are "standard" or "advanced". Defaults to "advanced".
 }
 ```
 
@@ -34,7 +35,7 @@ You will also need to retrieve your API URL by clicking the `Copy API URL` butto
 >[!NOTE]
 >While not a hard requirement, we recommend using an Advanced API Key for added security. Additional information on API key types can be found in the official documentation as well as the schema breakdown below.
 >
->Be sure to set the `api_key_type` attribute in the provider configuration to the appropriate key type (`"standard"` for a Standard API key or `"advanced"` for an Advanced API key) to prevent authentication errors.
+>Ensure that the provider's `api_key_type` value matches the type of API key being provided (`"standard"` for a standard key or `"advanced"` for an advanced key).
 
 There are multiple ways to specify the provider configuration values. The supported methods are listed below, in the order in which they are applied:
 1) Parameters in the provider block
@@ -49,11 +50,11 @@ Credentials can be provided through the `cortexcloud` provider block:
 provider "cortexcloud" {
   # Required
   api_url                   = "https://api-cortexcloud.xdr.us.paloaltonetworks.com"
-  api_key                   = "REPLACE_WITH_YOUR_API_KEY"
+  api_key                   = "your-api-key-here"
   api_key_id                = 100
 
   # Optional
-  api_key_type              = "standard"
+  api_key_type              = "advanced"
   sdk_log_level             = "info"
   request_timeout           = 60
   request_max_retries       = 3
@@ -76,7 +77,7 @@ provider "cortexcloud" {}
 
 ```shell
 export CORTEXCLOUD_API_URL="https://api-cortexcloud.xdr.us.paloaltonetworks.com"
-export CORTEXCLOUD_API_KEY="REPLACE_WITH_YOUR_API_KEY"
+export CORTEXCLOUD_API_KEY="your-api-key-here"
 export CORTEXCLOUD_API_KEY_ID=100
 export CORTEXCLOUD_API_KEY_TYPE="advanced"
 ```
@@ -94,9 +95,9 @@ provider "cortexcloud" {
 ```json
 {
     "api_url": "https://api-cortexcloud.xdr.us.paloaltonetworks.com",
-    "api_key": "REPLACE_WITH_YOUR_API_KEY",
+    "api_key": "your-api-key-here",
     "api_key_id": 100,
-    "api_key_type": "standard",
+    "api_key_type": "advanced",
     "sdk_log_level": "info",
     "request_timeout": 60,
     "request_max_retries": 3,
@@ -112,22 +113,35 @@ Format:
 
 ### v1.2.3 
 
-#### FEATURES
+#### Features
 - **New Resource**: `cortexcloud_foo`
 - Added support for authenticating via bar
 - resource/cortexcloud_foo_bar: Added support for singleton
 
-#### ENHANCEMENTS
+#### Enhancements
 - Improved Error Handling: Added additional guidance for 503 errors (#14)
 - data_source/cortexcloud_foobar: Added additional tests and examples
 
-#### BUG FIXES
+#### Bug Fixes
 - resource/cortexcloud_boo_far: Fixed refresh operation timing out (#22)
 - resource/cortexcloud_far_boo: Fixed type not being updated (#25)
 -->
 
-### v0.0.1
+### v1.0.3
 
-#### FEATURES
-- Initial release
+#### Bug Fixes
+- Fix outpost ID not being populated in create/update operations for cloud integration template resources.
+- Fixed sprawling attribute schema in asset group resource documentation and added patch step to prevent overwriting in future doc updates.
 
+#### Enhancements
+- Updated documentation for outpost resources and data sources with additional details and improved clarity.
+- Correct reference to unreleased version in usage example in README
+- Updated examples for asset group resource with working implementation and an additional example for static scope filters.
+- Various minor updates to project documentation.
+
+### v1.0.2
+
+#### Features
+- Initial GA release
+
+<!---Protected_by_PANW_Code_Armor_2024 - eGRyfC94ZHIvZGV2ZWxvcG1lbnQvY29ydGV4Y2xvdWQtdGVycmFmb3JtLXByb3ZpZGVyL3RlcnJhZm9ybXwzNDE1fG1hc3Rlcg== --->

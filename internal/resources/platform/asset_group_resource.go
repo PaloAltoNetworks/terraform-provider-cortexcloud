@@ -7,20 +7,25 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
+	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -74,8 +79,11 @@ func (r *AssetGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Required:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the asset group.",
+				Description: fmt.Sprintf("The type of the asset group. Possible values are: \"%s\".\n\nDynamic asset groups use criteria specified in the membership predicate to determine group membership.\n\nStatic asset groups use a set of assets specified by their unique identifier values.", strings.Join(enums.AllAssetGroupTypes(), "\", \"")),
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(enums.AllAssetGroupTypes()...),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "The description of the asset group.",
@@ -87,7 +95,7 @@ func (r *AssetGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Attributes:  rootFilterAttributes,
 			},
 			"creation_time": schema.Int64Attribute{
-				Description: "The creation time of the asset group.",
+				Description: "The timestamp representing when the asset group was created.",
 				Computed:    true,
 			},
 			"created_by": schema.StringAttribute{
@@ -95,7 +103,7 @@ func (r *AssetGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 			},
 			"last_update_time": schema.Int64Attribute{
-				Description: "The last update time of the asset group.",
+				Description: "The timestamp representing when the asset group was last updated.",
 				Computed:    true,
 			},
 			"modified_by": schema.StringAttribute{
@@ -155,16 +163,9 @@ func (r *AssetGroupResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	var predicate filterTypes.FilterRoot
-	if plan.MembershipPredicate != nil {
-		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
-	}
-
-	createRequest := platformTypes.CreateOrUpdateAssetGroupRequest{
-		GroupName:           plan.Name.ValueString(),
-		GroupType:           plan.Type.ValueString(),
-		GroupDescription:    plan.Description.ValueString(),
-		MembershipPredicate: predicate,
+	createRequest := plan.ToCreateOrUpdateRequest(ctx, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	success, assetGroupID, err := r.client.CreateAssetGroup(ctx, createRequest)
@@ -182,7 +183,6 @@ func (r *AssetGroupResource) Create(ctx context.Context, req resource.CreateRequ
 		resp.Diagnostics.AddError("Error Reading Asset Group", fmt.Sprintf("Error reading asset group after creation: %s", err.Error()))
 		return
 	}
-
 	if assetGroup == nil {
 		resp.Diagnostics.AddError("Error Creating Asset Group", "Could not find the asset group after creation.")
 		return
@@ -242,16 +242,9 @@ func (r *AssetGroupResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	var predicate filterTypes.FilterRoot
-	if plan.MembershipPredicate != nil {
-		predicate = models.RootModelToSDKFilter(ctx, plan.MembershipPredicate)
-	}
-
-	updateRequest := platformTypes.CreateOrUpdateAssetGroupRequest{
-		GroupName:           plan.Name.ValueString(),
-		GroupType:           plan.Type.ValueString(),
-		GroupDescription:    plan.Description.ValueString(),
-		MembershipPredicate: predicate,
+	updateRequest := plan.ToCreateOrUpdateRequest(ctx, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	success, err := r.client.UpdateAssetGroup(ctx, int(state.ID.ValueInt64()), updateRequest)
