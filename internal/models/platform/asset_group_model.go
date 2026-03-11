@@ -48,7 +48,7 @@ func (m *AssetGroupModel) ToCreateOrUpdateRequest(ctx context.Context, diags *di
 		diags.AddAttributeError(
 			path.Root("type"),
 			"Error Creating Asset Group",
-			"Recieved unknown asset group type value \"%s\". Please report this issue to the provider developers.",
+			"Received unknown asset group type value \"%s\". Please report this issue to the provider developers.",
 		)
 		return platformTypes.CreateOrUpdateAssetGroupRequest{}
 	}

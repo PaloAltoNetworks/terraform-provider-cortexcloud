@@ -14,7 +14,6 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	cortexEnums "github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
@@ -137,7 +136,7 @@ func (r *AssetGroupResource) findAssetGroup(ctx context.Context, id int) (*platf
 	listReq := platformTypes.ListAssetGroupsRequest{
 		Filters: filterTypes.NewSearchFilter(
 			"XDM.ASSET_GROUP.ID",
-			cortexEnums.SearchTypeEqualTo.String(),
+			enums.SearchTypeEqualTo.String(),
 			strconv.Itoa(id),
 		),
 	}
