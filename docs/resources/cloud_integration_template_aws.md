@@ -92,7 +92,6 @@ resource "aws_cloudformation_stack" "cortex_cloud_account_integration" {
 resource "cortexcloud_cloud_integration_template_aws" "account" {
   scope         = "ACCOUNT"
   instance_name = "AWS Account"
-  # TODO: change to outpost
   scan_mode = "MANAGED"
   scope_modifications = {
     regions = {

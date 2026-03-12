@@ -17,8 +17,14 @@
 resource "cortexcloud_cloud_integration_template_aws" "account" {
   scope         = "ACCOUNT"
   instance_name = "AWS Account"
-  # TODO: change to outpost
+
   scan_mode = "MANAGED"
+  # For outpost scanning, set this attribute
+  # to "OUTPOST" and define the outpost_id
+  # attribute with the ID of the target 
+  # deployed outpost
+
+
   scope_modifications = {
     regions = {
       enabled = true

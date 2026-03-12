@@ -1,5 +1,4 @@
 # Azure tenant onboarding template.
-# TODO: change subscription id guids, test
 # This template will be created with the following configuration:
 #   - Instance name of "Azure Management Group"
 #   - Scans scoped to:
