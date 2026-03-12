@@ -6,10 +6,14 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
+	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -28,11 +32,39 @@ type AssetGroupModel struct {
 	ModifiedBy          types.String     `tfsdk:"modified_by"`
 }
 
+func (m *AssetGroupModel) ToCreateOrUpdateRequest(ctx context.Context, diags *diag.Diagnostics) platformTypes.CreateOrUpdateAssetGroupRequest {
+	var predicate filterTypes.FilterRoot
+	if m.MembershipPredicate != nil {
+		predicate = RootModelToSDKFilter(ctx, m.MembershipPredicate)
+	}
+
+	var groupType string
+	switch strings.ToLower(m.Type.ValueString()) {
+	case strings.ToLower(enums.AssetGroupTypeDynamic):
+		groupType = enums.AssetGroupTypeDynamic
+	case strings.ToLower(enums.AssetGroupTypeStatic):
+		groupType = enums.AssetGroupTypeStatic
+	default:
+		diags.AddAttributeError(
+			path.Root("type"),
+			"Error Creating Asset Group",
+			"Received unknown asset group type value \"%s\". Please report this issue to the provider developers.",
+		)
+		return platformTypes.CreateOrUpdateAssetGroupRequest{}
+	}
+
+	return platformTypes.CreateOrUpdateAssetGroupRequest{
+		GroupName:           m.Name.ValueString(),
+		GroupType:           groupType,
+		GroupDescription:    m.Description.ValueString(),
+		MembershipPredicate: predicate,
+	}
+}
+
 // RefreshFromRemote refreshes the model from the remote API response.
 func (m *AssetGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformTypes.AssetGroup) {
 	tflog.Debug(ctx, "Refreshing asset group model from remote")
 
-	tflog.Trace(ctx, "Setting asset group attributes")
 	m.ID = types.Int64Value(int64(remote.ID))
 	m.Name = types.StringValue(remote.Name)
 	m.Type = types.StringValue(remote.Type)

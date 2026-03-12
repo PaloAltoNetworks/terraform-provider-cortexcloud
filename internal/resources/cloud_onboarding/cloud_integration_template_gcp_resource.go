@@ -65,14 +65,14 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 		Attributes: map[string]schema.Attribute{
 			"additional_capabilities": schema.SingleNestedAttribute{
 				Description: "Define which additional security capabilities to enable. " +
-				"\n\n~>**NOTE**: adding additional capabilities " +
+					"\n\n~>**NOTE**: adding additional capabilities " +
 					"typically requires additional cloud provider " +
 					"permissions. For more information, refer to the Cortex " +
 					"Cloud Posture Management documentation: " +
 					"https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions",
 				MarkdownDescription: "Define which additional security capabilities to enable. \n\n~>**NOTE** that adding additional capabilities typically requires additional cloud provider permissions. For more information, refer to the [Cortex Cloud Posture Management documentation](https://docs-cortex.paloaltonetworks.com/r/Cortex-CLOUD/Cortex-Cloud-Posture-Management-Documentation/Cloud-service-provider-permissions).",
-				Optional: true,
-				Computed: true,
+				Optional:            true,
+				Computed:            true,
 				Attributes: map[string]schema.Attribute{
 					"data_security_posture_management": schema.BoolAttribute{
 						Description: "Whether to enable data security " +
@@ -101,12 +101,10 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 						Default:  booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
-						Description: "Additional configuration options for" +
-							"registry scanning. Default value is \"true\".",
-						MarkdownDescription: "Additional configuration options for" +
-							"registry scanning. Default value is `true`.",
-						Optional: true,
-						Computed: true,
+						Description:         "Additional configuration options for registry scanning.",
+						MarkdownDescription: "Additional configuration options for registry scanning.",
+						Optional:            true,
+						Computed:            true,
 						Attributes: map[string]schema.Attribute{
 							"type": schema.StringAttribute{
 								Description: "Type of registry scanning.",
@@ -209,7 +207,7 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 							},
 							"agentless_disk_scanning": types.BoolType,
 							"xsiam_analytics":         types.BoolType,
-							"serverless_scanning":         types.BoolType,
+							"serverless_scanning":     types.BoolType,
 						},
 						map[string]attr.Value{
 							"data_security_posture_management": types.BoolValue(false),
@@ -226,7 +224,7 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 							),
 							"agentless_disk_scanning": types.BoolValue(true),
 							"xsiam_analytics":         types.BoolValue(true),
-							"serverless_scanning":         types.BoolValue(true),
+							"serverless_scanning":     types.BoolValue(true),
 						},
 					),
 				),
@@ -235,29 +233,29 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 				},
 			},
 			"collection_configuration": schema.SingleNestedAttribute{
-				Description: "Configure log data collection.",
+				Description:         "Configure log data collection.",
 				MarkdownDescription: "Configure log data collection.",
-				Optional:    true,
-				Computed:    true,
+				Optional:            true,
+				Computed:            true,
 				Attributes: map[string]schema.Attribute{
 					"audit_logs": schema.SingleNestedAttribute{
-						Description: "Configuration for audit logs collection.",
+						Description:         "Configuration for audit logs collection.",
 						MarkdownDescription: "Configuration for audit logs collection.",
-						Required:    true,
+						Required:            true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable audit log collection. Default value is \"true\".",
+								Description:         "Whether to enable audit log collection. Default value is \"true\".",
 								MarkdownDescription: "Whether to enable audit log collection. Default value is `true`.",
-								Optional:    true,
-								Computed:    true,
-								Default:     booldefault.StaticBool(true),
+								Optional:            true,
+								Computed:            true,
+								Default:             booldefault.StaticBool(true),
 							},
 							"collection_method": schema.StringAttribute{
-								Description: fmt.Sprintf("Method of audit log collection. Default value is \"%s\".", enums.AuditLogCollectionMethodAutomated.String()),
+								Description:         fmt.Sprintf("Method of audit log collection. Default value is \"%s\".", enums.AuditLogCollectionMethodAutomated.String()),
 								MarkdownDescription: fmt.Sprintf("Method of audit log collection. Default value is `%s`.", enums.AuditLogCollectionMethodAutomated.String()),
-								Optional:    true,
-								Computed:    true,
-								Default:     stringdefault.StaticString(enums.AuditLogCollectionMethodAutomated.String()),
+								Optional:            true,
+								Computed:            true,
+								Default:             stringdefault.StaticString(enums.AuditLogCollectionMethodAutomated.String()),
 								Validators: []validator.String{
 									stringvalidator.OneOf(
 										enums.AllAuditLogCollectionMethods()...,
@@ -334,17 +332,17 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 				},
 			},
 			"instance_name": schema.StringAttribute{
-				Description: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
+				Description:         "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
 				MarkdownDescription: "The name of the integration template. When the template is executed, integrations will appear in the console with this value.",
-				Optional: true,
+				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"scan_mode": schema.StringAttribute{
-				Description: fmt.Sprintf("Define what infrastructure the integration will use to scan cloud workloads. If set to \"MANAGED\", scanning will be done in the Cortex Cloud environment. If set to \"OUTPOST\", scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: \"%s\". \n\n~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.", strings.Join(enums.AllScanModes(), "\", \"")),
+				Description:         fmt.Sprintf("Define what infrastructure the integration will use to scan cloud workloads. If set to \"MANAGED\", scanning will be done in the Cortex Cloud environment. If set to \"OUTPOST\", scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: \"%s\". \n\n~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.", strings.Join(enums.AllScanModes(), "\", \"")),
 				MarkdownDescription: fmt.Sprintf("Define what infrastructure the integration will use to scan cloud workloads. If set to `MANAGED`, scanning will be done in the Cortex Cloud environment. If set to `OUTPOST`, scanning will be done on infrastructure deployed to a cloud account owned by you. Possible values are: `%s`. \n\n~>**NOTE** Scanning with an outpost may require additional CSP permissions and may incur additional costs.", strings.Join(enums.AllScanModes(), "`, `")),
-				Required: true,
+				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						enums.AllScanModes()...,
@@ -361,9 +359,9 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 				},
 			},
 			"scope": schema.StringAttribute{
-				Description: fmt.Sprintf("Define the scope for this integration instance. Possible values are: \"%s\"", strings.Join(enums.AllScopes(), "\", \"")),
+				Description:         fmt.Sprintf("Define the scope for this integration instance. Possible values are: \"%s\"", strings.Join(enums.AllScopes(), "\", \"")),
 				MarkdownDescription: fmt.Sprintf("Define the scope for this integration instance. Possible values are: `%s`", strings.Join(enums.AllScopes(), "`, `")),
-				Required: true,
+				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						enums.AllScopes()...,
@@ -390,9 +388,9 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"project\". If enabled, the \"type\" and \"project_ids\" attributes must be configured as well.",
+								Description:         "Whether to enable this scope modification. Cannot be set to \"true\" if scope is set to \"project\". If enabled, the \"type\" and \"project_ids\" attributes must be configured as well.",
 								MarkdownDescription: "Whether to enable this scope modification. Cannot be set to `true` if scope is set to `project`. If enabled, the `type` and `project_ids` attributes must be configured as well.",
-								Required:    true,
+								Required:            true,
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
 										true,
@@ -405,9 +403,9 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified project IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
+								Description:         fmt.Sprintf("Whether the specified project IDs should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\" and scope is not set to `ACCOUNT`. Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
 								MarkdownDescription: fmt.Sprintf("Whether the specified project IDs should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true` and scope is not set to `ACCOUNT`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
-								Optional:    true,
+								Optional:            true,
 								Validators: []validator.String{
 									stringvalidator.OneOf(
 										enums.AllScopeModificationTypes()...,
@@ -415,10 +413,10 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 								},
 							},
 							"project_ids": schema.SetAttribute{
-								Description: "Project IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
+								Description:         "Project IDs to include or exclude from scans. Cannot be configured if scope is set to \"ACCOUNT\". If scope is set to \"ORGANIZATION\" or \"ACCOUNT_GROUP\" and enabled is set to \"true\", it must be configured with at least 1 value.",
 								MarkdownDescription: "Project IDs to include or exclude from scans. Cannot be configured if scope is set to `ACCOUNT`. If scope is set to `ORGANIZATION` or `ACCOUNT_GROUP` and enabled is set to `true`, it must be configured with at least 1 value.",
-								Optional:    true,
-								ElementType: types.StringType,
+								Optional:            true,
+								ElementType:         types.StringType,
 								Validators: []validator.Set{
 									setvalidator.SizeAtLeast(1),
 								},
@@ -437,14 +435,14 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 						),
 					},
 					"regions": schema.SingleNestedAttribute{
-						Description: "TODO",
 						Optional:    true,
 						Computed:    true,
+						Description: "Configuration for regional scope modifications.",
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
-								Description: "Whether to enable this scope modification. If set to \"true\", the \"type\" and \"regions\" attributes must be configured as well.",
+								Description:         "Whether to enable this scope modification. If set to \"true\", the \"type\" and \"regions\" attributes must be configured as well.",
 								MarkdownDescription: "Whether to enable this scope modification. If set to `true`, the `type` and `regions` attributes must be configured as well.",
-								Required:    true,
+								Required:            true,
 								Validators: []validator.Bool{
 									validators.AlsoRequiresOnBoolValue(
 										true,
@@ -457,9 +455,9 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 								},
 							},
 							"type": schema.StringAttribute{
-								Description: fmt.Sprintf("Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\". Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
+								Description:         fmt.Sprintf("Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if \"enabled\" is set to \"true\". Possible values are: \"%s\"", strings.Join(enums.AllScopeModificationTypes(), "\", \"")),
 								MarkdownDescription: fmt.Sprintf("Whether the specified regions should be included in the scope or excluded from the scope. Must be configured if `enabled` is set to `true`. Possible values are: `%s`", strings.Join(enums.AllScopeModificationTypes(), "`, `")),
-								Optional:    true,
+								Optional:            true,
 								Validators: []validator.String{
 									stringvalidator.OneOf(
 										enums.AllScopeModificationTypes()...,
@@ -467,10 +465,10 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 								},
 							},
 							"regions": schema.SetAttribute{
-								Description: "Regions to include or exclude from scans. Must be configured with at least 1 value if \"enabled\" is set to \"true\".",
+								Description:         "Regions to include or exclude from scans. Must be configured with at least 1 value if \"enabled\" is set to \"true\".",
 								MarkdownDescription: "Regions to include or exclude from scans. Must be configured with at least 1 value if `enabled` is set to `true`.",
-								Optional:    true,
-								ElementType: types.StringType,
+								Optional:            true,
+								ElementType:         types.StringType,
 								Validators: []validator.Set{
 									setvalidator.SizeAtLeast(1),
 								},
@@ -548,33 +546,33 @@ func (r *CloudIntegrationTemplateGcpResource) Schema(ctx context.Context, req re
 				},
 			},
 			"outpost_id": schema.StringAttribute{
-				Description: "The ID of the outpost that will be used for scanning. Must be configured if \"scan_mode\" is set to \"OUTPOST\".",
+				Description:         "The ID of the outpost that will be used for scanning. Must be configured if \"scan_mode\" is set to \"OUTPOST\".",
 				MarkdownDescription: "The ID of the outpost that will be used for scanning. Must be configured if `scan_mode` is set to `OUTPOST`.",
-				Optional:    true,
-				Computed:    true,
+				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"status": schema.StringAttribute{
-				Description: "Status of the template.",
+				Description:         "Status of the template.",
 				MarkdownDescription: "Status of the template.",
-				Computed:    true,
-				Default:     stringdefault.StaticString(enums.IntegrationInstanceStatusPending.String()),
+				Computed:            true,
+				Default:             stringdefault.StaticString(enums.IntegrationInstanceStatusPending.String()),
 			},
 			"tracking_guid": schema.StringAttribute{
-				Description: "The unique ID value assigned to this template after creation.",
+				Description:         "The unique ID value assigned to this template after creation.",
 				MarkdownDescription: "The unique ID value assigned to this template after creation.",
-				Computed:    true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"terraform_module_url": schema.StringAttribute{
-				Description: "The full URL returned by Cortex Cloud when selecting the Terraform method of downloading the template. Opening this URL in your browser will begin a download of the created template as a Terraform module, which you can then apply to permit Cortex Cloud to scan your Azure resources.",
+				Description:         "The full URL returned by Cortex Cloud when selecting the Terraform method of downloading the template. Opening this URL in your browser will begin a download of the created template as a Terraform module, which you can then apply to permit Cortex Cloud to scan your Azure resources.",
 				MarkdownDescription: "The full URL returned by Cortex Cloud when selecting the Terraform method of downloading the template. Opening this URL in your browser will begin a download of the created template as a Terraform module, which you can then apply to permit Cortex Cloud to scan your Azure resources.",
-				Computed:    true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -653,7 +651,7 @@ func (r *CloudIntegrationTemplateGcpResource) Create(ctx context.Context, req re
 		)
 		return
 	}
-	
+
 	// Map response body to schema and populate Computed attribute values
 	tflog.Debug(ctx, "Setting computed attributes")
 	plan.SetGeneratedValues(ctx, &resp.Diagnostics, createResponse)
@@ -714,12 +712,12 @@ func (r *CloudIntegrationTemplateGcpResource) Read(ctx context.Context, req reso
 		tflog.Debug(ctx, "API returned multiple results")
 		resp.Diagnostics.AddWarning(
 			"Multiple Cloud Integration Templates Returned",
-			"Cortex Cloud returned multiple results for this resource. " +
+			"Cortex Cloud returned multiple results for this resource. "+
 				"Please report this issue to the provider developers.",
 		)
 		return
 	}
-	
+
 	// Refresh state values
 	tflog.Debug(ctx, "Refreshing configured attributes")
 	state.RefreshConfiguredPropertyValues(ctx, &resp.Diagnostics, response[0])
@@ -735,12 +733,12 @@ func (r *CloudIntegrationTemplateGcpResource) Read(ctx context.Context, req reso
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *CloudIntegrationTemplateGcpResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
-	
+
 	ctx = tflog.SetField(ctx, "resource_type", "cloud_integration_template_gcp")
 	ctx = tflog.SetField(ctx, "resource_id_field", "tracking_guid")
 	ctx = tflog.SetField(ctx, "resource_operation", "Update")
-	
-	// The resource should require replacement upon modifying any of the 
+
+	// The resource should require replacement upon modifying any of the
 	// configurable attributes, but as a fallback we will remove the resource
 	// from the state.
 	resp.State.RemoveResource(ctx)

@@ -231,11 +231,9 @@ The tag `managed_by` with the value `paloaltonetworks` will be applied by defaul
 Optional:
 
 - `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
-
-It is strongly recommended that you keep enable this feature enabled.
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
-- `registry_scanning_options` (Attributes) Additional configuration options forregistry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `registry_scanning_options` (Attributes) Additional configuration options for registry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
 - `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
 
@@ -285,7 +283,7 @@ Required:
 Optional:
 
 - `projects` (Attributes) Configuration for project-level scope modifications for GCP integrations. (see [below for nested schema](#nestedatt--scope_modifications--projects))
-- `regions` (Attributes) Configuration for scoping scans to specific regions or excluding specific regions from scans. (see [below for nested schema](#nestedatt--scope_modifications--regions))
+- `regions` (Attributes) Configuration for regional scope modifications. (see [below for nested schema](#nestedatt--scope_modifications--regions))
 
 <a id="nestedatt--scope_modifications--projects"></a>
 ### Nested Schema for `scope_modifications.projects`

@@ -335,7 +335,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 		resp.Diagnostics.AddAttributeError(
 			path.Root("id"),
 			"Cloud Integration Instance Data Source Configuration Error",
-			"Recieved null or unknown value for `id` attribute. Please report this issue to the developers.",
+			"Received null or unknown value for `id` attribute. Please report this issue to the developers.",
 		)
 	}
 

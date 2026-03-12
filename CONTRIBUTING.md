@@ -3,12 +3,14 @@
 First off, thanks for taking the time to contribute! Following these guidelines helps keep the project maintainable, easy to contribute to, and more secure.
 
 ## Where to start
+
 There are many ways to contribute.
 You can fix a bug, improve the documentation, submit bug reports and feature requests, or take a first shot at a feature you need for yourself.
 
 Pull requests are necessary for all contributions of code or documentation.
 
 ## Fixing a typo or other small issue
+
 Many fixes require little effort or review, such as:
 
 - Typos, white space and formatting changes
@@ -22,6 +24,7 @@ This will automatically create a fork and pull request with the change.
 See: [Creating a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
 ## Bug fixes and features
+
 For something that is bigger than a one or two line fix, go through the process of making a fork and pull request yourself:
 
 1. Create your own fork of the code
@@ -69,16 +72,17 @@ provider_installation {
 
 ## Testing
 
-Run `make test` to run the unit and acceptance test suites.
+Run `make test` to run the unit and acceptance test suites, or execute the individual test suites with `make test-unit` and `make test-acc` respectively.
 
-Note that acceptance tests require you to have the following environment variables configured against an existing Cortex Cloud tenant for which you are permissioned to create, modify and delete resources:
-- `CORTEX_API_URL`
-- `CORTEX_API_KEY`
-- `CORTEX_API_KEY_ID`
+The acceptance test suite requires the following environment variables to be configured with your Cortex Cloud API URL key, key ID, and key type:
+- `TEST_CORTEX_API_URL`
+- `TEST_CORTEX_API_KEY`
+- `TEST_CORTEX_API_KEY_ID`
+- `TEST_CORTEX_API_KEY_TYPE`
 
 ### Additional Tools
 
-The following tools are not necessary for contributing to the provider. They are largely used within the CI workflow to handle miscellanious tasks. However, if you would like to do us a solid and ensure that your pull request will pass the CI checks, feel free to install them on your local machine and execute them against the project after you've completed your changes to the provider.
+The following tools are not necessary for contributing to the provider. They are primarily used within the CI workflow to handle various tasks. However, it would be appreciated if you could ensure that your pull request will pass the CI checks. feel free to install them on your local machine and execute them against the project after you've completed your changes.
 
 - Copywrite v0.22.0
   - `brew tap hashicorp/tap`
@@ -92,7 +96,7 @@ To debug the provider, install the [Go for Visual Studio Code](https://marketpla
 
 After installing the extension, open the project in Visual Studio Code select the `Run and Debug` option on the sidebar and click `create a launch.json file`.
 
-Example `launch.json` definition:
+An example `launch.json` definition can be found below. Ensure that the value of the  `program` key matches the full path to the project directory on your local machine.
 
 ```
 {
@@ -103,8 +107,7 @@ Example `launch.json` definition:
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            // this assumes your workspace is the root of the repo
-            "program": "${workspaceFolder}",
+            "program": "${workspaceFolder}", 
             "env": {},
             "args": [
                 "-debug=true"

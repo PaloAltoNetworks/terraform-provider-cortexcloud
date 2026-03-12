@@ -1,25 +1,17 @@
 ## Release Notes
 
-<!-- 
-Format: 
+### v1.0.3
 
-### v1.2.3 
+#### Bug Fixes
+- Fixed sprawling attribute schema in asset group resource documentation and added patch step to prevent overwriting in future doc updates.
 
-#### FEATURES
-- **New Resource**: `cortexcloud_foo`
-- Added support for authenticating via bar
-- resource/cortexcloud_foo_bar: Added support for singleton
+#### Enhancements
+- Updated documentation for outpost resources and data sources with additional details and improved clarity.
+- Correct reference to unreleased version in usage example in README
+- Updated examples for asset group resource with working implementation and an additional example for static scope filters.
+- Various minor updates to project documentation.
 
-#### ENHANCEMENTS
-- Improved Error Handling: Added additional guidance for 503 errors (#14)
-- data_source/cortexcloud_foobar: Added additional tests and examples
+### v1.0.2
 
-#### BUG FIXES
-- resource/cortexcloud_boo_far: Fixed refresh operation timing out (#22)
-- resource/cortexcloud_far_boo: Fixed type not being updated (#25)
--->
-
-### v0.0.1
-
-#### FEATURES
-- Initial release
+#### Features
+- Initial GA release

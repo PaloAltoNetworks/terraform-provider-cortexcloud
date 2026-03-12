@@ -12,7 +12,7 @@ import (
 func AddMissingRequiredProviderConfigurationValue(diagnostics *diag.Diagnostics, attributeName, attributeNamePretty, attributeEnvVar string) {
 	diagnostics.AddError(
 		fmt.Sprintf("%s Is Required", attributeNamePretty),
-		fmt.Sprintf("Recieved unknown or empty value for required configuration parameter \"%s\". Either set the value in the provider configuration, or use the %s environment variable.", attributeName, attributeEnvVar),
+		fmt.Sprintf("Received unknown or empty value for required configuration parameter \"%s\". Either set the value in the provider configuration, or use the %s environment variable.", attributeName, attributeEnvVar),
 	)
 }
 

@@ -142,7 +142,6 @@ resource "cortexcloud_cloud_integration_template_azure" "subscription" {
 
 ```terraform
 # Azure tenant onboarding template.
-# TODO: change subscription id guids, test
 # This template will be created with the following configuration:
 #   - Instance name of "Azure Management Group"
 #   - Scans scoped to:
@@ -256,11 +255,9 @@ Required:
 Optional:
 
 - `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
-
-It is strongly recommended that you keep enable this feature enabled.
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
-- `registry_scanning_options` (Attributes) Additional configuration options forregistry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `registry_scanning_options` (Attributes) Additional configuration options for registry scanning. Default value is `true`. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
 - `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
 
@@ -309,7 +306,7 @@ Required:
 
 Optional:
 
-- `regions` (Attributes) (see [below for nested schema](#nestedatt--scope_modifications--regions))
+- `regions` (Attributes) Configuration for regional scope modifications. (see [below for nested schema](#nestedatt--scope_modifications--regions))
 - `subscriptions` (Attributes) Configuration for subscription-level scope modifications for Azure integrations. (see [below for nested schema](#nestedatt--scope_modifications--subscriptions))
 
 <a id="nestedatt--scope_modifications--regions"></a>

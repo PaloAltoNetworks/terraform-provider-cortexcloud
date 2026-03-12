@@ -17,15 +17,15 @@ Retrieves a list of cloud integration instances.
 
 ### Optional
 
-- `authentication_method` (String) The authentication method to filter on.
+- `authentication_method` (String) The authentication method to filter by.
 - `cloud_provider` (String)
-- `creation_time` (String) The creation time to filter on (Unix timestamp with milliseconds).
-- `instance_id` (String) The instance ID to filter on.
-- `name` (String) The name to filter on.
-- `outpost_id` (String) The outpost ID to filter on.
-- `scan_mode` (String) The scan mode to filter on.
-- `scope` (String) The scope to filter on.
-- `status` (String) The status to filter on.
+- `creation_time` (String) The creation time to filter by (RFC 3339 format).
+- `instance_id` (String) The instance ID to filter by.
+- `name` (String) The name to filter by.
+- `outpost_id` (String) The outpost ID to filter by.
+- `scan_mode` (String) The scan mode to filter by.
+- `scope` (String) The scope to filter by.
+- `status` (String) The status to filter by.
 
 ### Read-Only
 
