@@ -27,33 +27,44 @@ type UserGroupModel struct {
 	CreatedBy      types.String       `tfsdk:"created_by"`
 	CreatedTS      types.Int64        `tfsdk:"created_ts"`
 	UpdatedTS      types.Int64        `tfsdk:"updated_ts"`
-	Users          []string           `tfsdk:"users"`
+	Users          types.Set          `tfsdk:"users"`
+	AllUsers       types.Set          `tfsdk:"all_users"`
 	GroupType      types.String       `tfsdk:"group_type"`
 	NestedGroups   []NestedGroupModel `tfsdk:"nested_groups"` // read-only objects (from list)
-	IDPGroups      []string           `tfsdk:"idp_groups"`
+	IDPGroups      types.Set          `tfsdk:"idp_groups"`
 }
 
 // ToCreateRequest converts the model to a CreateUserGroup request for the SDK.
-func (m *UserGroupModel) ToCreateRequest() platformtypes.UserGroupCreateRequest {
+func (m *UserGroupModel) ToCreateRequest(ctx context.Context, diagnostics *diag.Diagnostics) platformtypes.UserGroupCreateRequest {
 	var nestedGroupIDs []string
 	for _, ng := range m.NestedGroups {
 		if !ng.GroupID.IsNull() && !ng.GroupID.IsUnknown() {
 			nestedGroupIDs = append(nestedGroupIDs, ng.GroupID.ValueString())
 		}
+	}
+
+	users := make([]string, len(m.Users.Elements()))
+	diagnostics.Append(m.Users.ElementsAs(ctx, &users, false)...)
+
+	idpGroups := make([]string, len(m.IDPGroups.Elements()))
+	diagnostics.Append(m.IDPGroups.ElementsAs(ctx, &idpGroups, false)...)
+
+	if diagnostics.HasError() {
+		return platformtypes.UserGroupCreateRequest{}
 	}
 
 	return platformtypes.UserGroupCreateRequest{
 		GroupName:    m.GroupName.ValueString(),
 		Description:  m.Description.ValueString(),
 		RoleName:     m.RoleID.ValueString(),
-		Users:        m.Users,
+		Users:        users,
 		NestedGroups: nestedGroupIDs,
-		IDPGroups:    m.IDPGroups,
+		IDPGroups:    idpGroups,
 	}
 }
 
 // ToEditRequest converts the model to an UserGroupEditRequest for the SDK.
-func (m *UserGroupModel) ToEditRequest() platformtypes.UserGroupEditRequest {
+func (m *UserGroupModel) ToEditRequest(ctx context.Context, diagnostics *diag.Diagnostics) platformtypes.UserGroupEditRequest {
 	var nestedGroupIDs []string
 	for _, ng := range m.NestedGroups {
 		if !ng.GroupID.IsNull() && !ng.GroupID.IsUnknown() {
@@ -61,22 +72,56 @@ func (m *UserGroupModel) ToEditRequest() platformtypes.UserGroupEditRequest {
 		}
 	}
 
+	users := make([]string, len(m.Users.Elements()))
+	diagnostics.Append(m.Users.ElementsAs(ctx, &users, false)...)
+
+	idpGroups := make([]string, len(m.IDPGroups.Elements()))
+	diagnostics.Append(m.IDPGroups.ElementsAs(ctx, &idpGroups, false)...)
+
+	if diagnostics.HasError() {
+		return platformtypes.UserGroupEditRequest{}
+	}
+
 	return platformtypes.UserGroupEditRequest{
 		GroupName:      m.GroupName.ValueString(),
 		Description:    m.Description.ValueString(),
 		RoleName:       m.RoleID.ValueString(),
-		Users:          m.Users,
+		Users:          users,
 		NestedGroupIDs: nestedGroupIDs,
-		IDPGroups:      m.IDPGroups,
+		IDPGroups:      idpGroups,
 	}
 }
 
 // RefreshFromRemote populates the model from the SDK's UserGroup object.
-func (m *UserGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnostics, remote *platformtypes.UserGroup) {
+func (m *UserGroupModel) RefreshFromRemote(ctx context.Context, diagnostics *diag.Diagnostics, remote *platformtypes.UserGroup) {
 	if remote == nil {
-		diags.AddError("User Group not found", "The requested user group does not exist.")
+		diagnostics.AddError("User Group not found", "The requested user group does not exist.")
 		return
 	}
+
+	// Convert users (directly configured)
+	//if len(m.Users.Elements()) == 0 {
+	//	m.Users = types.SetNull(types.StringType)
+	//} else {
+	//	users, diags := types.SetValueFrom(ctx, types.StringType, remote.Users)
+	//	diagnostics.Append(diags...)
+	//	m.Users = users
+	//}
+
+	// Populate all users (returned from API)
+	allUsers, diags := types.SetValueFrom(ctx, types.StringType, remote.Users)
+	diagnostics.Append(diags...)
+	m.AllUsers = allUsers
+
+	// Convert IDP groups
+	if len(remote.IDPGroups) == 0 {
+		m.IDPGroups = types.SetNull(types.StringType)
+	} else {
+		idpGroups, diags := types.SetValueFrom(ctx, types.StringType, remote.IDPGroups)
+		diagnostics.Append(diags...)
+		m.IDPGroups = idpGroups
+	}
+
 	m.ID = types.StringValue(remote.GroupID)
 	m.GroupName = types.StringValue(remote.GroupName)
 	m.Description = types.StringValue(remote.Description)
@@ -89,9 +134,7 @@ func (m *UserGroupModel) RefreshFromRemote(ctx context.Context, diags *diag.Diag
 	m.CreatedBy = types.StringValue(remote.CreatedBy)
 	m.CreatedTS = types.Int64Value(remote.CreatedTS)
 	m.UpdatedTS = types.Int64Value(remote.UpdatedTS)
-	m.Users = remote.Users
 	m.GroupType = types.StringValue(remote.GroupType)
-	m.IDPGroups = remote.IDPGroups
 
 	if len(remote.NestedGroups) == 0 {
 		m.NestedGroups = nil

@@ -5,6 +5,8 @@ package platform
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
@@ -12,8 +14,11 @@ import (
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -32,84 +37,83 @@ type GroupDataSource struct {
 	client *platform.Client
 }
 
+// Metadata returns the data source type name.
 func (r *GroupDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_user_group"
 }
 
+// Schema defines the schema for the data source.
 func (r *GroupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetch an existing Cortex Cloud user group by group_name.",
+		Description: "Provides details about an existing User Group.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "User group ID.",
+				Description: "The unique identifier of the user group.",
 				Computed:    true,
 			},
-
 			"group_name": schema.StringAttribute{
-				Description: "User group name.",
+				Description: "The unique name of the user group to look up.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
-
 			"description": schema.StringAttribute{
-				Description: "User group description.",
+				Description: "A brief description of the user group's purpose.",
 				Computed:    true,
 			},
-
 			"role_id": schema.StringAttribute{
-				Description: "Role ID associated with the group.",
+				Description: "The unique identifier of the role assigned to this group.",
 				Computed:    true,
 			},
-
 			"pretty_role_name": schema.StringAttribute{
-				Description: "Human-readable role name.",
+				Description: "The display name of the role assigned to this group.",
 				Computed:    true,
 			},
-
 			"created_by": schema.StringAttribute{
-				Description: "Creator of the user group.",
+				Description: "The user or system that created the user group.",
 				Computed:    true,
 			},
-
 			"created_ts": schema.Int64Attribute{
-				Description: "Created timestamp (epoch).",
+				Description: "Unix timestamp (milliseconds) of when the user group was created.",
 				Computed:    true,
 			},
-
 			"updated_ts": schema.Int64Attribute{
-				Description: "Updated timestamp (epoch).",
+				Description: "Unix timestamp (milliseconds) of when the user group was last updated.",
 				Computed:    true,
 			},
-
-			"users": schema.ListAttribute{
-				Description: "Users in the group (emails).",
+			"users": schema.SetAttribute{
+				Description: "A list of user email addresses directly configured in this group.",
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-
-			"group_type": schema.StringAttribute{
-				Description: "Group type.",
+			"all_users": schema.SetAttribute{
+				Description: "A list of users with effective membership for this group. \n\nThis list represents the union of users that have been directly configured in this group and any users that are a member of an IDP group configured in the `idp_groups` attribute that have logged in via SSO/JIT authentication.\n\nDue to API limitations, it is currently not possible to determine which users were added from direct configuration versus SSO/JIT authentication.",
+				ElementType: types.StringType,
 				Computed:    true,
 			},
-
-			"nested_groups": schema.ListNestedAttribute{
-				Description: "Nested groups (read-only).",
+			"group_type": schema.StringAttribute{
+				Description: "The type of the user group. Possible values: `custom` (created directly in the UI), `ad_type` (imported and synchronized from Azure Active Directory).",
+				Computed:    true,
+			},
+			"nested_groups": schema.SetNestedAttribute{
+				Description: "The list of direct child groups nested within this user group.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"group_id": schema.StringAttribute{
-							Description: "Nested group ID.",
+							Description: "The unique identifier of the nested group.",
 							Computed:    true,
 						},
 						"group_name": schema.StringAttribute{
-							Description: "Nested group name.",
+							Description: "The display name of the nested group.",
 							Computed:    true,
 						},
 					},
 				},
 			},
-
-			"idp_groups": schema.ListAttribute{
-				Description: "IDP group mappings.",
+			"idp_groups": schema.SetAttribute{
+				Description: "The identity provider (IdP) group names associated with this group. Members of these IdP groups are added automatically via SSO/JIT and appear in `idp_users`.",
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -117,6 +121,7 @@ func (r *GroupDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 	}
 }
 
+// Configure adds the provider-configured client to the data source.
 func (r *GroupDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -131,6 +136,7 @@ func (r *GroupDataSource) Configure(ctx context.Context, req datasource.Configur
 	r.client = clients.Platform
 }
 
+// Read refreshes the Terraform state with the latest data.
 func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
@@ -140,14 +146,9 @@ func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	if config.GroupName.IsNull() || config.GroupName.IsUnknown() || config.GroupName.ValueString() == "" {
-		resp.Diagnostics.AddError("Invalid configuration", "group_name must be provided.")
-		return
-	}
-
 	groups, err := r.client.ListUserGroups(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("User Group Data Source Read Error", err.Error())
+		resp.Diagnostics.AddError("Error Reading User Group", err.Error())
 		return
 	}
 
@@ -160,9 +161,10 @@ func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	if found == nil {
-		resp.Diagnostics.AddError(
-			"User Group not found",
-			"No user group found with group_name="+config.GroupName.ValueString(),
+		resp.Diagnostics.AddAttributeError(
+			path.Root("group_name"),
+			"User Group Not Found",
+			fmt.Sprintf("User group with name %s not found", strconv.Quote(config.GroupName.ValueString())),
 		)
 		return
 	}
@@ -174,4 +176,3 @@ func (r *GroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
-

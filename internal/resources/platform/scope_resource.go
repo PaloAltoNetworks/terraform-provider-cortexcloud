@@ -81,7 +81,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"assets": schema.SingleNestedAttribute{
 				Description: "The assets scope.",
 				Optional:    true,
-				Computed: true,
+				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
 						Description: "The mode of the assets scope.",
@@ -106,7 +106,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							types.SetValueMust(
 								types.ObjectType{
 									AttrTypes: map[string]attr.Type{
-										"asset_group_id": types.Int64Type,
+										"asset_group_id":   types.Int64Type,
 										"asset_group_name": types.StringType,
 									},
 								},
@@ -122,7 +122,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							"asset_groups": types.SetType{
 								ElemType: types.ObjectType{
 									AttrTypes: map[string]attr.Type{
-										"asset_group_id": types.Int64Type,
+										"asset_group_id":   types.Int64Type,
 										"asset_group_name": types.StringType,
 									},
 								},
@@ -133,7 +133,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							"asset_groups": types.SetValueMust(
 								types.ObjectType{
 									AttrTypes: map[string]attr.Type{
-										"asset_group_id": types.Int64Type,
+										"asset_group_id":   types.Int64Type,
 										"asset_group_name": types.StringType,
 									},
 								},
@@ -146,7 +146,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"datasets_rows": schema.SingleNestedAttribute{
 				Description: "The datasets rows scope.",
 				Optional:    true,
-				Computed: true,
+				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"default_filter_mode": schema.StringAttribute{
 						Description: fmt.Sprintf("The default filter mode of the datasets rows scope. Possible values are: \"%s\"", strings.Join([]string{"no_scope", "see_all"}, "\", \"")),
@@ -161,7 +161,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					"filters": schema.SetNestedAttribute{
 						Description: "The filters in the datasets rows scope.",
 						Optional:    true,
-						Computed: true,
+						Computed:    true,
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"dataset": schema.StringAttribute{
@@ -179,7 +179,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								types.ObjectType{
 									AttrTypes: map[string]attr.Type{
 										"dataset": types.StringType,
-										"filter": types.StringType,
+										"filter":  types.StringType,
 									},
 								},
 								[]attr.Value{},
@@ -195,7 +195,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								ElemType: types.ObjectType{
 									AttrTypes: map[string]attr.Type{
 										"dataset": types.StringType,
-										"filter": types.StringType,
+										"filter":  types.StringType,
 									},
 								},
 							},
@@ -206,7 +206,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 								types.ObjectType{
 									AttrTypes: map[string]attr.Type{
 										"dataset": types.StringType,
-										"filter": types.StringType,
+										"filter":  types.StringType,
 									},
 								},
 								[]attr.Value{},
@@ -218,7 +218,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"endpoints": schema.SingleNestedAttribute{
 				Description: "The endpoints scope.",
 				Optional:    true,
-				Computed: true,
+				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"endpoint_groups": schema.SingleNestedAttribute{
 						Description: "The endpoint groups scope.",
@@ -288,8 +288,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetType{
 										ElemType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 									},
@@ -301,8 +301,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetType{
 										ElemType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 									},
@@ -316,8 +316,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetType{
 										ElemType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 									},
@@ -327,8 +327,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetValueMust(
 										types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 										[]attr.Value{},
@@ -341,8 +341,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetType{
 										ElemType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 									},
@@ -352,8 +352,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									"tags": types.SetValueMust(
 										types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"tag_id": types.StringType,
-												"tag_name":types.StringType,
+												"tag_id":   types.StringType,
+												"tag_name": types.StringType,
 											},
 										},
 										[]attr.Value{},
@@ -367,7 +367,7 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"cases_issues": schema.SingleNestedAttribute{
 				Description: "The cases issues scope.",
 				Optional:    true,
-				Computed: true,
+				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
 						Description: "The mode of the cases issues scope.",
@@ -400,8 +400,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							"tags": types.SetType{
 								ElemType: types.ObjectType{
 									AttrTypes: map[string]attr.Type{
-										"tag_id": types.StringType,
-										"tag_name":types.StringType,
+										"tag_id":   types.StringType,
+										"tag_name": types.StringType,
 									},
 								},
 							},
@@ -411,8 +411,8 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 							"tags": types.SetValueMust(
 								types.ObjectType{
 									AttrTypes: map[string]attr.Type{
-										"tag_id": types.StringType,
-										"tag_name":types.StringType,
+										"tag_id":   types.StringType,
+										"tag_name": types.StringType,
 									},
 								},
 								[]attr.Value{},

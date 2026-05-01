@@ -94,7 +94,7 @@ func AlsoRequiresOnObjectValues(onValues []attr.Value, expressions ...path.Expre
 }
 
 func (v AlsoRequiresOnValuesValidator) MarkdownDescription(ctx context.Context) string {
-	return "TODO"
+	return ""
 }
 
 func (v AlsoRequiresOnValuesValidator) Description(ctx context.Context) string {

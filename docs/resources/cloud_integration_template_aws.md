@@ -92,7 +92,14 @@ resource "aws_cloudformation_stack" "cortex_cloud_account_integration" {
 resource "cortexcloud_cloud_integration_template_aws" "account" {
   scope         = "ACCOUNT"
   instance_name = "AWS Account"
+
   scan_mode = "MANAGED"
+  # For outpost scanning, set this attribute
+  # to "OUTPOST" and define the outpost_id
+  # attribute with the ID of the target 
+  # deployed outpost
+
+
   scope_modifications = {
     regions = {
       enabled = true
@@ -305,7 +312,9 @@ resource "cortexcloud_cloud_integration_template_aws" "organization" {
 
 The tag `managed_by` with the value `paloaltonetworks` will be applied by default. (see [below for nested schema](#nestedatt--custom_resources_tags))
 - `instance_name` (String) The name of the integration template. When the template is executed, integrations will appear in the console with this value.
-- `outpost_id` (String) The ID of the outpost that will be used for scanning. Must be configured if `scan_mode` is set to `OUTPOST`.
+- `outpost_id` (String) The ID of the deployed outpost that will be used for scanning. 
+
+Must be configured if `scan_mode` attribute is set to `OUTPOST`. If `scan_mode` is set to `MANAGED`, this will be set to the ID of the platform's internal AWS outpost.
 - `scope_modifications` (Attributes) Define the scope of scans by including/excluding accounts or regions. (see [below for nested schema](#nestedatt--scope_modifications))
 
 ### Read-Only
@@ -326,7 +335,7 @@ Optional:
 - `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
-- `registry_scanning_options` (Attributes) Additional configuration options for registry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `registry_scanning_options` (Attributes) Additional configuration options for registy scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
 - `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
 
@@ -376,7 +385,7 @@ Required:
 Optional:
 
 - `accounts` (Attributes) Configuration for account-level scope modifications for AWS integrations. (see [below for nested schema](#nestedatt--scope_modifications--accounts))
-- `regions` (Attributes) Configuration for regional scope modifications. (see [below for nested schema](#nestedatt--scope_modifications--regions))
+- `regions` (Attributes) Define the scope of scans by including/excluding accounts or regions. (see [below for nested schema](#nestedatt--scope_modifications--regions))
 
 <a id="nestedatt--scope_modifications--accounts"></a>
 ### Nested Schema for `scope_modifications.accounts`

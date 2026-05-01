@@ -1,8 +1,8 @@
 {
     "api_url": "https://api-cortexcloud.xdr.us.paloaltonetworks.com",
-    "api_key": "REPLACE_WITH_YOUR_API_KEY",
+    "api_key": "your-api-key-here",
     "api_key_id": 100,
-    "api_key_type": "standard",
+    "api_key_type": "advanced",
     "sdk_log_level": "info",
     "request_timeout": 60,
     "request_max_retries": 3,

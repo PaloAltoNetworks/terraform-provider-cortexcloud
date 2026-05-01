@@ -37,14 +37,14 @@ func (d *OutpostDataSource) Metadata(ctx context.Context, req datasource.Metadat
 // Schema defines the schema for the data source.
 func (d *OutpostDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves a single outpost.",
+		Description: "Provides details about an existing Outpost.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "The ID of the outpost.",
 				Required:    true,
 			},
 			"cloud_provider": schema.StringAttribute{
-				Description: "The cloud provider of the outpost.",
+				Description: "The cloud service provider for the outpost.",
 				Computed:    true,
 			},
 			"created_at": schema.Int64Attribute{
@@ -52,7 +52,7 @@ func (d *OutpostDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the outpost.",
+				Description: "The type of outpost.",
 				Computed:    true,
 			},
 		},
@@ -93,16 +93,24 @@ func (d *OutpostDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	data, err := d.client.ListOutposts(ctx, listReq)
+	data, err := d.client.ListOutposts(ctx, &listReq)
 	if err != nil {
-		resp.Diagnostics.AddError("Outpost Data Source Read Error", err.Error())
+		resp.Diagnostics.AddError("Error Reading Outpost", err.Error())
+		return
+	}
+
+	if data == nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Outpost",
+			"API returned nil response.\nPlease report this issue to the provider developers.",
+		)
 		return
 	}
 
 	if data.FilterCount != 1 {
 		resp.Diagnostics.AddError(
 			"Unable to find unique outpost",
-			fmt.Sprintf("Expected 1 outpost for ID %s, but found %d", config.ID.ValueString(), data.FilterCount),
+			fmt.Sprintf("Expected 1 outpost for ID %s, but found %d\nPlease report this issue to the provider developers.", config.ID.ValueString(), data.FilterCount),
 		)
 		return
 	}

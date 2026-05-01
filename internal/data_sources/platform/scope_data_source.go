@@ -72,7 +72,7 @@ func (d *scopeDataSource) Metadata(_ context.Context, req datasource.MetadataReq
 // Schema defines the schema for the data source.
 func (d *scopeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Gets a Cortex Cloud scope.",
+		Description: "Provides details about an existing Scope.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

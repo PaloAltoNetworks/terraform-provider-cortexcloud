@@ -36,4 +36,3 @@ type DatasetGroupModel struct {
 	Datasets        []string `tfsdk:"datasets"`
 	DatasetCategory string   `tfsdk:"dataset_category"`
 }
-

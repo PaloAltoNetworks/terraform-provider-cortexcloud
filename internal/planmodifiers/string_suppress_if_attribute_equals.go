@@ -39,7 +39,7 @@ func (m *stringSuppressIfAttributeEquals) MarkdownDescription(ctx context.Contex
 // PlanModifyString implements the planmodifier.String interface.
 func (m *stringSuppressIfAttributeEquals) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// Do nothing if the planned value is not null or unknown.
-	if (!req.PlanValue.IsNull() && !req.PlanValue.IsUnknown()) {
+	if !req.PlanValue.IsNull() && !req.PlanValue.IsUnknown() {
 		return
 	}
 

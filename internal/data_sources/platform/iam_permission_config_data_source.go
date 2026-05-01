@@ -40,7 +40,7 @@ func (d *iamPermissionConfigDataSource) Metadata(ctx context.Context, req dataso
 // Schema defines the schema for the data source.
 func (d *iamPermissionConfigDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Provides visibility into the available IAM permission configurations.",
+		Description: "Provides details about the available IAM permission configurations.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

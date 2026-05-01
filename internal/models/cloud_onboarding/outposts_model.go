@@ -14,15 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// OutpostsDataSourceModel is the model for the outposts data source (plural).
+// OutpostsDataSourceModel is the model for the outposts data source.
 type OutpostsDataSourceModel struct {
-	ID                 types.String                              `tfsdk:"id"`
-	CloudProvider      types.String                              `tfsdk:"cloud_provider"`
-	Outposts           []OutpostModel                            `tfsdk:"outposts"`
+	ID            types.String   `tfsdk:"id"`
+	CloudProvider types.String   `tfsdk:"cloud_provider"`
+	Outposts      []OutpostModel `tfsdk:"outposts"`
 }
 
-// ToListRequest creates a ListOutpostsRequest from the data source's filters.
-func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListOutpostsRequest {
+// ToListRequest returns a ListOutpostsRequest struct populated with the model's values.
+func (m *OutpostsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostsDataSourceModel")
 
 	var filters []filterTypes.Filter

@@ -3,12 +3,12 @@
 page_title: "cortexcloud_user_group Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Fetch an existing Cortex Cloud user group by group_name.
+  Provides details about an existing User Group.
 ---
 
 # cortexcloud_user_group (Data Source)
 
-Fetch an existing Cortex Cloud user group by group_name.
+Provides details about an existing User Group.
 
 ## Example Usage
 
@@ -41,26 +41,31 @@ output "group_users" {
 
 ### Required
 
-- `group_name` (String) User group name.
+- `group_name` (String) The unique name of the user group to look up.
 
 ### Read-Only
 
-- `created_by` (String) Creator of the user group.
-- `created_ts` (Number) Created timestamp (epoch).
-- `description` (String) User group description.
-- `group_type` (String) Group type.
-- `id` (String) User group ID.
-- `idp_groups` (List of String) IDP group mappings.
-- `nested_groups` (Attributes List) Nested groups (read-only). (see [below for nested schema](#nestedatt--nested_groups))
-- `pretty_role_name` (String) Human-readable role name.
-- `role_id` (String) Role ID associated with the group.
-- `updated_ts` (Number) Updated timestamp (epoch).
-- `users` (List of String) Users in the group (emails).
+- `all_users` (Set of String) A list of users with effective membership for this group. 
+
+This list represents the union of users that have been directly configured in this group and any users that are a member of an IDP group configured in the `idp_groups` attribute that have logged in via SSO/JIT authentication.
+
+Due to API limitations, it is currently not possible to determine which users were added from direct configuration versus SSO/JIT authentication.
+- `created_by` (String) The user or system that created the user group.
+- `created_ts` (Number) Unix timestamp (milliseconds) of when the user group was created.
+- `description` (String) A brief description of the user group's purpose.
+- `group_type` (String) The type of the user group. Possible values: `custom` (created directly in the UI), `ad_type` (imported and synchronized from Azure Active Directory).
+- `id` (String) The unique identifier of the user group.
+- `idp_groups` (Set of String) The identity provider (IdP) group names associated with this group. Members of these IdP groups are added automatically via SSO/JIT and appear in `idp_users`.
+- `nested_groups` (Attributes Set) The list of direct child groups nested within this user group. (see [below for nested schema](#nestedatt--nested_groups))
+- `pretty_role_name` (String) The display name of the role assigned to this group.
+- `role_id` (String) The unique identifier of the role assigned to this group.
+- `updated_ts` (Number) Unix timestamp (milliseconds) of when the user group was last updated.
+- `users` (Set of String) A list of user email addresses directly configured in this group.
 
 <a id="nestedatt--nested_groups"></a>
 ### Nested Schema for `nested_groups`
 
 Read-Only:
 
-- `group_id` (String) Nested group ID.
-- `group_name` (String) Nested group name.
+- `group_id` (String) The unique identifier of the nested group.
+- `group_name` (String) The display name of the nested group.

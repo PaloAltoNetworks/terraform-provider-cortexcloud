@@ -7,21 +7,39 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	"github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability"
+
+	appsecDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/appsec"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
+	cloudsecDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloudsec"
+	complianceDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/compliance"
+	cwpDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cwp"
 	platformDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/platform"
+	vulnerabilityDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/vulnerability"
 	cloudOnboardingEphemeralResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/ephemeral/cloud_onboarding"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
-	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloud_onboarding"
+	appsecResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/appsec"
+	cloudOnboardingResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloudonboarding"
+	cloudsecResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cloudsec"
+	complianceResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/compliance"
+	cwpResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/cwp"
 	platformResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/platform"
+	vulnerabilityResources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/resources/vulnerability"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -33,13 +51,17 @@ var (
 
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
-	tflog.Info(context.Background(), fmt.Sprintf("Cortex Cloud Terraform Provider version: %s", version))
-	if version == "test" {
-		return func() provider.Provider {
-			return &CortexCloudProvider{
-				version: version,
-			}
-		}
+	switch version {
+	case "test":
+		fmt.Printf("=======================================================\n" +
+			"Provider execution started in TEST mode\n" +
+			"=======================================================\n")
+	case "dev":
+		fmt.Printf("=======================================================\n" +
+			"Provider execution started in DEV mode\n" +
+			"=======================================================\n")
+	default:
+		tflog.Info(context.Background(), fmt.Sprintf("Cortex Cloud Terraform Provider (version %s)", version))
 	}
 
 	return func() provider.Provider {
@@ -156,7 +178,9 @@ func (p *CortexCloudProvider) Schema(ctx context.Context, req provider.SchemaReq
 func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.Resource {
 	resources := []func() resource.Resource{}
 
-	tflog.Debug(ctx, "Registering Cloud Onboarding Resources")
+	tflog.Debug(ctx, "Starting resource registration")
+
+	tflog.Debug(ctx, "Registering Cloud Onboarding resources")
 	resources = append(
 		resources,
 		cloudOnboardingResources.NewCloudIntegrationTemplateAwsResource,
@@ -165,7 +189,14 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		cloudOnboardingResources.NewOutpostTemplateResource,
 	)
 
-	tflog.Debug(ctx, "Registering Platform Resources")
+	tflog.Debug(ctx, "Registering CloudSec resources")
+	resources = append(
+		resources,
+		cloudsecResources.NewCloudSecPolicyResource,
+		cloudsecResources.NewCloudSecRuleResource,
+	)
+
+	tflog.Debug(ctx, "Registering Platform resources")
 	resources = append(
 		resources,
 		platformResources.NewAuthenticationSettingsResource,
@@ -174,7 +205,40 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewUserResource,
 		platformResources.NewScopeResource,
 		platformResources.NewIamRoleResource,
+		platformResources.NewNotificationForwardingConfigAgentAuditLogsResource,
+		platformResources.NewNotificationForwardingConfigManagementAuditLogsResource,
+		platformResources.NewNotificationForwardingConfigIssuesResource,
+		platformResources.NewNotificationForwardingConfigCasesResource,
 	)
+
+	tflog.Debug(ctx, "Registering Compliance resources")
+	resources = append(
+		resources,
+		complianceResources.NewControlResource,
+		complianceResources.NewStandardResource,
+		complianceResources.NewAssessmentProfileResource,
+	)
+
+	tflog.Debug(ctx, "Registering Vulnerability resources")
+	resources = append(
+		resources,
+		vulnerabilityResources.NewPolicyResource,
+	)
+
+	tflog.Debug(ctx, "Registering AppSec resources")
+	resources = append(
+		resources,
+		appsecResources.NewRuleResource,
+		appsecResources.NewPolicyResource,
+	)
+
+	tflog.Debug(ctx, "Registering CWP Resources")
+	resources = append(
+		resources,
+		cwpResources.NewPolicyResource,
+	)
+
+	tflog.Debug(ctx, "Resource registration complete")
 
 	return resources
 }
@@ -182,7 +246,9 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	datasources := []func() datasource.DataSource{}
 
-	tflog.Debug(ctx, "Registering Cloud Onboarding Data Sources")
+	tflog.Debug(ctx, "Starting data source registration")
+
+	tflog.Debug(ctx, "Registering Cloud Onboarding data sources")
 	datasources = append(datasources,
 		cloudOnboardingDataSources.NewCloudIntegrationInstanceDataSource,
 		cloudOnboardingDataSources.NewCloudIntegrationInstancesDataSource,
@@ -190,13 +256,53 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		cloudOnboardingDataSources.NewOutpostsDataSource,
 	)
 
-	tflog.Debug(ctx, "Registering Platform Data Sources")
+	tflog.Debug(ctx, "Registering CloudSec data sources")
+	datasources = append(datasources,
+		cloudsecDataSources.NewCloudSecPolicyDataSource,
+		cloudsecDataSources.NewCloudSecRuleDataSource,
+		cloudsecDataSources.NewCloudSecRulesDataSource,
+	)
+
+	tflog.Debug(ctx, "Registering Platform data sources")
 	datasources = append(datasources,
 		platformDataSources.NewUserDataSource,
 		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 		platformDataSources.NewIamPermissionConfigDataSource,
 	)
+
+	tflog.Debug(ctx, "Registering Compliance data sources")
+	datasources = append(datasources,
+		complianceDataSources.NewControlDataSource,
+		complianceDataSources.NewControlsDataSource,
+		complianceDataSources.NewStandardDataSource,
+		complianceDataSources.NewStandardsDataSource,
+		complianceDataSources.NewAssessmentProfileDataSource,
+		complianceDataSources.NewAssessmentProfilesDataSource,
+	)
+
+	tflog.Debug(ctx, "Registering Vulnerability data sources")
+	datasources = append(datasources,
+		vulnerabilityDataSources.NewPolicyDataSource,
+		vulnerabilityDataSources.NewPoliciesDataSource,
+	)
+
+	tflog.Debug(ctx, "Registering AppSec data sources")
+	datasources = append(datasources,
+		appsecDataSources.NewRuleDataSource,
+		appsecDataSources.NewRulesDataSource,
+		appsecDataSources.NewPolicyDataSource,
+		appsecDataSources.NewPoliciesDataSource,
+		appsecDataSources.NewRuleLabelsDataSource,
+	)
+
+	tflog.Debug(ctx, "Registering CWP Data Sources")
+	datasources = append(datasources,
+		cwpDataSources.NewPolicyDataSource,
+		cwpDataSources.NewPoliciesDataSource,
+	)
+
+	tflog.Debug(ctx, "Data Source registration complete")
 
 	return datasources
 }
@@ -212,30 +318,44 @@ func (p *CortexCloudProvider) EphemeralResources(ctx context.Context) []func() e
 	return ephemeralResources
 }
 
+func getProviderConfig(ctx context.Context, config tfsdk.Config, diagnostics *diag.Diagnostics, version string) *models.CortexCloudProviderModel {
+	// Retrieve configuration values from provider block
+	var providerConfig *models.CortexCloudProviderModel
+	diagnostics.Append(config.Get(ctx, &providerConfig)...)
+	if diagnostics.HasError() {
+		return &models.CortexCloudProviderModel{}
+	}
+
+	// Parse config file
+	providerConfig.ParseConfigFile(ctx, diagnostics)
+	if diagnostics.HasError() {
+		return &models.CortexCloudProviderModel{}
+	}
+
+	// Parse environment variables — skip in test mode so the mock server URL
+	// set in the HCL config block is not overwritten by real credentials from
+	// the environment.
+	if version != "test" {
+		providerConfig.ParseEnvVars(ctx, diagnostics)
+		if diagnostics.HasError() {
+			return &models.CortexCloudProviderModel{}
+		}
+	}
+
+	// Validate provider configuration
+	providerConfig.Validate(ctx, diagnostics)
+	if diagnostics.HasError() {
+		return &models.CortexCloudProviderModel{}
+	}
+
+	return providerConfig
+}
+
 func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Debug(ctx, "Starting provider configuration")
 
 	// Retrieve configuration values from provider block
-	var providerConfig *models.CortexCloudProviderModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &providerConfig)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Parse config file
-	providerConfig.ParseConfigFile(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Parse environment variables
-	providerConfig.ParseEnvVars(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Validate provider configuration
-	providerConfig.Validate(ctx, &resp.Diagnostics)
+	providerConfig := getProviderConfig(ctx, req.Config, &resp.Diagnostics, p.version)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -281,11 +401,111 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	tflog.Debug(ctx, "Initializing cloudsec client")
+	cloudSecClient, err := cloudsec.NewClient(
+		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		platform.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		platform.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		platform.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
+		return
+	}
+
+	tflog.Debug(ctx, "Initializing appsec client")
+	appsecClient, err := appsec.NewClient(
+		appsec.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		appsec.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		appsec.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		appsec.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		appsec.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		appsec.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		appsec.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		appsec.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		appsec.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		appsec.WithLogger(log.TflogAdapter{}),
+		appsec.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
+		return
+	}
+
+	tflog.Debug(ctx, "Initializing compliance client")
+	complianceClient, err := compliance.NewClient(
+		compliance.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		compliance.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		compliance.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		compliance.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		compliance.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		compliance.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		compliance.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		compliance.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		compliance.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		compliance.WithLogger(log.TflogAdapter{}),
+		compliance.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
+		return
+	}
+
+	tflog.Debug(ctx, "Initializing vulnerability client")
+	vulnerabilityClient, err := vulnerability.NewClient(
+		vulnerability.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		vulnerability.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		vulnerability.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		vulnerability.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		vulnerability.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		vulnerability.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		vulnerability.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		vulnerability.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		vulnerability.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		vulnerability.WithLogger(log.TflogAdapter{}),
+		vulnerability.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
+		return
+	}
+
 	tflog.Debug(ctx, "Cortex Cloud API client setup complete")
 
+	tflog.Debug(ctx, "Initializing CWP client")
+	cwpClient, err := cwp.NewClient(
+		cwp.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		cwp.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		cwp.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		cwp.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		cwp.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		cwp.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		cwp.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		cwp.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		cwp.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		cwp.WithLogger(log.TflogAdapter{}),
+		cwp.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
+	if err != nil {
+		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
+		return
+	}
+
 	// Attach SDK clients to model
+	clients.AppSec = appsecClient
 	clients.CloudOnboarding = cloudOnboardingClient
+	clients.CloudSec = cloudSecClient
+	clients.Compliance = complianceClient
+	clients.CWP = cwpClient
 	clients.Platform = platformClient
+	clients.Vulnerability = vulnerabilityClient
 
 	// Assign clients model pointer to ProviderData to allow resources and
 	// data sources to access SDK functions

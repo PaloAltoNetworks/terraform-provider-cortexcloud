@@ -1,0 +1,37 @@
+130c130
+< - `criteria` (Attributes List) List of nested filter criteria. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria))
+---
+> - `criteria` (Attributes List) List of nested filter criteria. Same schema as this attribute.
+135,166d134
+< 
+< <a id="nestedatt--rule_matching--filter_criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria`
+< 
+< Read-Only:
+< 
+< - `criteria` (Attributes List) List of nested filter criteria. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria--criteria))
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType').
+< - `operator` (String) Logical operator for combining criteria (AND or OR).
+< - `type` (String) Filter operation type (EQ, NEQ, CONTAINS, NCONTAINS, ARRAY_CONTAINS).
+< - `value` (String) Value to filter for.
+< 
+< <a id="nestedatt--rule_matching--filter_criteria--criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria.criteria`
+< 
+< Read-Only:
+< 
+< - `criteria` (Attributes List) List of nested filter criteria. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria--criteria--criteria))
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType').
+< - `operator` (String) Logical operator for combining criteria (AND or OR).
+< - `type` (String) Filter operation type (EQ, NEQ, CONTAINS, NCONTAINS, ARRAY_CONTAINS).
+< - `value` (String) Value to filter for.
+< 
+< <a id="nestedatt--rule_matching--filter_criteria--criteria--criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria.criteria.criteria`
+< 
+< Read-Only:
+< 
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType').
+< - `operator` (String) Logical operator for combining criteria (AND or OR).
+< - `type` (String) Filter operation type (EQ, NEQ, CONTAINS, NCONTAINS, ARRAY_CONTAINS).
+< - `value` (String) Value to filter for.

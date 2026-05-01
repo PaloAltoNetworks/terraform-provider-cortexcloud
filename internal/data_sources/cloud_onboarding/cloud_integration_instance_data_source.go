@@ -9,7 +9,7 @@ import (
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 
-	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
+	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
@@ -44,7 +44,7 @@ func (r *CloudIntegrationInstanceDataSource) Metadata(ctx context.Context, req d
 // Schema defines the schema for the data source.
 func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "TODO",
+		Description: "Provides details about an existing Cloud Service Provider integration.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "A unique identifier of the integration.",
@@ -70,7 +70,7 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 						Computed: true,
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
-						Description: "TODO",
+						Description: "Additional configuration options for registry scanning.",
 						Computed:    true,
 						Attributes: map[string]schema.Attribute{
 							"type": schema.StringAttribute{
@@ -105,7 +105,7 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 						},
 					},
 					"agentless_disk_scanning": schema.BoolAttribute{
-						Description: "TODO",
+						Description: "Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle.",
 						Computed:    true,
 					},
 					"serverless_scanning": schema.BoolAttribute{
@@ -127,9 +127,8 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 				},
 			},
 			"cloud_provider": schema.StringAttribute{
-				Description: "The cloud service provider that is being " +
-					"integrated. Must be one of `AWS`, `AZURE` or `GCP`.",
-				Computed: true,
+				Description: "The cloud service provider that is being integrated.",
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						enums.AllCloudProviders()...,
@@ -137,9 +136,8 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 				},
 			},
 			"collector": schema.StringAttribute{
-				Description: "The cloud service provider that is being " +
-					"integrated. Must be one of `AWS`, `AZURE` or `GCP`.",
-				Computed: true,
+				Description: "The collector used for this integration.",
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						enums.AllCloudProviders()...,
@@ -201,11 +199,11 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 				},
 			},
 			"scan": schema.SingleNestedAttribute{
-				Description: "TODO",
+				Description: "Scan configuration for the integration.",
 				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"scan_method": schema.StringAttribute{
-						Description: "TODO",
+						Description: "Define what infrastructure the integration will use to scan cloud workloads.",
 						Computed:    true,
 						Validators: []validator.String{
 							stringvalidator.OneOf(
@@ -214,17 +212,17 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 						},
 					},
 					"outpost_id": schema.StringAttribute{
-						Description: "TODO",
+						Description: "The ID of the outpost used for scanning.",
 						Computed:    true,
 					},
 					"status_ui": schema.Int32Attribute{
-						Description: "TODO",
+						Description: "The scan status code as displayed in the UI.",
 						Computed:    true,
 					},
 				},
 			},
 			"scope": schema.StringAttribute{
-				Description: "",
+				Description: "The scope of the integration.",
 				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -233,48 +231,48 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 				},
 			},
 			"security_capabilities": schema.SetNestedAttribute{
-				Description: "TODO",
+				Description: "The security capabilities enabled for this integration.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Description: "TODO",
+							Description: "The name of the security capability.",
 							Computed:    true,
 						},
 						"description": schema.StringAttribute{
-							Description: "TODO",
+							Description: "The description of the security capability.",
 							Computed:    true,
 						},
 						"status": schema.StringAttribute{
-							Description: "TODO",
+							Description: "The status of the security capability.",
 							Computed:    true,
 						},
 						"status_code": schema.Int32Attribute{
-							Description: "TODO",
+							Description: "The status code of the security capability.",
 							Computed:    true,
 						},
 						"last_scan_coverage": schema.SingleNestedAttribute{
-							Description: "TODO",
+							Description: "Coverage statistics from the last scan.",
 							Computed:    true,
 							Attributes: map[string]schema.Attribute{
 								"excluded": schema.Int32Attribute{
-									Description: "TODO",
+									Description: "Number of resources excluded from the scan.",
 									Computed:    true,
 								},
 								"issues": schema.Int32Attribute{
-									Description: "TODO",
+									Description: "Number of resources with issues found during the scan.",
 									Computed:    true,
 								},
 								"pending": schema.Int32Attribute{
-									Description: "TODO",
+									Description: "Number of resources pending scan.",
 									Computed:    true,
 								},
 								"success": schema.Int32Attribute{
-									Description: "TODO",
+									Description: "Number of resources successfully scanned.",
 									Computed:    true,
 								},
 								"unsupported": schema.Int32Attribute{
-									Description: "TODO",
+									Description: "Number of resources not supported for scanning.",
 									Computed:    true,
 								},
 							},
@@ -287,7 +285,7 @@ func (r *CloudIntegrationInstanceDataSource) Schema(ctx context.Context, req dat
 				Computed:    true,
 			},
 			"upgrade_available": schema.BoolAttribute{
-				Description: "TODO",
+				Description: "Indicates whether an upgrade is available for this integration.",
 				Computed:    true,
 			},
 		},
@@ -335,7 +333,7 @@ func (r *CloudIntegrationInstanceDataSource) Read(ctx context.Context, req datas
 		resp.Diagnostics.AddAttributeError(
 			path.Root("id"),
 			"Cloud Integration Instance Data Source Configuration Error",
-			"Received null or unknown value for `id` attribute. Please report this issue to the developers.",
+			"Recieved null or unknown value for `id` attribute. Please report this issue to the developers.",
 		)
 	}
 

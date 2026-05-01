@@ -3,12 +3,12 @@
 page_title: "cortexcloud_outposts Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Retrieves a list of outposts.
+  Provides a filtered list of existing Outposts.
 ---
 
 # cortexcloud_outposts (Data Source)
 
-Retrieves a list of outposts.
+Provides a filtered list of existing Outposts.
 
 
 
@@ -17,19 +17,19 @@ Retrieves a list of outposts.
 
 ### Optional
 
-- `cloud_provider` (String)
+- `cloud_provider` (String) Filter results by cloud service provider. Possible values are: "AWS", "AZURE", "GCP".
 
 ### Read-Only
 
 - `id` (String) Static identifier for the data source.
-- `outposts` (Attributes List) The list of outposts. (see [below for nested schema](#nestedatt--outposts))
+- `outposts` (Attributes List) The filtered set of outposts. (see [below for nested schema](#nestedatt--outposts))
 
 <a id="nestedatt--outposts"></a>
 ### Nested Schema for `outposts`
 
 Read-Only:
 
-- `cloud_provider` (String) The cloud provider of the outpost.
+- `cloud_provider` (String) The cloud service provider for the outpost.
 - `created_at` (Number) The creation time of the outpost.
 - `id` (String) The ID of the outpost.
-- `type` (String) The type of the outpost.
+- `type` (String) The type of outpost.

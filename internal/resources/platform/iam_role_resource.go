@@ -77,8 +77,9 @@ func (r *iamRoleResource) Schema(ctx context.Context, req resource.SchemaRequest
 							Required:    true,
 						},
 						"permissions": schema.SetAttribute{
-							Description: "The permissions for the dataset.",
-							Required:    true,
+							Description: "The permissions for the dataset. This field is optional as the API does not require specific permissions for dataset access.",
+							Optional:    true,
+							Computed:    true,
 							ElementType: types.StringType,
 						},
 					},
@@ -147,9 +148,11 @@ func (r *iamRoleResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 		for _, m := range dsPermsModels {
 			var perms []string
-			resp.Diagnostics.Append(m.Permissions.ElementsAs(ctx, &perms, false)...)
-			if resp.Diagnostics.HasError() {
-				return
+			if !m.Permissions.IsNull() && !m.Permissions.IsUnknown() {
+				resp.Diagnostics.Append(m.Permissions.ElementsAs(ctx, &perms, false)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
 			}
 			datasetPermissions = append(datasetPermissions, platformTypes.DatasetPermission{
 				Category:    m.Category.ValueString(),
@@ -265,9 +268,11 @@ func (r *iamRoleResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 		for _, dsPermsModel := range dsPermsModels {
 			var permissions []string
-			resp.Diagnostics.Append(dsPermsModel.Permissions.ElementsAs(ctx, &permissions, false)...)
-			if resp.Diagnostics.HasError() {
-				return
+			if !dsPermsModel.Permissions.IsNull() && !dsPermsModel.Permissions.IsUnknown() {
+				resp.Diagnostics.Append(dsPermsModel.Permissions.ElementsAs(ctx, &permissions, false)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
 			}
 			datasetPermissions = append(datasetPermissions, platformTypes.DatasetPermission{
 				Category:    dsPermsModel.Category.ValueString(),

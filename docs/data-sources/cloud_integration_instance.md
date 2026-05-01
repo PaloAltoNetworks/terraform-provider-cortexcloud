@@ -3,12 +3,12 @@
 page_title: "cortexcloud_cloud_integration_instance Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  
+  Provides details about an existing Cloud Service Provider integration.
 ---
 
 # cortexcloud_cloud_integration_instance (Data Source)
 
-
+Provides details about an existing Cloud Service Provider integration.
 
 
 
@@ -22,26 +22,26 @@ description: |-
 ### Read-Only
 
 - `additional_capabilities` (Attributes) Define which additional security capabilities to enable. (see [below for nested schema](#nestedatt--additional_capabilities))
-- `cloud_provider` (String) The cloud service provider that is being integrated. Must be one of `AWS`, `AZURE` or `GCP`.
+- `cloud_provider` (String) The cloud service provider that is being integrated.
 - `collection_configuration` (Attributes) Configure the data that will be collected. (see [below for nested schema](#nestedatt--collection_configuration))
-- `collector` (String) The cloud service provider that is being integrated. Must be one of `AWS`, `AZURE` or `GCP`.
+- `collector` (String) The collector used for this integration.
 - `custom_resources_tags` (Attributes Set) Custom tags that will be applied to any new resource created by Cortex in the cloud environment. By default, the `managed_by` tag will always be applied with the value `paloaltonetworks`. (see [below for nested schema](#nestedatt--custom_resources_tags))
 - `instance_name` (String) Name of the integration instance. If left empty, the name will be auto-populated.
-- `scan` (Attributes) (see [below for nested schema](#nestedatt--scan))
-- `scope` (String)
-- `security_capabilities` (Attributes Set) (see [below for nested schema](#nestedatt--security_capabilities))
+- `scan` (Attributes) Scan configuration for the integration. (see [below for nested schema](#nestedatt--scan))
+- `scope` (String) The scope of the integration.
+- `security_capabilities` (Attributes Set) The security capabilities enabled for this integration. (see [below for nested schema](#nestedatt--security_capabilities))
 - `status` (String) Status of the integration.
-- `upgrade_available` (Boolean)
+- `upgrade_available` (Boolean) Indicates whether an upgrade is available for this integration.
 
 <a id="nestedatt--additional_capabilities"></a>
 ### Nested Schema for `additional_capabilities`
 
 Read-Only:
 
-- `agentless_disk_scanning` (Boolean)
+- `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle.
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data.
 - `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets.
-- `registry_scanning_options` (Attributes) (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `registry_scanning_options` (Attributes) Additional configuration options for registry scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
 - `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected.
 
@@ -87,9 +87,9 @@ Read-Only:
 
 Read-Only:
 
-- `outpost_id` (String)
-- `scan_method` (String)
-- `status_ui` (Number)
+- `outpost_id` (String) The ID of the outpost used for scanning.
+- `scan_method` (String) Define what infrastructure the integration will use to scan cloud workloads.
+- `status_ui` (Number) The scan status code as displayed in the UI.
 
 
 <a id="nestedatt--security_capabilities"></a>
@@ -97,19 +97,19 @@ Read-Only:
 
 Read-Only:
 
-- `description` (String)
-- `last_scan_coverage` (Attributes) (see [below for nested schema](#nestedatt--security_capabilities--last_scan_coverage))
-- `name` (String)
-- `status` (String)
-- `status_code` (Number)
+- `description` (String) The description of the security capability.
+- `last_scan_coverage` (Attributes) Coverage statistics from the last scan. (see [below for nested schema](#nestedatt--security_capabilities--last_scan_coverage))
+- `name` (String) The name of the security capability.
+- `status` (String) The status of the security capability.
+- `status_code` (Number) The status code of the security capability.
 
 <a id="nestedatt--security_capabilities--last_scan_coverage"></a>
 ### Nested Schema for `security_capabilities.last_scan_coverage`
 
 Read-Only:
 
-- `excluded` (Number)
-- `issues` (Number)
-- `pending` (Number)
-- `success` (Number)
-- `unsupported` (Number)
+- `excluded` (Number) Number of resources excluded from the scan.
+- `issues` (Number) Number of resources with issues found during the scan.
+- `pending` (Number) Number of resources pending scan.
+- `success` (Number) Number of resources successfully scanned.
+- `unsupported` (Number) Number of resources not supported for scanning.

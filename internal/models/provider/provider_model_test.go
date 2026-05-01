@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Shared test values
@@ -269,6 +270,65 @@ func TestConfigurationPrecedence(t *testing.T) {
 	assert.Equal(t, expectedAPIKey, model.APIKey.ValueString())
 	assert.Equal(t, expectedAPIKeyID, model.APIKeyID.ValueInt32())
 	assert.Equal(t, expectedAPIKeyType, model.APIKeyType.ValueString())
+}
+
+// TestValidate_APIKeyType verifies that Validate accepts valid api_key_type
+// values ("standard", "advanced"), rejects invalid ones, and does not produce
+// a diagnostic when api_key_type is null (i.e. not configured).
+func TestValidate_APIKeyType(t *testing.T) {
+	baseModel := func(keyType types.String) CortexCloudProviderModel {
+		return CortexCloudProviderModel{
+			APIURL:   types.StringValue("https://api.example.com"),
+			APIKey:   types.StringValue("test-key"),
+			APIKeyID: types.Int32Value(123),
+			// api_key_type is set by the caller
+			APIKeyType: keyType,
+		}
+	}
+
+	t.Run("valid value: standard", func(t *testing.T) {
+		var diags diag.Diagnostics
+		m := baseModel(types.StringValue("standard"))
+		m.Validate(context.Background(), &diags)
+		assert.False(t, diags.HasError(), "expected no error for api_key_type=standard, got: %v", diags.Errors())
+	})
+
+	t.Run("valid value: advanced", func(t *testing.T) {
+		var diags diag.Diagnostics
+		m := baseModel(types.StringValue("advanced"))
+		m.Validate(context.Background(), &diags)
+		assert.False(t, diags.HasError(), "expected no error for api_key_type=advanced, got: %v", diags.Errors())
+	})
+
+	t.Run("invalid value produces diagnostic", func(t *testing.T) {
+		var diags diag.Diagnostics
+		m := baseModel(types.StringValue("invalid-type"))
+		m.Validate(context.Background(), &diags)
+		require.True(t, diags.HasError(), "expected a diagnostic error for invalid api_key_type")
+		// Verify the diagnostic mentions the invalid value.
+		found := false
+		for _, d := range diags.Errors() {
+			if d.Detail() != "" {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "expected diagnostic detail to be non-empty")
+	})
+
+	t.Run("null api_key_type is allowed (field is optional)", func(t *testing.T) {
+		var diags diag.Diagnostics
+		m := baseModel(types.StringNull())
+		m.Validate(context.Background(), &diags)
+		assert.False(t, diags.HasError(), "expected no error when api_key_type is null, got: %v", diags.Errors())
+	})
+
+	t.Run("unknown api_key_type is allowed (deferred until apply)", func(t *testing.T) {
+		var diags diag.Diagnostics
+		m := baseModel(types.StringUnknown())
+		m.Validate(context.Background(), &diags)
+		assert.False(t, diags.HasError(), "expected no error when api_key_type is unknown, got: %v", diags.Errors())
+	})
 }
 
 // createTempConfigFile is a helper function to create a temporary JSON

@@ -36,7 +36,7 @@ type CloudIntegrationTemplateAwsModel struct {
 	CloudFormationTemplateURL types.String `tfsdk:"cloudformation_template_url"`
 }
 
-type scopeModificationsAws struct {
+type scopeModificationsAWS struct {
 	Accounts *scopeModificationAccounts `json:"accounts,omitempty" tfsdk:"accounts"`
 	Regions  *scopeModificationRegions  `json:"regions,omitempty" tfsdk:"regions"`
 }
@@ -59,7 +59,7 @@ func (m *CloudIntegrationTemplateAwsModel) ToCreateRequest(ctx context.Context, 
 	var customResourcesTags []cloudOnboardingTypes.Tag
 	diagnostics.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
 
-	var scopeModificationsValue scopeModificationsAws
+	var scopeModificationsValue scopeModificationsAWS
 	diagnostics.Append(m.ScopeModifications.As(ctx, &scopeModificationsValue, basetypes.ObjectAsOptions{})...)
 
 	scopeModifications := cloudOnboardingTypes.ScopeModifications{}
@@ -82,11 +82,11 @@ func (m *CloudIntegrationTemplateAwsModel) ToCreateRequest(ctx context.Context, 
 		return nil
 	}
 
-	if !slices.Contains(customResourcesTags, managedByPANWTag) {
-		customResourcesTags = append(customResourcesTags, managedByPANWTag)
+	if !slices.Contains(customResourcesTags, defaultIntegrationTemplatePANWTag) {
+		customResourcesTags = append(customResourcesTags, defaultIntegrationTemplatePANWTag)
 	}
 
-	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
+	options := []cloudOnboardingTypes.CreateIntegrationTemplateRequestOption{
 		cloudOnboardingTypes.WithAdditionalCapabilities(additionalCapabilities),
 		cloudOnboardingTypes.WithCloudProvider(enums.CloudProviderAWS.String()),
 		cloudOnboardingTypes.WithCollectionConfiguration(collectionConfiguration),
@@ -95,7 +95,13 @@ func (m *CloudIntegrationTemplateAwsModel) ToCreateRequest(ctx context.Context, 
 		cloudOnboardingTypes.WithScanMode(m.ScanMode.ValueString()),
 		cloudOnboardingTypes.WithScope(m.Scope.ValueString()),
 		cloudOnboardingTypes.WithScopeModifications(scopeModifications),
-	)
+	}
+
+	if !m.OutpostID.IsNull() && !m.OutpostID.IsUnknown() && len(m.OutpostID.ValueString()) > 0 {
+		options = append(options, cloudOnboardingTypes.WithOutpostID(m.OutpostID.ValueString()))
+	}
+
+	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(options...)
 }
 
 func (m *CloudIntegrationTemplateAwsModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
@@ -130,10 +136,6 @@ func (m *CloudIntegrationTemplateAwsModel) ToGetRequest(ctx context.Context, dia
 func (m *CloudIntegrationTemplateAwsModel) SetGeneratedValues(ctx context.Context, diagnostics *diag.Diagnostics, response cloudOnboardingTypes.CreateTemplateOrEditIntegrationInstanceResponse) {
 	ctx = tflog.SetField(ctx, "resource_operation", "SetGeneratedValues")
 
-	if m.OutpostID.IsNull() || m.OutpostID.IsUnknown() {
-		m.OutpostID = types.StringNull()
-	}
-
 	if response.Automated.TrackingGUID == nil {
 		m.TrackingGUID = types.StringNull()
 	} else {
@@ -166,7 +168,7 @@ func (m *CloudIntegrationTemplateAwsModel) SetGeneratedValues(ctx context.Contex
 	}
 }
 
-func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
+func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, remote cloudOnboardingTypes.IntegrationInstance) {
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
@@ -180,27 +182,27 @@ func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx c
 		})
 	)
 
-	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), apiResponse.AdditionalCapabilities)
+	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), remote.AdditionalCapabilities)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
 	if !m.CustomResourcesTags.IsNull() {
-		for idx, tag := range apiResponse.CustomResourcesTags {
-			if tag == managedByPANWTag {
-				if len(apiResponse.CustomResourcesTags) == 1 {
-					apiResponse.CustomResourcesTags = []cloudOnboardingTypes.Tag{}
+		for idx, tag := range remote.CustomResourcesTags {
+			if tag == defaultIntegrationTemplatePANWTag {
+				if len(remote.CustomResourcesTags) == 1 {
+					remote.CustomResourcesTags = []cloudOnboardingTypes.Tag{}
 				} else {
-					apiResponse.CustomResourcesTags = append(
-						apiResponse.CustomResourcesTags[:idx],
-						apiResponse.CustomResourcesTags[idx+1:]...,
+					remote.CustomResourcesTags = append(
+						remote.CustomResourcesTags[:idx],
+						remote.CustomResourcesTags[idx+1:]...,
 					)
 				}
 			}
 		}
 
-		customResourcesTags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), apiResponse.CustomResourcesTags)
+		customResourcesTags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), remote.CustomResourcesTags)
 		diagnostics.Append(diags...)
 		if diagnostics.HasError() {
 			return
@@ -208,14 +210,15 @@ func (m *CloudIntegrationTemplateAwsModel) RefreshConfiguredPropertyValues(ctx c
 	}
 	m.CustomResourcesTags = customResourcesTags
 
-	if m.InstanceName.IsNull() && apiResponse.InstanceName == "" {
+	if m.InstanceName.IsNull() && remote.InstanceName == "" {
 		m.InstanceName = types.StringNull()
 	} else {
-		m.InstanceName = types.StringValue(apiResponse.InstanceName)
+		m.InstanceName = types.StringValue(remote.InstanceName)
 	}
 
 	m.AdditionalCapabilities = additionalCapabilities
-	m.ScanMode = types.StringValue(apiResponse.Scan.ScanMethod)
-	m.Status = types.StringValue(apiResponse.Status)
+	m.OutpostID = types.StringValue(remote.OutpostID)
+	m.ScanMode = types.StringValue(remote.Scan.ScanMethod)
+	m.Status = types.StringValue(remote.Status)
 
 }

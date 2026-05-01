@@ -13,7 +13,7 @@ PROVIDER_HOSTNAME 	?= registry.terraform.io
 PROVIDER_NAMESPACE 	?= PaloAltoNetworks
 PROVIDER_NAME 		?= cortexcloud
 PROVIDER_BINARY 	?= terraform-provider-${PROVIDER_NAME}
-PROVIDER_VERSION 	?= 1.0.3
+PROVIDER_VERSION 	?= 0.0.1
 
 # Linker values
 GIT_COMMIT 					:= $(shell git rev-parse HEAD)
@@ -111,8 +111,12 @@ docs:
 	@echo "Generating provider documentation with tfplugindocs..."
 	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
 	@echo "Applying documentation patches..."
-	@patch -u docs/index.md -i docs/patch/index.md.patch --no-backup-if-mismatch
-	@patch docs/resources/asset_group.md -i docs/patch/resources/asset_group.md.patch --no-backup-if-mismatch
+	@find docs/patch -name '*.patch' | sort | while read patchfile; do \
+		target="docs/$${patchfile#docs/patch/}"; \
+		target="$${target%.patch}"; \
+		echo "  Patching $$target"; \
+		patch --no-backup-if-mismatch "$$target" -i "$$patchfile"; \
+	done
 	@echo "Appending release notes to documentation..."
 	@cat RELEASE_NOTES.md >> docs/index.md
 	@echo ""
@@ -128,8 +132,15 @@ test-unit:
 
 # Run acceptance tests
 test-acc: build
+	@missing=""; \
+	[ -n "$$TEST_CORTEX_API_URL" ]    || missing="$$missing TEST_CORTEX_API_URL"; \
+	[ -n "$$TEST_CORTEX_API_KEY" ]    || missing="$$missing TEST_CORTEX_API_KEY"; \
+	[ -n "$$TEST_CORTEX_API_KEY_ID" ] || missing="$$missing TEST_CORTEX_API_KEY_ID"; \
+	if [ -n "$$missing" ]; then \
+		printf '\033[33mWARNING: The following environment variables are not set and may cause acceptance tests to fail or be skipped:%s\033[0m\n' "$$missing"; \
+	fi
 	@echo "Running acceptance tests..."
-	@TF_ACC=1 TF_ACC_LOG=DEBUG go test -v -cover -race $$(go list ./... | grep /acceptance)
+	@TF_ACC=1 TF_ACC_LOG=DEBUG go test -v -count=1 -race $$(go list ./... | grep /acceptance)
 
 # Run linter
 lint:
@@ -148,7 +159,6 @@ clean:
 	@echo "Deleting directory ${PROVIDER_PATH}"
 	@rm -rf ${PROVIDER_PATH}
 	@echo "Done!"
-
 
 # Print warning message if target operating system architecture does not
 # match the values returned by the system, or error message if this is

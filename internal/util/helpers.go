@@ -6,16 +6,60 @@ package util
 import (
 	"context"
 	"fmt"
+	"os"
+	"reflect"
 	"slices"
 	"strconv"
 
-	//"regexp"
-	"os"
-	"reflect"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// ApplyStringEnvVar reads envVar from the environment and, if non-empty,
+// overwrites dest with the value. A debug log line is emitted on each
+// successful overwrite.
+func ApplyStringEnvVar(ctx context.Context, envVar string, dest *types.String) {
+	if val, ok := os.LookupEnv(envVar); ok && val != "" {
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%s" => "%s"`, envVar, dest.ValueString(), val))
+		*dest = types.StringValue(val)
+	}
+}
+
+// ApplyInt32EnvVar reads envVar from the environment and, if non-empty,
+// parses it as int32 and overwrites dest. A parse error is appended to diags.
+func ApplyInt32EnvVar(ctx context.Context, envVar string, dest *types.Int32, diags *diag.Diagnostics) {
+	if raw, ok := os.LookupEnv(envVar); ok && raw != "" {
+		val, err := strconv.ParseInt(raw, 10, 32)
+		if err != nil {
+			diags.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as int32: %s", envVar, err.Error()),
+			)
+			return
+		}
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%d" => "%d"`, envVar, dest.ValueInt32(), val))
+		*dest = types.Int32Value(int32(val))
+	}
+}
+
+// ApplyBoolEnvVar reads envVar from the environment and, if non-empty,
+// parses it as bool and overwrites dest. A parse error is appended to diags.
+func ApplyBoolEnvVar(ctx context.Context, envVar string, dest *types.Bool, diags *diag.Diagnostics) {
+	if raw, ok := os.LookupEnv(envVar); ok && raw != "" {
+		val, err := strconv.ParseBool(raw)
+		if err != nil {
+			diags.AddError(
+				"Environment Variable Parse Error",
+				fmt.Sprintf("Failed to parse %s as bool: %s", envVar, err.Error()),
+			)
+			return
+		}
+		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%t" => "%t"`, envVar, dest.ValueBool(), val))
+		*dest = types.BoolValue(val)
+	}
+}
 
 // GetEnvironmentVariable retrieves the string value of the specified environment
 // variable, converts it to the type of the reciever argument, and assigns address

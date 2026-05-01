@@ -3,12 +3,12 @@
 page_title: "cortexcloud_iam_permission_config Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Provides visibility into the available IAM permission configurations.
+  Provides details about the available IAM permission configurations.
 ---
 
 # cortexcloud_iam_permission_config (Data Source)
 
-Provides visibility into the available IAM permission configurations.
+Provides details about the available IAM permission configurations.
 
 ## Example Usage
 

@@ -16,7 +16,7 @@ func TagsContainNoDuplicateKeys() tagsContainNoDuplicateKeys {
 	return tagsContainNoDuplicateKeys{}
 }
 
-type tagsContainNoDuplicateKeys struct {}
+type tagsContainNoDuplicateKeys struct{}
 
 // Description returns a plain text description of the validator's behavior.
 func (v tagsContainNoDuplicateKeys) Description(ctx context.Context) string {
@@ -37,14 +37,14 @@ func (v tagsContainNoDuplicateKeys) ValidateSet(ctx context.Context, req validat
 	var tags []cloudOnboardingTypes.Tag
 	resp.Diagnostics.Append(req.ConfigValue.ElementsAs(ctx, &tags, false)...)
 	if resp.Diagnostics.HasError() {
-		 return
+		return
 	}
 
 	knownValues := make(map[string]struct{})
 
 	for i, tag := range tags {
 		if _, exists := knownValues[tag.Key]; !exists {
-			knownValues[tag.Key] = struct{}{}	
+			knownValues[tag.Key] = struct{}{}
 		} else {
 			resp.Diagnostics.AddAttributeError(
 				req.Path.AtSetValue(req.ConfigValue.Elements()[i]),

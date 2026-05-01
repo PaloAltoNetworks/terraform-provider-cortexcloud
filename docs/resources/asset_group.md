@@ -63,11 +63,7 @@ resource "cortexcloud_asset_group" "example" {
 ### Required
 
 - `name` (String) The name of the asset group.
-- `type` (String) The type of the asset group. Possible values are: "Dynamic", "Static".
-
-Dynamic asset groups use criteria specified in the membership predicate to determine group membership.
-
-Static asset groups use a set of assets specified by their unique identifier values.
+- `type` (String) The type of the asset group.
 
 ### Optional
 
@@ -77,9 +73,9 @@ Static asset groups use a set of assets specified by their unique identifier val
 ### Read-Only
 
 - `created_by` (String) The user who created the asset group.
-- `creation_time` (Number) The timestamp representing when the asset group was created.
+- `creation_time` (Number) The creation time of the asset group.
 - `id` (Number) The ID of the asset group.
-- `last_update_time` (Number) The timestamp representing when the asset group was last updated.
+- `last_update_time` (Number) The last update time of the asset group.
 - `modified_by` (String) The user who last modified the asset group.
 
 <a id="nestedatt--membership_predicate"></a>

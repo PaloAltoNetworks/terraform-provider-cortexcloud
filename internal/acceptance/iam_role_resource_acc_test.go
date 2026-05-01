@@ -28,9 +28,8 @@ resource "cortexcloud_iam_role" "test" {
 
   dataset_permissions = [
     {
-      category    = "Lookup"
-      access_all  = true
-      permissions = []
+      category   = "Lookup"
+      access_all = true
     }
   ]
 }
@@ -63,7 +62,6 @@ func TestAccIamRoleResource_CreateOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(iamRoleResourceName, "dataset_permissions.#", "1"),
 					resource.TestCheckResourceAttr(iamRoleResourceName, "dataset_permissions.0.category", "Lookup"),
 					resource.TestCheckResourceAttr(iamRoleResourceName, "dataset_permissions.0.access_all", "true"),
-					resource.TestCheckResourceAttr(iamRoleResourceName, "dataset_permissions.0.permissions.#", "0"),
 				),
 			},
 		},

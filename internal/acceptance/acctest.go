@@ -21,13 +21,11 @@ var (
 	providerName = "cortexcloud"
 
 	dotEnvPath           = filepath.Join("..", "..", ".env.acctest")
-	testFQDNEnvVar       = "TEST_CORTEX_FQDN"
 	testAPIURLEnvVar     = "TEST_CORTEX_API_URL"
 	testAPIKeyEnvVar     = "TEST_CORTEX_API_KEY"
 	testAPIKeyIDEnvVar   = "TEST_CORTEX_API_KEY_ID"
 	testAPIKeyTypeEnvVar = "TEST_CORTEX_API_KEY_TYPE"
 
-	testFQDN                        string
 	testAPIURL                      string
 	testAPIKey                      string
 	testAPIKeyIDStr                 string
@@ -68,7 +66,6 @@ func loadDotEnv(t *testing.T, envFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to load .env file: %v", err)
 	}
-	testFQDN = os.Getenv(testFQDNEnvVar)
 	testAPIURL = os.Getenv(testAPIURLEnvVar)
 	testAPIKey = os.Getenv(testAPIKeyEnvVar)
 	testAPIKeyIDStr = os.Getenv(testAPIKeyIDEnvVar)
@@ -88,8 +85,8 @@ func testAccPreCheck(t *testing.T) {
 	t.Log("Checking provider config env vars")
 
 	configErrs := []string{}
-	if testFQDN == "" && testAPIURL == "" {
-		configErrs = append(configErrs, fmt.Sprintf("One of %s or %s must be set for acceptance tests", testFQDNEnvVar, testAPIURLEnvVar))
+	if testAPIURL == "" {
+		configErrs = append(configErrs, fmt.Sprintf("%s must be set for acceptance tests", testAPIURLEnvVar))
 	}
 
 	if testAPIKey == "" {

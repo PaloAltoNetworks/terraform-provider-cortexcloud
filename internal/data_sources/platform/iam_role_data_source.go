@@ -42,34 +42,34 @@ func (r *RoleDataSource) Metadata(ctx context.Context, req datasource.MetadataRe
 // Schema defines the schema for the data source.
 func (r *RoleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Provides visibility into an IAM role.",
+		Description: "Provides details about an existing IAM role.",
 		Attributes: map[string]schema.Attribute{
 			"role_id": schema.StringAttribute{
-				Description: "role_id of the IAM role.",
+				Description: "Unique identifier for the role.",
 				Required:    true,
 			},
 			"pretty_name": schema.StringAttribute{
-				Description: "Name of the IAM role.",
+				Description: "Name of the role.",
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Description of the IAM role.",
+				Description: "Description of the role.",
 				Computed:    true,
 			},
 			"is_custom": schema.BoolAttribute{
-				Description: "Whether or not the IAM role is custom.",
+				Description: "Whether or not this role is custom or system-provided.",
 				Computed:    true,
 			},
 			"created_by": schema.StringAttribute{
-				Description: "ID of the user who created the IAM role.",
+				Description: "The user or system that created the role.",
 				Computed:    true,
 			},
 			"created_ts": schema.Int64Attribute{
-				Description: "Timestamp when the IAM role was created.",
+				Description: "The date and time when the role was created.",
 				Computed:    true,
 			},
 			"updated_ts": schema.Int64Attribute{
-				Description: "Timestamp when the IAM role was updated.",
+				Description: "The date and time when the role was updated.",
 				Computed:    true,
 			},
 		},

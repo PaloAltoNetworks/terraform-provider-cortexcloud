@@ -38,24 +38,25 @@ resource "cortexcloud_iam_role" "with_datasets" {
     "file_search"
   ]
 
-  dataset_permissions {
-    category   = "security_logs"
-    access_all = false
-    permissions = [
-      "read",
-      "query"
-    ]
-  }
-
-  dataset_permissions {
-    category   = "network_traffic"
-    access_all = true
-    permissions = [
-      "read",
-      "query",
-      "export"
-    ]
-  }
+  dataset_permissions = [
+    {
+      category   = "security_logs"
+      access_all = false
+      permissions = [
+        "read",
+        "query"
+      ]
+    },
+    {
+      category   = "network_traffic"
+      access_all = true
+      permissions = [
+        "read",
+        "query",
+        "export",
+      ]
+    },
+  ]
 }
 ```
 
@@ -87,4 +88,7 @@ Required:
 
 - `access_all` (Boolean) Whether to grant access to all datasets in the category.
 - `category` (String) The category of the dataset.
-- `permissions` (Set of String) The permissions for the dataset.
+
+Optional:
+
+- `permissions` (Set of String) The permissions for the dataset. This field is optional as the API does not require specific permissions for dataset access.

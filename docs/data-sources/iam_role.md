@@ -3,12 +3,12 @@
 page_title: "cortexcloud_iam_role Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Provides visibility into an IAM role.
+  Provides details about an existing IAM role.
 ---
 
 # cortexcloud_iam_role (Data Source)
 
-Provides visibility into an IAM role.
+Provides details about an existing IAM role.
 
 ## Example Usage
 
@@ -37,13 +37,13 @@ output "is_custom_role" {
 
 ### Required
 
-- `role_id` (String) role_id of the IAM role.
+- `role_id` (String) Unique identifier for the role.
 
 ### Read-Only
 
-- `created_by` (String) ID of the user who created the IAM role.
-- `created_ts` (Number) Timestamp when the IAM role was created.
-- `description` (String) Description of the IAM role.
-- `is_custom` (Boolean) Whether or not the IAM role is custom.
-- `pretty_name` (String) Name of the IAM role.
-- `updated_ts` (Number) Timestamp when the IAM role was updated.
+- `created_by` (String) The user or system that created the role.
+- `created_ts` (Number) The date and time when the role was created.
+- `description` (String) Description of the role.
+- `is_custom` (Boolean) Whether or not this role is custom or system-provided.
+- `pretty_name` (String) Name of the role.
+- `updated_ts` (Number) The date and time when the role was updated.

@@ -13,7 +13,7 @@ type scopeModificationRegions struct {
 	Regions *[]string `json:"regions,omitempty" tfsdk:"regions"`
 }
 
-var managedByPANWTag = cloudOnboardingTypes.Tag{
+var defaultIntegrationTemplatePANWTag = cloudOnboardingTypes.Tag{
 	Key:   "managed_by",
 	Value: "paloaltonetworks",
 }

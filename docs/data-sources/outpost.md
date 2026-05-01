@@ -3,12 +3,12 @@
 page_title: "cortexcloud_outpost Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Retrieves a single outpost.
+  Provides details about an existing Outpost.
 ---
 
 # cortexcloud_outpost (Data Source)
 
-Retrieves a single outpost.
+Provides details about an existing Outpost.
 
 
 
@@ -21,6 +21,6 @@ Retrieves a single outpost.
 
 ### Read-Only
 
-- `cloud_provider` (String) The cloud provider of the outpost.
+- `cloud_provider` (String) The cloud service provider for the outpost.
 - `created_at` (Number) The creation time of the outpost.
-- `type` (String) The type of the outpost.
+- `type` (String) The type of outpost.

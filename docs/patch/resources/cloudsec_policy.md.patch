@@ -1,0 +1,39 @@
+466,484d465
+< 
+< Optional:
+< 
+< - `criteria` (Attributes List) List of nested filter criteria. Required when operator is provided. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria))
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType'). Required for leaf nodes.
+< - `operator` (String) Logical operator for combining criteria (AND or OR). Required when criteria is provided.
+< - `type` (String) Filter operation type. Required for leaf nodes.
+< - `value` (String) Value to filter for. Required for leaf nodes.
+< 
+< <a id="nestedatt--rule_matching--filter_criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria`
+< 
+< Optional:
+< 
+< - `criteria` (Attributes List) List of nested filter criteria. Required when operator is provided. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria--criteria))
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType'). Required for leaf nodes.
+< - `operator` (String) Logical operator for combining criteria (AND or OR). Required when criteria is provided.
+< - `type` (String) Filter operation type. Required for leaf nodes.
+< - `value` (String) Value to filter for. Required for leaf nodes.
+486,488d466
+< <a id="nestedatt--rule_matching--filter_criteria--criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria.criteria`
+< 
+491c469
+< - `criteria` (Attributes List) List of nested filter criteria. Required when operator is provided. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria--criteria--criteria--criteria))
+---
+> - `criteria` (Attributes List) List of nested filter criteria. Same schema as this attribute. Required when operator is provided.
+496,505d473
+< 
+< <a id="nestedatt--rule_matching--filter_criteria--criteria--criteria--criteria"></a>
+< ### Nested Schema for `rule_matching.filter_criteria.criteria.criteria.criteria`
+< 
+< Optional:
+< 
+< - `field` (String) Field name to filter on (e.g., 'severity', 'cloudType'). Required for leaf nodes.
+< - `operator` (String) Logical operator for combining criteria (AND or OR). Required when criteria is provided.
+< - `type` (String) Filter operation type. Required for leaf nodes.
+< - `value` (String) Value to filter for. Required for leaf nodes.

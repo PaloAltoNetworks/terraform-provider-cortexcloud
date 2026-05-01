@@ -5,6 +5,8 @@ package cloudonboarding
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
@@ -39,23 +41,23 @@ func (d *OutpostsDataSource) Metadata(ctx context.Context, req datasource.Metada
 // Schema defines the schema for the data source.
 func (d *OutpostsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves a list of outposts.",
+		Description: "Provides a filtered list of existing Outposts.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Static identifier for the data source.",
 				Computed:    true,
 			},
 			"cloud_provider": schema.StringAttribute{
-				Description: "",
+				Description: fmt.Sprintf("Filter results by cloud service provider. Possible values are: \"%s\".", strings.Join(enums.AllOutpostCloudServiceProviders(), "\", \"")),
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						enums.AllCloudProviders()...,
+						enums.AllOutpostCloudServiceProviders()...,
 					),
 				},
 			},
 			"outposts": schema.ListNestedAttribute{
-				Description: "The list of outposts.",
+				Description: "The filtered set of outposts.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -64,7 +66,7 @@ func (d *OutpostsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 							Computed:    true,
 						},
 						"cloud_provider": schema.StringAttribute{
-							Description: "The cloud provider of the outpost.",
+							Description: "The cloud service provider for the outpost.",
 							Computed:    true,
 						},
 						"created_at": schema.Int64Attribute{
@@ -72,7 +74,7 @@ func (d *OutpostsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 							Computed:    true,
 						},
 						"type": schema.StringAttribute{
-							Description: "The type of the outpost.",
+							Description: "The type of outpost.",
 							Computed:    true,
 						},
 					},
@@ -116,9 +118,17 @@ func (d *OutpostsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	data, err := d.client.ListOutposts(ctx, listReq)
+	data, err := d.client.ListOutposts(ctx, &listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Outposts Data Source Read Error", err.Error())
+		return
+	}
+
+	if data == nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Outposts",
+			"API returned nil response.\nPlease report this issue to the provider developers.",
+		)
 		return
 	}
 

@@ -52,7 +52,6 @@ func TestUnitIamRoleResource(t *testing.T) {
 				"metadata": { "total_count": 1 }
 			}`)
 
-		// Delete：/platform/iam/v1/role/{role_id}
 		case path == "/platform/iam/v1/role/test-role-id" && r.Method == http.MethodDelete:
 			w.WriteHeader(http.StatusOK)
 
@@ -68,7 +67,7 @@ func TestUnitIamRoleResource(t *testing.T) {
 			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
-			// Step 1: Create
+			// Step 1: Create without dataset_permissions
 			{
 				Config: fmt.Sprintf(`
 					provider "cortexcloud" {
@@ -93,11 +92,92 @@ func TestUnitIamRoleResource(t *testing.T) {
 				ResourceName: "cortexcloud_iam_role.test",
 				RefreshState: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "id", "test-role-id"), // ID 保持不变
+					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "id", "test-role-id"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "is_custom", "true"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "created_by", "test-user"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "created_ts", "1678886400000"),
 					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "updated_ts", "1678886400000"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitIamRoleResource_DatasetPermissionsWithoutPermissions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		for strings.Contains(path, "//") {
+			path = strings.ReplaceAll(path, "//", "/")
+		}
+		if strings.HasSuffix(path, "/") && path != "/" {
+			path = strings.TrimSuffix(path, "/")
+		}
+
+		switch {
+		case path == "/platform/iam/v1/role" && r.Method == http.MethodPost:
+			w.WriteHeader(http.StatusCreated)
+			fmt.Fprintln(w, `{
+				"data": {
+					"message": "role_id test-role-ds-id created successfully."
+				}
+			}`)
+
+		case path == "/platform/iam/v1/role" && r.Method == http.MethodGet:
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, `{
+				"data": [
+					{
+						"role_id": "test-role-ds-id",
+						"pretty_name": "test-role-datasets",
+						"description": "test role with dataset permissions",
+						"is_custom": true,
+						"created_by": "test-user",
+						"created_ts": 1678886400000,
+						"updated_ts": 1678886400000
+					}
+				],
+				"metadata": { "total_count": 1 }
+			}`)
+
+		case path == "/platform/iam/v1/role/test-role-ds-id" && r.Method == http.MethodDelete:
+			w.WriteHeader(http.StatusOK)
+
+		default:
+			http.Error(w, "not found: "+r.URL.Path, http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+		},
+		Steps: []resource.TestStep{
+			// Create with dataset_permissions but without the permissions field
+			{
+				Config: fmt.Sprintf(`
+					provider "cortexcloud" {
+						api_url    = "%s"
+						api_key    = "test"
+						api_key_id = 123
+					}
+					resource "cortexcloud_iam_role" "test" {
+						pretty_name           = "test-role-datasets"
+						description           = "test role with dataset permissions"
+						component_permissions = ["perm1"]
+						dataset_permissions = [
+							{
+								category   = "Lookup"
+								access_all = true
+							}
+						]
+					}
+				`, server.URL),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "id", "test-role-ds-id"),
+					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "pretty_name", "test-role-datasets"),
+					resource.TestCheckResourceAttr("cortexcloud_iam_role.test", "dataset_permissions.#", "1"),
 				),
 			},
 		},

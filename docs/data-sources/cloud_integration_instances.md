@@ -3,12 +3,12 @@
 page_title: "cortexcloud_cloud_integration_instances Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Retrieves a list of cloud integration instances.
+  Provides a filtered list of existing Cloud Service Provider integrations.
 ---
 
 # cortexcloud_cloud_integration_instances (Data Source)
 
-Retrieves a list of cloud integration instances.
+Provides a filtered list of existing Cloud Service Provider integrations.
 
 
 
@@ -17,15 +17,15 @@ Retrieves a list of cloud integration instances.
 
 ### Optional
 
-- `authentication_method` (String) The authentication method to filter by.
-- `cloud_provider` (String)
-- `creation_time` (String) The creation time to filter by (RFC 3339 format).
-- `instance_id` (String) The instance ID to filter by.
-- `name` (String) The name to filter by.
-- `outpost_id` (String) The outpost ID to filter by.
-- `scan_mode` (String) The scan mode to filter by.
-- `scope` (String) The scope to filter by.
-- `status` (String) The status to filter by.
+- `authentication_method` (String) The authentication method to filter on.
+- `cloud_provider` (String) The cloud service provider to filter on.
+- `creation_time` (String) The creation time to filter on (RFC 3339 format).
+- `instance_id` (String) The instance ID to filter on.
+- `name` (String) The name to filter on.
+- `outpost_id` (String) The outpost ID to filter on.
+- `scan_mode` (String) The scan mode to filter on.
+- `scope` (String) The scope to filter on.
+- `status` (String) The status to filter on.
 
 ### Read-Only
 

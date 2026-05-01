@@ -3,12 +3,12 @@
 page_title: "cortexcloud_outpost_template Ephemeral Resource - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Manages a CSP outpost template.
+  Manages an outpost template.
 ---
 
 # cortexcloud_outpost_template (Ephemeral Resource)
 
-Manages a CSP outpost template.
+Manages an outpost template.
 
 
 

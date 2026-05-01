@@ -5,13 +5,21 @@ package planmodifiers
 
 import (
 	"context"
+	//"fmt"
 	"slices"
+	////"strconv"
+	//"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+//var (
+//	_ validator.String = NullIfAlsoSetPlanModifier{}
+//	_ validator.Bool   = NullIfAlsoSetPlanModifier{}
+//)
 
 func NullIfAlsoSetInt32(onValues []string) planmodifier.Int32 {
 	return &nullIfAlsoSetInt32{

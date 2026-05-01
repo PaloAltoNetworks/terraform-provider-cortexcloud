@@ -45,16 +45,16 @@ If you are using an Advanced API key, you will also need to set the `api_key_typ
 
 Example:
 
-{{ tffile "examples/provider/environment_variables.tf" }}
-
 {{ codefile "shell" "examples/provider/environment_variables.sh" }}
+
+{{ tffile "examples/provider/environment_variables.tf" }}
 
 ### Configuration File
 
 Credentials can be provided by creating a JSON file with the following structure and configuring the provider's `config_file` attribute with the full or relative filepath:
 
-{{ tffile "examples/provider/config_file.tf" }}
-
 {{ codefile "json" "examples/provider/config_file.json" }}
+
+{{ tffile "examples/provider/config_file.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}

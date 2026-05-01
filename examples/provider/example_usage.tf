@@ -2,14 +2,15 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "0.0.1"
+      version = "1.0.4"
     }
   }
 }
 
 # Configure the Cortex Cloud provider
 provider "cortexcloud" {
-  api_url    = "https://api-cortexcloud.xdr.us.paloaltonetworks.com"
-  api_key    = "REPLACE_WITH_YOUR_API_KEY"
-  api_key_id = 100
+  api_url      = "https://api-cortexcloud.xdr.us.paloaltonetworks.com"
+  api_key      = "your-api-key-here"
+  api_key_id   = 100
+  api_key_type = "advanced" # Possible values are "standard" or "advanced". Defaults to "advanced".
 }

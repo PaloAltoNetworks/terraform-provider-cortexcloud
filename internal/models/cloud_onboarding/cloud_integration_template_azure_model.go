@@ -87,11 +87,11 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 		return nil
 	}
 
-	if !slices.Contains(customResourcesTags, managedByPANWTag) {
-		customResourcesTags = append(customResourcesTags, managedByPANWTag)
+	if !slices.Contains(customResourcesTags, defaultIntegrationTemplatePANWTag) {
+		customResourcesTags = append(customResourcesTags, defaultIntegrationTemplatePANWTag)
 	}
 
-	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(
+	options := []cloudOnboardingTypes.CreateIntegrationTemplateRequestOption{
 		cloudOnboardingTypes.WithAccountDetails(&accountDetails),
 		cloudOnboardingTypes.WithAdditionalCapabilities(additionalCapabilities),
 		cloudOnboardingTypes.WithCloudProvider(enums.CloudProviderAzure.String()),
@@ -101,7 +101,13 @@ func (m *CloudIntegrationTemplateAzureModel) ToCreateRequest(ctx context.Context
 		cloudOnboardingTypes.WithScanMode(m.ScanMode.ValueString()),
 		cloudOnboardingTypes.WithScope(m.Scope.ValueString()),
 		cloudOnboardingTypes.WithScopeModifications(scopeModifications),
-	)
+	}
+
+	if !m.OutpostID.IsNull() && !m.OutpostID.IsUnknown() && len(m.OutpostID.ValueString()) > 0 {
+		options = append(options, cloudOnboardingTypes.WithOutpostID(m.OutpostID.ValueString()))
+	}
+
+	return cloudOnboardingTypes.NewCreateIntegrationTemplateRequest(options...)
 }
 
 func (m *CloudIntegrationTemplateAzureModel) ToGetRequest(ctx context.Context, diagnostics *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {
@@ -164,7 +170,7 @@ func (m *CloudIntegrationTemplateAzureModel) SetGeneratedValues(ctx context.Cont
 	}
 }
 
-func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, apiResponse cloudOnboardingTypes.IntegrationInstance) {
+func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx context.Context, diagnostics *diag.Diagnostics, remote cloudOnboardingTypes.IntegrationInstance) {
 	ctx = tflog.SetField(ctx, "resource_operation", "RefreshConfiguredPropertyValues")
 
 	var (
@@ -178,27 +184,27 @@ func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx
 		})
 	)
 
-	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), apiResponse.AdditionalCapabilities)
+	additionalCapabilities, diags = types.ObjectValueFrom(ctx, m.AdditionalCapabilities.AttributeTypes(ctx), remote.AdditionalCapabilities)
 	diagnostics.Append(diags...)
 	if diagnostics.HasError() {
 		return
 	}
 
 	if !m.CustomResourcesTags.IsNull() {
-		for idx, tag := range apiResponse.CustomResourcesTags {
-			if tag == managedByPANWTag {
-				if len(apiResponse.CustomResourcesTags) == 1 {
-					apiResponse.CustomResourcesTags = []cloudOnboardingTypes.Tag{}
+		for idx, tag := range remote.CustomResourcesTags {
+			if tag == defaultIntegrationTemplatePANWTag {
+				if len(remote.CustomResourcesTags) == 1 {
+					remote.CustomResourcesTags = []cloudOnboardingTypes.Tag{}
 				} else {
-					apiResponse.CustomResourcesTags = append(
-						apiResponse.CustomResourcesTags[:idx],
-						apiResponse.CustomResourcesTags[idx+1:]...,
+					remote.CustomResourcesTags = append(
+						remote.CustomResourcesTags[:idx],
+						remote.CustomResourcesTags[idx+1:]...,
 					)
 				}
 			}
 		}
 
-		customResourcesTags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), apiResponse.CustomResourcesTags)
+		customResourcesTags, diags = types.SetValueFrom(ctx, m.CustomResourcesTags.ElementType(ctx), remote.CustomResourcesTags)
 		diagnostics.Append(diags...)
 		if diagnostics.HasError() {
 			return
@@ -206,13 +212,14 @@ func (m *CloudIntegrationTemplateAzureModel) RefreshConfiguredPropertyValues(ctx
 	}
 	m.CustomResourcesTags = customResourcesTags
 
-	if m.InstanceName.IsNull() && apiResponse.InstanceName == "" {
+	if m.InstanceName.IsNull() && remote.InstanceName == "" {
 		m.InstanceName = types.StringNull()
 	} else {
-		m.InstanceName = types.StringValue(apiResponse.InstanceName)
+		m.InstanceName = types.StringValue(remote.InstanceName)
 	}
 
 	m.AdditionalCapabilities = additionalCapabilities
-	m.ScanMode = types.StringValue(apiResponse.Scan.ScanMethod)
-	m.Status = types.StringValue(apiResponse.Status)
+	m.OutpostID = types.StringValue(remote.OutpostID)
+	m.ScanMode = types.StringValue(remote.Scan.ScanMethod)
+	m.Status = types.StringValue(remote.Status)
 }

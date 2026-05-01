@@ -8,7 +8,7 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
+	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -41,14 +41,14 @@ func (d *CloudIntegrationInstancesDataSource) Metadata(ctx context.Context, req 
 // Schema defines the schema for the data source.
 func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves a list of cloud integration instances.",
+		Description: "Provides a filtered list of existing Cloud Service Provider integrations.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "The object ID.",
 				Computed:    true,
 			},
 			"cloud_provider": schema.StringAttribute{
-				Description: "",
+				Description: "The cloud service provider to filter on.",
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -57,11 +57,11 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "The name to filter by.",
+				Description: "The name to filter on.",
 				Optional:    true,
 			},
 			"status": schema.StringAttribute{
-				Description: "The status to filter by.",
+				Description: "The status to filter on.",
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -70,7 +70,7 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 				},
 			},
 			"scope": schema.StringAttribute{
-				Description: "The scope to filter by.",
+				Description: "The scope to filter on.",
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -79,7 +79,7 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 				},
 			},
 			"scan_mode": schema.StringAttribute{
-				Description: "The scan mode to filter by.",
+				Description: "The scan mode to filter on.",
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(
@@ -88,19 +88,19 @@ func (d *CloudIntegrationInstancesDataSource) Schema(ctx context.Context, req da
 				},
 			},
 			"creation_time": schema.StringAttribute{
-				Description: "The creation time to filter by (RFC 3339 format).",
+				Description: "The creation time to filter on (RFC 3339 format).",
 				Optional:    true,
 			},
 			"outpost_id": schema.StringAttribute{
-				Description: "The outpost ID to filter by.",
+				Description: "The outpost ID to filter on.",
 				Optional:    true,
 			},
 			"authentication_method": schema.StringAttribute{
-				Description: "The authentication method to filter by.",
+				Description: "The authentication method to filter on.",
 				Optional:    true,
 			},
 			"instance_id": schema.StringAttribute{
-				Description: "The instance ID to filter by.",
+				Description: "The instance ID to filter on.",
 				Optional:    true,
 			},
 			"instances": schema.ListNestedAttribute{

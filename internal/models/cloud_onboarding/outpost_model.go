@@ -23,7 +23,7 @@ type OutpostModel struct {
 }
 
 // ToListRequest creates a ListOutpostsRequest to find a single outpost by ID.
-func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListOutpostsRequest {
+func (m *OutpostModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) cloudOnboardingTypes.ListOutpostsRequest {
 	tflog.Debug(ctx, "Creating ListOutpostsRequest from OutpostModel")
 
 	return cloudOnboardingTypes.NewListOutpostsRequest(

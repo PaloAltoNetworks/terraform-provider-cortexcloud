@@ -3,12 +3,12 @@
 page_title: "cortexcloud_user Data Source - Cortex Cloud Provider"
 subcategory: ""
 description: |-
-  Gets a Cortex Cloud user.
+  Provides details about an existing user.
 ---
 
 # cortexcloud_user (Data Source)
 
-Gets a Cortex Cloud user.
+Provides details about an existing user.
 
 ## Example Usage
 
@@ -36,7 +36,7 @@ output "user_groups" {
 
 ### Required
 
-- `user_email` (String) The email of the user.
+- `user_email` (String) The email address of the user.
 
 ### Read-Only
 

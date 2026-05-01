@@ -8,22 +8,23 @@ resource "cortexcloud_iam_role" "with_datasets" {
     "file_search"
   ]
 
-  dataset_permissions {
-    category   = "security_logs"
-    access_all = false
-    permissions = [
-      "read",
-      "query"
-    ]
-  }
-
-  dataset_permissions {
-    category   = "network_traffic"
-    access_all = true
-    permissions = [
-      "read",
-      "query",
-      "export"
-    ]
-  }
+  dataset_permissions = [
+    {
+      category   = "security_logs"
+      access_all = false
+      permissions = [
+        "read",
+        "query"
+      ]
+    },
+    {
+      category   = "network_traffic"
+      access_all = true
+      permissions = [
+        "read",
+        "query",
+        "export",
+      ]
+    },
+  ]
 }

@@ -6,8 +6,8 @@ package acceptance
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"slices"
+	"strconv"
 	"testing"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
@@ -144,9 +144,9 @@ func TestAccAuthenticationSettingsResourceIDPSSO(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { 
-			testAccPreCheck(t) 
-			testAccAuthSettingsPreCheck(t) 
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAuthSettingsPreCheck(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -210,9 +210,9 @@ func TestAccAuthenticationSettingsResourceIDPMetadata(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { 
-			testAccPreCheck(t) 
-			testAccAuthSettingsPreCheck(t) 
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAuthSettingsPreCheck(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

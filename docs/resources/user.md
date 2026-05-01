@@ -43,24 +43,24 @@ resource "cortexcloud_user" "minimal_example" {
 
 ### Optional
 
-- `groups` (Attributes Set) The groups of the user. (see [below for nested schema](#nestedatt--groups))
+- `group_ids` (List of String) Desired group IDs for the user (write intent).
 - `hidden` (Boolean) The hidden status of the user.
 - `phone_number` (String) The phone number of the user.
+- `role_name` (String) The role name of the user.
 - `status` (String) The status of the user.
 
 ### Read-Only
 
+- `groups` (Attributes List) The groups of the user. (see [below for nested schema](#nestedatt--groups))
 - `last_logged_in` (Number) The last logged in timestamp of the user.
-- `role_name` (String) The role name of the user.
+- `user_first_name` (String) The first name of the user.
+- `user_last_name` (String) The last name of the user.
 - `user_type` (String) The user type of the user.
 
 <a id="nestedatt--groups"></a>
 ### Nested Schema for `groups`
 
-Required:
-
-- `group_id` (String) The ID of the nested group.
-
 Read-Only:
 
+- `group_id` (String) The ID of the nested group.
 - `group_name` (String) The name of the nested group.

@@ -40,10 +40,10 @@ func (d *userDataSource) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the data source.
 func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Gets a Cortex Cloud user.",
+		Description: "Provides details about an existing user.",
 		Attributes: map[string]schema.Attribute{
 			"user_email": schema.StringAttribute{
-				Description: "The email of the user.",
+				Description: "The email address of the user.",
 				Required:    true,
 			},
 			"user_first_name": schema.StringAttribute{

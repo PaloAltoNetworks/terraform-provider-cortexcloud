@@ -6,6 +6,7 @@ package acceptance
 import (
 	"context"
 	"fmt"
+
 	//"os"
 	"strconv"
 	"testing"
@@ -146,14 +147,13 @@ func TestAccAssetGroupResourceDynamicLifecycle(t *testing.T) {
 //			return fmt.Errorf("Error parsing ID: %s", err.Error())
 //		}
 //		var (
-//			testFQDN       string = os.Getenv(testFQDNEnvVar)
 //			testAPIKey     string = os.Getenv(testAPIKeyEnvVar)
 //			testAPIKeyID   int
 //			testAPIKeyType string = os.Getenv(testAPIKeyTypeEnvVar)
 //		)
 //
 //		client, err := platform.NewClient(
-//			platform.WithCortexFQDN(testFQDN),
+//			platform.WithCortexAPIURL(testAPIURL),
 //			platform.WithCortexAPIKey(testAPIKey),
 //			platform.WithCortexAPIKeyID(testAPIKeyID),
 //			platform.WithCortexAPIKeyType(testAPIKeyType),
