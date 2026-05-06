@@ -1,5 +1,10 @@
 ## Release Notes
 
+### v1.0.5
+
+#### Enhancements
+* Removed Cortex API credentials from debug log messages
+
 ### v1.0.4
 
 #### Features

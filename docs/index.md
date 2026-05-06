@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.4"
+      version = "1.0.5"
     }
   }
 }
@@ -196,7 +196,7 @@ provider "cortexcloud" {
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
 
-### v1.0.4
+### v1.0.5
 
 #### Features
 * **New Resource**: `cortexcloud_appsec_rule`

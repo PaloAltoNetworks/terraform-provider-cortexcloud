@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.4"
+      version = "1.0.5"
     }
   }
 }
@@ -107,6 +107,11 @@ provider "cortexcloud" {
 ```
 
 ## Release Notes
+
+### v1.0.5
+
+#### Enhancements
+* Removed Cortex API credentials from debug log messages
 
 ### v1.0.4
 

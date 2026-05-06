@@ -3,17 +3,17 @@ module github.com/PaloAltoNetworks/terraform-provider-cortexcloud
 go 1.25.0
 
 require (
-	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/compliance v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/cwp v1.0.4
+	github.com/PaloAltoNetworks/cortex-cloud-go/appsec v1.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding v1.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec v1.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/compliance v1.0.6
+	github.com/PaloAltoNetworks/cortex-cloud-go/cwp v1.0.6
 	github.com/PaloAltoNetworks/cortex-cloud-go/enums v1.0.4
 	github.com/PaloAltoNetworks/cortex-cloud-go/errors v1.0.4
 	github.com/PaloAltoNetworks/cortex-cloud-go/log v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/platform v1.0.4
+	github.com/PaloAltoNetworks/cortex-cloud-go/platform v1.0.6
 	github.com/PaloAltoNetworks/cortex-cloud-go/types v1.0.4
-	github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability v1.0.4
+	github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability v1.0.6
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.31.0
@@ -25,8 +25,8 @@ require (
 )
 
 require (
-	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client v1.0.4 // indirect
-	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v1.0.4 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client v1.0.6 // indirect
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config v1.0.6 // indirect
 	github.com/PaloAltoNetworks/cortex-cloud-go/version v1.0.4 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect

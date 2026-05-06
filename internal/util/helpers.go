@@ -17,19 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// ApplyStringEnvVar reads envVar from the environment and, if non-empty,
-// overwrites dest with the value. A debug log line is emitted on each
-// successful overwrite.
-func ApplyStringEnvVar(ctx context.Context, envVar string, dest *types.String) {
+// ApplyStringEnvVar overwrites dest with envVar's value if the variable is set and non-empty.
+func ApplyStringEnvVar(ctx context.Context, paramName, envVar string, dest *types.String) {
 	if val, ok := os.LookupEnv(envVar); ok && val != "" {
-		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%s" => "%s"`, envVar, dest.ValueString(), val))
+		tflog.Debug(ctx, fmt.Sprintf("Overwriting %s from %s", paramName, envVar))
 		*dest = types.StringValue(val)
 	}
 }
 
-// ApplyInt32EnvVar reads envVar from the environment and, if non-empty,
-// parses it as int32 and overwrites dest. A parse error is appended to diags.
-func ApplyInt32EnvVar(ctx context.Context, envVar string, dest *types.Int32, diags *diag.Diagnostics) {
+// ApplyInt32EnvVar parses envVar as int32 and overwrites dest. Appends to diags on parse error.
+func ApplyInt32EnvVar(ctx context.Context, paramName, envVar string, dest *types.Int32, diags *diag.Diagnostics) {
 	if raw, ok := os.LookupEnv(envVar); ok && raw != "" {
 		val, err := strconv.ParseInt(raw, 10, 32)
 		if err != nil {
@@ -39,14 +36,13 @@ func ApplyInt32EnvVar(ctx context.Context, envVar string, dest *types.Int32, dia
 			)
 			return
 		}
-		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%d" => "%d"`, envVar, dest.ValueInt32(), val))
+		tflog.Debug(ctx, fmt.Sprintf("Overwriting %s from %s", paramName, envVar))
 		*dest = types.Int32Value(int32(val))
 	}
 }
 
-// ApplyBoolEnvVar reads envVar from the environment and, if non-empty,
-// parses it as bool and overwrites dest. A parse error is appended to diags.
-func ApplyBoolEnvVar(ctx context.Context, envVar string, dest *types.Bool, diags *diag.Diagnostics) {
+// ApplyBoolEnvVar parses envVar as bool and overwrites dest. Appends to diags on parse error.
+func ApplyBoolEnvVar(ctx context.Context, paramName, envVar string, dest *types.Bool, diags *diag.Diagnostics) {
 	if raw, ok := os.LookupEnv(envVar); ok && raw != "" {
 		val, err := strconv.ParseBool(raw)
 		if err != nil {
@@ -56,7 +52,7 @@ func ApplyBoolEnvVar(ctx context.Context, envVar string, dest *types.Bool, diags
 			)
 			return
 		}
-		tflog.Debug(ctx, fmt.Sprintf(`Overwriting from %s: "%t" => "%t"`, envVar, dest.ValueBool(), val))
+		tflog.Debug(ctx, fmt.Sprintf("Overwriting %s from %s", paramName, envVar))
 		*dest = types.BoolValue(val)
 	}
 }
