@@ -101,5 +101,5 @@ If set to `true`, users will be able to log in using additional authentication m
 - `force_authn` (Boolean) Whether to force users to re-authenticate in order to access the Cortex tenant if requested by the IdP (even if they already authenticated to access other applications).
 - `idp_single_logout_url` (String) The URL of the IdP's Single Logout endpoint. Configuring this ensures that when a user logs out of Cortex, the IdP logs the user out of all applications in the current identity provider login session.
 - `relay_state` (String) The URL that users will be directed to after they've been authenticated by your organization's IdP and log into Cortex.
-- `service_provider_private_key` (String) The syslog server's private key in PEM format for signing SAML responses. This is most relevant for the integration of Azure Directory Federation Services (ADFS).
+- `service_provider_private_key` (String, Sensitive) The syslog server's private key in PEM format for signing SAML responses. This is most relevant for the integration of Azure Directory Federation Services (ADFS).
 - `service_provider_public_cert` (String) The syslog server's public X.509 certificate in PEM format for IdP validation.
