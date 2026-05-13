@@ -133,6 +133,7 @@ func (r *AuthenticationSettingsResource) Schema(ctx context.Context, req resourc
 						Optional:            true,
 						Computed:            true,
 						Default:             stringdefault.StaticString(""),
+						Sensitive:           true,
 					},
 					"authn_context_enabled": schema.BoolAttribute{
 						Description:         "Whether to remove the \"RequestedAuthnContext\" parameter from SAML requests.\n\nIf set to \"true\", users will be able to log in using additional authentication methods.",
