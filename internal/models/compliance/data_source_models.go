@@ -20,6 +20,7 @@ type ControlsDataSourceModel struct {
 	Filter     *FilterModel   `tfsdk:"filter"`
 	SearchFrom types.Int64    `tfsdk:"search_from"`
 	SearchTo   types.Int64    `tfsdk:"search_to"`
+	MaxResults types.Int64    `tfsdk:"max_results"`
 	Controls   []ControlModel `tfsdk:"controls"`
 }
 
@@ -29,6 +30,7 @@ type StandardsDataSourceModel struct {
 	Filter     *FilterModel    `tfsdk:"filter"`
 	SearchFrom types.Int64     `tfsdk:"search_from"`
 	SearchTo   types.Int64     `tfsdk:"search_to"`
+	MaxResults types.Int64     `tfsdk:"max_results"`
 	Standards  []StandardModel `tfsdk:"standards"`
 }
 
@@ -38,6 +40,7 @@ type AssessmentProfilesDataSourceModel struct {
 	Filter             *FilterModel             `tfsdk:"filter"`
 	SearchFrom         types.Int64              `tfsdk:"search_from"`
 	SearchTo           types.Int64              `tfsdk:"search_to"`
+	MaxResults         types.Int64              `tfsdk:"max_results"`
 	AssessmentProfiles []AssessmentProfileModel `tfsdk:"assessment_profiles"`
 }
 
@@ -165,9 +168,15 @@ func buildFilters(ctx context.Context, filter *FilterModel, diags *diag.Diagnost
 func (m *ControlsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) complianceTypes.ListControlsRequest {
 	tflog.Debug(ctx, "Converting controls data source model to list request")
 
-	req := complianceTypes.ListControlsRequest{
-		SearchFrom: int(m.SearchFrom.ValueInt64()),
-		SearchTo:   int(m.SearchTo.ValueInt64()),
+	req := complianceTypes.ListControlsRequest{}
+
+	if !m.SearchFrom.IsNull() && !m.SearchFrom.IsUnknown() {
+		from := int(m.SearchFrom.ValueInt64())
+		req.SearchFrom = &from
+	}
+	if !m.SearchTo.IsNull() && !m.SearchTo.IsUnknown() {
+		to := int(m.SearchTo.ValueInt64())
+		req.SearchTo = &to
 	}
 
 	req.Filters = buildFilters(ctx, m.Filter, diags)
@@ -194,11 +203,15 @@ func (m *ControlsDataSourceModel) RefreshFromRemote(ctx context.Context, diags *
 func (m *StandardsDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) complianceTypes.ListStandardsRequest {
 	tflog.Debug(ctx, "Converting standards data source model to list request")
 
-	req := complianceTypes.ListStandardsRequest{
-		Pagination: &complianceTypes.Pagination{
-			SearchFrom: int(m.SearchFrom.ValueInt64()),
-			SearchTo:   int(m.SearchTo.ValueInt64()),
-		},
+	req := complianceTypes.ListStandardsRequest{}
+
+	if !m.SearchFrom.IsNull() && !m.SearchFrom.IsUnknown() {
+		from := int(m.SearchFrom.ValueInt64())
+		req.SearchFrom = &from
+	}
+	if !m.SearchTo.IsNull() && !m.SearchTo.IsUnknown() {
+		to := int(m.SearchTo.ValueInt64())
+		req.SearchTo = &to
 	}
 
 	req.Filters = buildFilters(ctx, m.Filter, diags)
@@ -225,11 +238,15 @@ func (m *StandardsDataSourceModel) RefreshFromRemote(ctx context.Context, diags 
 func (m *AssessmentProfilesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) complianceTypes.ListAssessmentProfilesRequest {
 	tflog.Debug(ctx, "Converting assessment profiles data source model to list request")
 
-	req := complianceTypes.ListAssessmentProfilesRequest{
-		Pagination: &complianceTypes.Pagination{
-			SearchFrom: int(m.SearchFrom.ValueInt64()),
-			SearchTo:   int(m.SearchTo.ValueInt64()),
-		},
+	req := complianceTypes.ListAssessmentProfilesRequest{}
+
+	if !m.SearchFrom.IsNull() && !m.SearchFrom.IsUnknown() {
+		from := int(m.SearchFrom.ValueInt64())
+		req.SearchFrom = &from
+	}
+	if !m.SearchTo.IsNull() && !m.SearchTo.IsUnknown() {
+		to := int(m.SearchTo.ValueInt64())
+		req.SearchTo = &to
 	}
 
 	req.Filters = buildFilters(ctx, m.Filter, diags)

@@ -5,12 +5,14 @@ resource "cortexcloud_appsec_policy" "critical_findings" {
   status      = "enabled"
 
   # Conditions as JSON (supports up to 10 levels of nesting)
+  # Each condition clause must include a Finding Type field.
+  # Valid Finding Type values: VULNERABILITY, SECRETS, etc.
   conditions = jsonencode({
     AND = [
       {
-        SEARCH_FIELD = "Severity"
+        SEARCH_FIELD = "Finding Type"
         SEARCH_TYPE  = "EQ"
-        SEARCH_VALUE = "CRITICAL"
+        SEARCH_VALUE = "VULNERABILITY"
       }
     ]
   })
