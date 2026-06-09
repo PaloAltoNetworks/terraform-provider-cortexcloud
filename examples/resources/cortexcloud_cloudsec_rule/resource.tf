@@ -1,29 +1,17 @@
-# Cloud Security rule for detecting S3 buckets with access logging disabled.
-resource "cortexcloud_cloudsec_rule" "aws-s3-access-logging-disabled" {
-  name        = "AWS Access logging not enabled on S3 buckets"
-  description = <<-EOF
-Overly permissive key policies on AWS S3 buckets encrypted with Customer Managed Keys (CMKs) allow unauthorized access to sensitive data, leading to data breaches and compliance violations.
-
-AWS S3 utilizes Customer Managed Keys (CMKs) for encryption, stored and managed within AWS Key Management Service (KMS). A misconfigured KMS key policy granting excessive permissions to untrusted principals, exposes the encryption key. Attackers exploiting this misconfiguration can decrypt and access sensitive data stored in the S3 bucket.
-
-The impact of this misconfiguration includes data breaches, financial losses, reputational damage, and regulatory penalties for non-compliance. Restricting permissions to only necessary principals minimizes the potential impact of a compromised key. Following the principle of least privilege ensures only authorized entities can access the encryption key.
-
-Mitigate this risk by implementing least privilege access controls on the KMS key policy. Grant required permissions only to trusted entities and services requiring access. Regularly review and audit the KMS key policy to identify and remove unnecessary permissions. Use a strong, unique CMK for each S3 bucket, and avoid using wildcard characters in the KMS key policy.
-EOF
+# Basic CloudSec detection rule for identifying S3 buckets with public access
+resource "cortexcloud_cloudsec_rule" "s3_public_access" {
+  name        = "AWS S3 Bucket with Public Access"
+  description = "Identifies S3 buckets that allow public access through ACLs or bucket policies"
   class       = "config"
-  asset_types = ["S3_BUCKET"]
+  asset_types = ["aws-s3-bucket"]
   severity    = "high"
+
+  # XQL query to detect public S3 buckets
   query = {
-    xql = <<-EOF
-dataset = asset_inventory
-| filter xdm.asset.provider = "aws" and xdm.asset.type.id = "S3_BUCKET"
-| alter LoggingConfiguration = json_extract(xdm.asset.raw_fields, "$.Platform Discovery.Properties.LoggingConfiguration")
-| alter targetBucket = json_extract_scalar(xdm.asset.raw_fields, "$.Platform Discovery.Properties.LoggingConfiguration.TargetBucket")
-| alter targetPrefix = json_extract_scalar(xdm.asset.raw_fields, "$.Platform Discovery.Properties.LoggingConfiguration.TargetPrefix")
-| filter (LoggingConfiguration = null or targetBucket = null or targetPrefix = null)
-| fields xdm.asset.id as asset_id, xdm.asset.type.id as asset_type_id, xdm.asset.name as asset_name
-EOF
+    xql = "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = acl.grants[?(@.grantee=='AllUsers' || @.grantee=='AuthenticatedUsers')] exists"
   }
+
+  # Remediation guidance
   metadata = {
     issue = {
       recommendation = <<-EOT
@@ -36,7 +24,10 @@ EOF
       EOT
     }
   }
-  labels  = ["S3", "Public Access", "Data Exposure"]
+
+  # Custom labels for categorization
+  labels = ["S3", "Public Access", "Data Exposure"]
+
+  # Enable the rule
   enabled = true
 }
-

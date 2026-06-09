@@ -5,7 +5,6 @@ package models
 
 import (
 	"context"
-	"strings"
 
 	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -64,9 +63,7 @@ func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 	m.FirstName = types.StringValue(remote.FirstName)
 	m.LastName = types.StringValue(remote.LastName)
 	m.PhoneNumber = types.StringValue(remote.PhoneNumber)
-	// Normalize status to lowercase — the API returns "Active"/"Inactive"
-	// but the provider's canonical form is "active"/"inactive".
-	m.Status = types.StringValue(strings.ToLower(remote.Status))
+	m.Status = types.StringValue(remote.Status)
 	m.RoleName = types.StringValue(remote.RoleName)
 	m.LastLoggedIn = types.Int64Value(remote.LastLoggedIn)
 	m.Hidden = types.BoolValue(remote.Hidden)

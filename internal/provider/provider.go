@@ -6,7 +6,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
@@ -15,7 +14,6 @@ import (
 	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/version"
 	"github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability"
 
 	appsecDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/appsec"
@@ -52,8 +50,8 @@ var (
 )
 
 // New is a helper function to simplify provider server and testing implementation.
-func New(gitCommit string, providerVersion string) func() provider.Provider {
-	switch gitCommit {
+func New(version string) func() provider.Provider {
+	switch version {
 	case "test":
 		fmt.Printf("=======================================================\n" +
 			"Provider execution started in TEST mode\n" +
@@ -63,30 +61,24 @@ func New(gitCommit string, providerVersion string) func() provider.Provider {
 			"Provider execution started in DEV mode\n" +
 			"=======================================================\n")
 	default:
-		tflog.Info(context.Background(), fmt.Sprintf("Cortex Cloud Terraform Provider (version %s)", providerVersion))
+		tflog.Info(context.Background(), fmt.Sprintf("Cortex Cloud Terraform Provider (version %s)", version))
 	}
 
 	return func() provider.Provider {
 		return &CortexCloudProvider{
-			gitCommit:       gitCommit,
-			providerVersion: providerVersion,
+			version: version,
 		}
 	}
 }
 
 // CortexCloudProvider is the provider implementation.
 type CortexCloudProvider struct {
-	// gitCommit is the git commit SHA used for build-info logging.
-	gitCommit string
-	// providerVersion is the semver release version (e.g. "0.7.0") used in
-	// the User-Agent header for analytics. Set via -ldflags at build time;
-	// defaults to "dev" for local builds.
-	providerVersion string
+	version string
 }
 
 func (p *CortexCloudProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "cortexcloud"
-	resp.Version = p.gitCommit
+	resp.Version = p.version
 }
 
 // Schema defines the provider-level schema for configuration data.
@@ -363,7 +355,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	tflog.Debug(ctx, "Starting provider configuration")
 
 	// Retrieve configuration values from provider block
-	providerConfig := getProviderConfig(ctx, req.Config, &resp.Diagnostics, p.gitCommit)
+	providerConfig := getProviderConfig(ctx, req.Config, &resp.Diagnostics, p.version)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -371,8 +363,8 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	// Initialize SDK clients
 	clients := models.CortexCloudSDKClients{}
 
-	// Build the common SDK options shared by all clients.
-	commonOpts := []platform.Option{
+	tflog.Debug(ctx, "Initializing platform client")
+	platformClient, err := platform.NewClient(
 		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
 		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
 		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
@@ -384,58 +376,102 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
 		platform.WithLogger(log.TflogAdapter{}),
 		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
-	}
-
-	// clientOpts returns commonOpts with the Terraform User-Agent option
-	// appended for the given module, unless CORTEXCLOUD_AGENT is set (in
-	// which case the SDK's env-var-based agent string takes precedence).
-	clientOpts := func(moduleName string) []platform.Option {
-		opts := make([]platform.Option, len(commonOpts))
-		copy(opts, commonOpts)
-		if os.Getenv(cortexCloudAgentEnvVar) == "" {
-			suffix := appendTerraformUserAgentSuffix(p.providerVersion, req.TerraformVersion)
-			opts = append(opts, platform.WithAgent(version.UserAgentWithCustom(moduleName, suffix)))
-		}
-		return opts
-	}
-
-	tflog.Debug(ctx, "Initializing platform client")
-	platformClient, err := platform.NewClient(clientOpts(platform.ModuleName)...)
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing cloudonboarding client")
-	cloudOnboardingClient, err := cloudonboarding.NewClient(clientOpts(cloudonboarding.ModuleName)...)
+	cloudOnboardingClient, err := cloudonboarding.NewClient(
+		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		platform.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		platform.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		platform.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing cloudsec client")
-	cloudSecClient, err := cloudsec.NewClient(clientOpts(cloudsec.ModuleName)...)
+	cloudSecClient, err := cloudsec.NewClient(
+		platform.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		platform.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		platform.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		platform.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		platform.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		platform.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		platform.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		platform.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		platform.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		platform.WithLogger(log.TflogAdapter{}),
+		platform.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing appsec client")
-	appsecClient, err := appsec.NewClient(clientOpts(appsec.ModuleName)...)
+	appsecClient, err := appsec.NewClient(
+		appsec.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		appsec.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		appsec.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		appsec.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		appsec.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		appsec.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		appsec.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		appsec.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		appsec.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		appsec.WithLogger(log.TflogAdapter{}),
+		appsec.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing compliance client")
-	complianceClient, err := compliance.NewClient(clientOpts(compliance.ModuleName)...)
+	complianceClient, err := compliance.NewClient(
+		compliance.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		compliance.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		compliance.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		compliance.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		compliance.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		compliance.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		compliance.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		compliance.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		compliance.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		compliance.WithLogger(log.TflogAdapter{}),
+		compliance.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing vulnerability client")
-	vulnerabilityClient, err := vulnerability.NewClient(clientOpts(vulnerability.ModuleName)...)
+	vulnerabilityClient, err := vulnerability.NewClient(
+		vulnerability.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		vulnerability.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		vulnerability.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		vulnerability.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		vulnerability.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		vulnerability.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		vulnerability.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		vulnerability.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		vulnerability.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		vulnerability.WithLogger(log.TflogAdapter{}),
+		vulnerability.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
@@ -444,7 +480,19 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	tflog.Debug(ctx, "Cortex Cloud API client setup complete")
 
 	tflog.Debug(ctx, "Initializing CWP client")
-	cwpClient, err := cwp.NewClient(clientOpts(cwp.ModuleName)...)
+	cwpClient, err := cwp.NewClient(
+		cwp.WithCortexAPIURL(providerConfig.APIURL.ValueString()),
+		cwp.WithCortexAPIKey(providerConfig.APIKey.ValueString()),
+		cwp.WithCortexAPIKeyID(int(providerConfig.APIKeyID.ValueInt32())),
+		cwp.WithCortexAPIKeyType(providerConfig.APIKeyType.ValueString()),
+		cwp.WithSkipSSLVerify(providerConfig.SkipSSLVerify.ValueBool()),
+		cwp.WithTimeout(int(providerConfig.RequestTimeout.ValueInt32())),
+		cwp.WithMaxRetries(int(providerConfig.RequestMaxRetries.ValueInt32())),
+		cwp.WithRetryMaxDelay(int(providerConfig.RequestMaxRetryDelay.ValueInt32())),
+		cwp.WithCrashStackDir(providerConfig.CrashStackDir.ValueString()),
+		cwp.WithLogger(log.TflogAdapter{}),
+		cwp.WithLogLevel(providerConfig.SDKLogLevel.ValueString()),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return

@@ -83,7 +83,7 @@ func TestUnitCloudSecRulesDataSource_ReadAll(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -180,7 +180,7 @@ func TestUnitCloudSecRulesDataSource_ReadWithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +263,7 @@ func TestUnitCloudSecRulesDataSource_ReadWithPagination(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestUnitCloudSecRulesDataSource_EmptyResult(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
 		},
 		Steps: []resource.TestStep{
 			{

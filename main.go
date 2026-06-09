@@ -15,7 +15,6 @@ import (
 
 var (
 	GitCommit           = "NOCOMMIT"
-	ProviderVersion     = "dev"
 	CortexServerVersion = "UNKNOWN"
 	CortexPAPIVersion   = "UNKNOWN"
 	GoVersion           = "UNKNOWN"
@@ -23,12 +22,12 @@ var (
 )
 
 func logBuildInfo() {
-	log.Printf("{ "+
-		"\"GitCommit\": \"%s\""+
-		", \"CortexServerVersion\": \"%s\""+
-		", \"CortexServerVersion\": \"%s\""+
-		", \"GoVersion\": \"%s\""+
-		", \"BuildDate\": \"%s\""+
+	log.Printf("{ " +
+		"\"GitCommit\": \"%s\"" +
+		", \"CortexServerVersion\": \"%s\"" +
+		", \"CortexServerVersion\": \"%s\"" +
+		", \"GoVersion\": \"%s\"" +
+		", \"BuildDate\": \"%s\"" +
 		"}",
 		GitCommit, CortexServerVersion, CortexPAPIVersion, GoVersion, BuildDate)
 }
@@ -47,7 +46,7 @@ func main() {
 		ProtocolVersion: 6,
 	}
 
-	err := providerserver.Serve(context.Background(), provider.New(GitCommit, ProviderVersion), opts)
+	err := providerserver.Serve(context.Background(), provider.New(GitCommit), opts)
 
 	if err != nil {
 		log.Fatal(err.Error())
