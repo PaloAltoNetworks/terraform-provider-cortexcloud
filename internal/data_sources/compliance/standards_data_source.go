@@ -7,14 +7,19 @@ import (
 	"context"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
+	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
 	complianceModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/compliance"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util/pagination"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// standardsListPageSize is the per-call page window the get_standards endpoint will honor
+const standardsListPageSize = 100
 
 var (
 	_ datasource.DataSource              = &standardsDataSource{}
@@ -42,11 +47,15 @@ func (d *standardsDataSource) Schema(ctx context.Context, req datasource.SchemaR
 				Computed:    true,
 			},
 			"search_from": schema.Int64Attribute{
-				Description: "The starting index for pagination.",
+				Description: "The starting index for an explicit pagination window.\n\nWhen both `search_from` and `search_to` are unset, the data source automatically fetches all matching standards up to `max_results`.\n\nWhen either is set, only that single API page is returned and `max_results` is not enforced.",
 				Optional:    true,
 			},
 			"search_to": schema.Int64Attribute{
-				Description: "The ending index for pagination.",
+				Description: "The inclusive ending index for an explicit pagination window.\n\nSee `search_from` for the interaction with auto-pagination.",
+				Optional:    true,
+			},
+			"max_results": schema.Int64Attribute{
+				Description: "Maximum number of standards to accumulate when using auto-pagination (when `search_from` and `search_to` are both unconfigured).\n\nIf set to 0, the limit is disabled and all matching standards will be fetched.\n\nDefaults to 1000.",
 				Optional:    true,
 			},
 			"standards": schema.ListNestedAttribute{
@@ -170,13 +179,45 @@ func (d *standardsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	result, err := d.client.ListStandards(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Listing Compliance Standards", err.Error())
-		return
+	var standards []complianceTypes.Standard
+
+	// Honour an explicit search_from/search_to window with a single API call,
+	// matching the historical (pre-auto-pagination) behaviour. Auto-pagination
+	// activates only when both pagination bounds are unset.
+	//
+	if listReq.SearchFrom != nil && listReq.SearchTo != nil {
+		result, err := d.client.ListStandards(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing Compliance Standards", err.Error())
+			return
+		}
+		standards = result.Standards
+	} else {
+		maxResults := pagination.ResolveMaxResults(config.MaxResults) // unset → 1000; 0 → unlimited
+		all, err := pagination.OffsetAccumulateAll(
+			ctx,
+			standardsListPageSize,
+			maxResults,
+			"standards",
+			func(ctx context.Context, from, to int) ([]complianceTypes.Standard, int, error) {
+				pageReq := listReq
+				pageReq.SearchFrom = &from
+				pageReq.SearchTo = &to
+				page, err := d.client.ListStandards(ctx, pageReq)
+				if err != nil {
+					return nil, 0, err
+				}
+				return page.Standards, page.TotalCount, nil
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing Compliance Standards", err.Error())
+			return
+		}
+		standards = all
 	}
 
-	config.RefreshFromRemote(ctx, &resp.Diagnostics, result.Standards)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, standards)
 	if resp.Diagnostics.HasError() {
 		return
 	}

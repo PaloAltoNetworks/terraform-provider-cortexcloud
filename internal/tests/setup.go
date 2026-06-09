@@ -34,7 +34,7 @@ var (
 	testAPIKeyID                    int
 	testAPIKeyType                  string
 	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+		"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 	}
 )
 

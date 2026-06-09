@@ -7,14 +7,20 @@ import (
 	"context"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
+	appsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/appsec"
 	appsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/appsec"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util/pagination"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// rulesListPageSize is the per-call page window sent to the
+// list endpoint when auto-paginating.
+const rulesListPageSize = 1000
 
 var (
 	_ datasource.DataSource              = &rulesDataSource{}
@@ -46,11 +52,15 @@ func (d *rulesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 				Optional:    true,
 			},
 			"limit": schema.Int64Attribute{
-				Description: "Maximum number of rules returned by the API request.",
+				Description: "Page size for an explicit single-page request.\n\nWhen both `limit` and `offset` are unset, the data source automatically fetches all matching rules up to `max_results`. When either attribute is set, only that single API page is returned and `max_results` is not enforced. When not configured, falls through to the platform default value of 100.",
 				Optional:    true,
 			},
 			"offset": schema.Int64Attribute{
-				Description: "Number of rules at the beginning of the API response to skip.",
+				Description: "Starting index for an explicit single-page request. \n\nSee `limit` attribute's description for the interaction with auto-pagination. When not configured, falls through to the platform default value of 0.",
+				Optional:    true,
+			},
+			"max_results": schema.Int64Attribute{
+				Description: "Maximum number of rules to accumulate when using auto-pagination (when `limit` and `offset` are both unconfigured).\n\nIf set to 0, the limit is disabled and all matching rules will be fetched. When not configured, falls through to the platform default value of 1000.",
 				Optional:    true,
 			},
 			"rules": schema.ListNestedAttribute{
@@ -177,13 +187,52 @@ func (d *rulesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	result, err := d.client.List(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Listing AppSec Rules", err.Error())
-		return
+	var rules []appsecTypes.Rule
+
+	// Use auto-pagination when limit or offset are configured, otherwise
+	// use the default behavior (single-page fetch with an offset of 0 and
+	// limit of 100).
+	limitSet := !config.Limit.IsNull() && !config.Limit.IsUnknown()
+	offsetSet := !config.Offset.IsNull() && !config.Offset.IsUnknown()
+	if limitSet || offsetSet {
+		// Single-page fetch
+		result, err := d.client.List(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing AppSec Rules", err.Error())
+			return
+		}
+		rules = result.Rules
+	} else {
+		// Auto-pagination
+		maxResults := pagination.ResolveMaxResults(config.MaxResults)
+		nextOffset := 0
+		all, err := pagination.AccumulateAll(
+			ctx,
+			maxResults,
+			"rules",
+			func(ctx context.Context) ([]appsecTypes.Rule, int, bool, error) {
+				pageReq := listReq
+				pageReq.Limit = rulesListPageSize
+				pageReq.Offset = nextOffset
+				page, err := d.client.List(ctx, pageReq)
+				if err != nil {
+					return nil, 0, false, err
+				}
+				if page.NextOffset == nil {
+					return page.Rules, 0, false, nil
+				}
+				nextOffset = *page.NextOffset
+				return page.Rules, 0, true, nil
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing AppSec Rules", err.Error())
+			return
+		}
+		rules = all
 	}
 
-	config.RefreshFromRemote(ctx, &resp.Diagnostics, result.Rules)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, rules)
 	if resp.Diagnostics.HasError() {
 		return
 	}

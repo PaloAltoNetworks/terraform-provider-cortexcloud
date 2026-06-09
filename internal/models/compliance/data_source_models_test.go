@@ -546,6 +546,81 @@ func TestControlsToListRequest_IsCustomEqAutoConvertsToIn(t *testing.T) {
 	}
 }
 
+// --- Pagination (*int) tests for all 3 data source models ---
+//
+// These tests guard the contract that root-level *int SearchFrom/SearchTo
+// fields are nil when the user omitted them (so the SDK omits them via
+// json:",omitempty") and non-nil when explicitly set, including the value 0.
+// The previous implementation used plain int assignment, which always sent
+// {"search_from": 0, "search_to": 0} when the user omitted pagination —
+// effectively requesting an empty page.
+
+// checkPaginationConversion runs three table-driven cases against a single
+// model's ToListRequest: omitted (nil), explicitly set, and explicit zero
+// (regression guard for the null-vs-zero collapse bug).
+func checkPaginationConversion(
+	t *testing.T,
+	modelName string,
+	convert func(searchFrom, searchTo types.Int64) (gotFrom, gotTo *int),
+) {
+	t.Helper()
+
+	t.Run(modelName+"/omitted", func(t *testing.T) {
+		gotFrom, gotTo := convert(types.Int64Null(), types.Int64Null())
+		if gotFrom != nil {
+			t.Errorf("expected SearchFrom nil when omitted, got %v", *gotFrom)
+		}
+		if gotTo != nil {
+			t.Errorf("expected SearchTo nil when omitted, got %v", *gotTo)
+		}
+	})
+
+	t.Run(modelName+"/set", func(t *testing.T) {
+		gotFrom, gotTo := convert(types.Int64Value(10), types.Int64Value(20))
+		if gotFrom == nil || *gotFrom != 10 {
+			t.Errorf("expected SearchFrom = 10, got %v", gotFrom)
+		}
+		if gotTo == nil || *gotTo != 20 {
+			t.Errorf("expected SearchTo = 20, got %v", gotTo)
+		}
+	})
+
+	// Regression guard: previously int(m.SearchFrom.ValueInt64()) collapsed
+	// null and explicit-zero into the same wire value. With *int + null guard,
+	// an explicit 0 must produce a non-nil pointer to 0.
+	t.Run(modelName+"/zero_preserved", func(t *testing.T) {
+		gotFrom, _ := convert(types.Int64Value(0), types.Int64Value(50))
+		if gotFrom == nil {
+			t.Fatal("expected SearchFrom = 0 (non-nil), got nil")
+		}
+		if *gotFrom != 0 {
+			t.Errorf("expected SearchFrom = 0, got %d", *gotFrom)
+		}
+	})
+}
+
+func TestPaginationConversion(t *testing.T) {
+	ctx := context.Background()
+
+	checkPaginationConversion(t, "controls", func(f, to types.Int64) (*int, *int) {
+		m := ControlsDataSourceModel{SearchFrom: f, SearchTo: to}
+		req := m.ToListRequest(ctx, &diag.Diagnostics{})
+		return req.SearchFrom, req.SearchTo
+	})
+
+	checkPaginationConversion(t, "standards", func(f, to types.Int64) (*int, *int) {
+		m := StandardsDataSourceModel{SearchFrom: f, SearchTo: to}
+		req := m.ToListRequest(ctx, &diag.Diagnostics{})
+		return req.SearchFrom, req.SearchTo
+	})
+
+	checkPaginationConversion(t, "assessment_profiles", func(f, to types.Int64) (*int, *int) {
+		m := AssessmentProfilesDataSourceModel{SearchFrom: f, SearchTo: to}
+		req := m.ToListRequest(ctx, &diag.Diagnostics{})
+		return req.SearchFrom, req.SearchTo
+	})
+}
+
 func TestAssessmentProfilesToListRequest_IsCustomEqAutoConvertsToIn(t *testing.T) {
 	ctx := context.Background()
 	diags := diag.Diagnostics{}

@@ -14,11 +14,12 @@ import (
 
 // RulesDataSourceModel is the model for the rules list data source.
 type RulesDataSourceModel struct {
-	ID       types.String `tfsdk:"id"`
-	IsCustom types.Bool   `tfsdk:"is_custom"`
-	Limit    types.Int64  `tfsdk:"limit"`
-	Offset   types.Int64  `tfsdk:"offset"`
-	Rules    []RuleModel  `tfsdk:"rules"`
+	ID         types.String `tfsdk:"id"`
+	IsCustom   types.Bool   `tfsdk:"is_custom"`
+	Limit      types.Int64  `tfsdk:"limit"`
+	Offset     types.Int64  `tfsdk:"offset"`
+	MaxResults types.Int64  `tfsdk:"max_results"`
+	Rules      []RuleModel  `tfsdk:"rules"`
 }
 
 // PoliciesDataSourceModel is the model for the policies list data source.
@@ -29,7 +30,7 @@ type PoliciesDataSourceModel struct {
 	Policies []PolicyModel `tfsdk:"policies"`
 }
 
-// ToListRulesRequest converts the data source model to an SDK list request.
+// ToListRequest converts the data source model to an SDK list request.
 func (m *RulesDataSourceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) appsecTypes.ListRequest {
 	tflog.Debug(ctx, "Converting rules data source model to list request")
 
