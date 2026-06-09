@@ -17,11 +17,13 @@ import (
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -60,8 +62,11 @@ func (r *AssetGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Required:    true,
 			},
 			"type": schema.StringAttribute{
-				Description: "The type of the asset group.",
+				Description: "The type of the asset group. Allowed value: Dynamic.",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("Dynamic"),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "The description of the asset group.",

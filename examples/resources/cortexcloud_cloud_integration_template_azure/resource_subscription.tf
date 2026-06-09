@@ -13,6 +13,11 @@
 #     resources created by Cortex Cloud in the target Azure environment
 #       - An additional "managed_by" tag with the value "paloaltonetworks" is
 #         applied by default for all onboarded CSP environments
+#
+# IMPORTANT: After running `terraform apply`, the integration will be in
+# PENDING status. You must deploy the generated ARM template or Terraform
+# module in your Azure environment to complete the onboarding. See the
+# management group example for detailed instructions.
 resource "cortexcloud_cloud_integration_template_azure" "subscription" {
   scope         = "ACCOUNT"
   instance_name = "Azure Subscription"
@@ -51,4 +56,14 @@ resource "cortexcloud_cloud_integration_template_azure" "subscription" {
       value = "production"
     },
   ]
+}
+
+output "subscription_arm_template_url" {
+  description = "Download and deploy this ARM template in your Azure environment to complete onboarding."
+  value       = cortexcloud_cloud_integration_template_azure.subscription.arm_template_url
+}
+
+output "subscription_terraform_module_url" {
+  description = "Alternatively, download and apply this Terraform module in your Azure environment."
+  value       = cortexcloud_cloud_integration_template_azure.subscription.terraform_module_url
 }

@@ -78,7 +78,7 @@ func (r *standardResource) Schema(ctx context.Context, req resource.SchemaReques
 				ElementType: types.StringType,
 			},
 			"labels": schema.SetAttribute{
-				Description: "The set of labels for this standard.",
+				Description: "The set of labels for this standard. Allowed values: aws, azure, gcp, oci, alibaba_cloud, gke, k8s, linux, on_prem, win, aks, eks, llm, code, docker, openshift, snowflake, databricks, microsoft_365, jamf_pro, ping_identity, datadog, salesforce, okta.",
 				Optional:    true,
 				ElementType: types.StringType,
 			},

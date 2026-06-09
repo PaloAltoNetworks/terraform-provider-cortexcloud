@@ -17,6 +17,11 @@
 #     resources created by Cortex Cloud in the target Azure environment
 #       - An additional "managed_by" tag with the value "paloaltonetworks" is
 #         applied by default for all onboarded CSP environments
+#
+# IMPORTANT: After running `terraform apply`, the integration will be in
+# PENDING status. To complete the onboarding, you must deploy the generated
+# ARM template or Terraform module in your Azure environment. See the output
+# values below for the download URLs.
 resource "cortexcloud_cloud_integration_template_azure" "management-group" {
   scope         = "ACCOUNT_GROUP"
   instance_name = "Azure Management Group"
@@ -65,4 +70,49 @@ resource "cortexcloud_cloud_integration_template_azure" "management-group" {
       value = "production"
     },
   ]
+}
+
+# =============================================================================
+# Completing the onboarding
+# =============================================================================
+# After `terraform apply` succeeds, the template will be in PENDING status.
+# You must deploy the generated template in your Azure environment to grant
+# Cortex Cloud the necessary permissions and complete the onboarding.
+#
+# Steps:
+#   1. Copy the `arm_template_url` output value below.
+#   2. Open the URL in your browser to download the ARM template archive.
+#   3. Extract the downloaded archive.
+#   4. Ensure Azure CLI is installed and authenticated (run `az login`).
+#   5. Run `bash onboard.sh` from the extracted directory.
+#   6. Provide the prompted values:
+#        - The management group or tenant ID to onboard
+#        - A subscription ID to host the onboarding resource group
+#        - The Azure location for creating onboarding resources
+#   7. Wait for the script to complete. It will automatically notify Cortex
+#      Cloud, and the integration status will transition from PENDING to
+#      CONNECTED.
+#
+# Alternatively, you can use the `terraform_module_url` output to download
+# a Terraform module instead of the ARM template.
+# =============================================================================
+
+output "arm_template_url" {
+  description = "Download and deploy this ARM template in your Azure environment to complete onboarding."
+  value       = cortexcloud_cloud_integration_template_azure.management-group.arm_template_url
+}
+
+output "terraform_module_url" {
+  description = "Alternatively, download and apply this Terraform module in your Azure environment."
+  value       = cortexcloud_cloud_integration_template_azure.management-group.terraform_module_url
+}
+
+output "tracking_guid" {
+  description = "The unique ID of this integration template."
+  value       = cortexcloud_cloud_integration_template_azure.management-group.tracking_guid
+}
+
+output "status" {
+  description = "Current status of the integration (PENDING until the template is deployed in Azure)."
+  value       = cortexcloud_cloud_integration_template_azure.management-group.status
 }

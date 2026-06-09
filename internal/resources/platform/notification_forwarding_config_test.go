@@ -746,7 +746,7 @@ func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *tes
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{

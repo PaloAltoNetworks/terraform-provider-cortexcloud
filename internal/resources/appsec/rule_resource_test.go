@@ -89,7 +89,7 @@ func TestUnitAppSecRuleResource_UppercaseNameAndDescriptionPreserved(t *testing.
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func TestUnitAppSecRuleResource_AlreadyLowercaseNoDrift(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -330,7 +330,7 @@ func TestUnitAppSecRuleResource_MixedCaseUpdatePreservesUserCasing(t *testing.T)
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -478,7 +478,7 @@ func TestUnitAppSecRuleResource_AutoAddedFrameworkFiltered(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -612,7 +612,7 @@ func TestUnitAppSecRuleResource_MultipleFrameworksAllConfigured(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{

@@ -4,6 +4,7 @@
 # First, create the CloudSec rules
 resource "cortexcloud_cloudsec_rule" "s3_public_access" {
   name        = "S3 Bucket Public Access"
+  description = "Detects S3 buckets with public access via ACL grants"
   class       = "config"
   asset_types = ["aws-s3-bucket"]
   severity    = "high"
@@ -15,6 +16,7 @@ resource "cortexcloud_cloudsec_rule" "s3_public_access" {
 
 resource "cortexcloud_cloudsec_rule" "s3_encryption" {
   name        = "S3 Bucket Encryption Disabled"
+  description = "Detects S3 buckets without server-side encryption configured"
   class       = "config"
   asset_types = ["aws-s3-bucket"]
   severity    = "medium"
@@ -27,19 +29,19 @@ resource "cortexcloud_cloudsec_rule" "s3_encryption" {
 # Create an asset group for production S3 buckets
 resource "cortexcloud_asset_group" "production_s3" {
   name        = "production-s3-buckets"
-  type        = "ASSET"
+  type        = "Dynamic"
   description = "Production S3 bucket assets"
 
   membership_predicate = {
     and = [
       {
-        search_field = "asset.type"
-        search_type  = "EQUALS"
+        search_field = "xdm.asset.type"
+        search_type  = "EQ"
         search_value = "aws-s3-bucket"
       },
       {
-        search_field = "asset.tags.environment"
-        search_type  = "EQUALS"
+        search_field = "xdm.asset.tags.environment"
+        search_type  = "EQ"
         search_value = "production"
       }
     ]
