@@ -32,7 +32,7 @@ var (
 	testAPIKeyID                    int
 	testAPIKeyType                  string
 	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		providerName: providerserver.NewProtocol6WithError(provider.New("test", "test")()),
+		providerName: providerserver.NewProtocol6WithError(provider.New("test")()),
 	}
 )
 

@@ -7,19 +7,13 @@ import (
 	"context"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
 	complianceModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/compliance"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
-	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util/pagination"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
-
-// controlsListPageSize is the per-call page window the get_controls endpoint
-// will honor
-const controlsListPageSize = 100
 
 var (
 	_ datasource.DataSource              = &controlsDataSource{}
@@ -47,15 +41,11 @@ func (d *controlsDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed:    true,
 			},
 			"search_from": schema.Int64Attribute{
-				Description: "The starting index for an explicit pagination window.\n\nWhen both `search_from` and `search_to` are unset, the data source automatically fetches all matching controls up to `max_results`.\n\nWhen either is set, only that single API page is returned and `max_results` is not enforced.",
+				Description: "The starting index for pagination.",
 				Optional:    true,
 			},
 			"search_to": schema.Int64Attribute{
-				Description: "The inclusive ending index for an explicit pagination window.\n\nSee `search_from` for the interaction with auto-pagination.",
-				Optional:    true,
-			},
-			"max_results": schema.Int64Attribute{
-				Description: "Maximum number of controls to accumulate when using auto-pagination (when `search_from` and `search_to` are both unconfigured).\n\nIf set to 0, the limit is disabled and all matching controls will be fetched.\n\nDefaults to 1000.",
+				Description: "The ending index for pagination.",
 				Optional:    true,
 			},
 			"controls": schema.ListNestedAttribute{
@@ -182,41 +172,13 @@ func (d *controlsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var controls []complianceTypes.Control
-
-	if listReq.SearchFrom != nil && listReq.SearchTo != nil {
-		result, err := d.client.ListControls(ctx, listReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error Listing Compliance Controls", err.Error())
-			return
-		}
-		controls = result.Controls
-	} else {
-		maxResults := pagination.ResolveMaxResults(config.MaxResults)
-		all, err := pagination.OffsetAccumulateAll(
-			ctx,
-			controlsListPageSize,
-			maxResults,
-			"controls",
-			func(ctx context.Context, from, to int) ([]complianceTypes.Control, int, error) {
-				pageReq := listReq
-				pageReq.SearchFrom = &from
-				pageReq.SearchTo = &to
-				page, err := d.client.ListControls(ctx, pageReq)
-				if err != nil {
-					return nil, 0, err
-				}
-				return page.Controls, page.TotalCount, nil
-			},
-		)
-		if err != nil {
-			resp.Diagnostics.AddError("Error Listing Compliance Controls", err.Error())
-			return
-		}
-		controls = all
+	result, err := d.client.ListControls(ctx, listReq)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Listing Compliance Controls", err.Error())
+		return
 	}
 
-	config.RefreshFromRemote(ctx, &resp.Diagnostics, controls)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, result.Controls)
 	if resp.Diagnostics.HasError() {
 		return
 	}

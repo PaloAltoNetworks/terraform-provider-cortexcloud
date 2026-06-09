@@ -8,19 +8,16 @@ import (
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
-	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -66,26 +63,19 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Computed:    true,
 			},
 			"phone_number": schema.StringAttribute{
-				Description: "The phone number of the user. Must not be empty when provided.",
+				Description: "The phone number of the user.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"status": schema.StringAttribute{
-				Description: "The status of the user. Allowed values: active, inactive.",
+				Description: "The status of the user.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					planmodifiers.ToLowercase(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOfCaseInsensitive("active", "inactive"),
 				},
 			},
 			"role_name": schema.StringAttribute{
