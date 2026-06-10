@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.5"
+      version = "1.0.6"
     }
   }
 }
@@ -107,6 +107,18 @@ provider "cortexcloud" {
 ```
 
 ## Release Notes
+
+### v1.0.6
+
+#### Enhancements
+* Enriched User-Agent header with Terraform provider and CLI version information
+* Added auto-pagination for compliance and AppSec data sources
+* Added input validation for various resource attributes
+* Updated Azure cloud integration template documentation with onboarding instructions
+* Improved resource examples across multiple domains
+
+#### Bug Fixes
+* Fixed compliance data sources not honoring practitioner-configured pagination controls
 
 ### v1.0.5
 

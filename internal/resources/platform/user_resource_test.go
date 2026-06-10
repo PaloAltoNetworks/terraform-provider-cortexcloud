@@ -67,7 +67,7 @@ func TestUnitUserResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -81,13 +81,13 @@ func TestUnitUserResource(t *testing.T) {
 					resource "cortexcloud_user" "u" {
 						user_email      = "test@example.com"
 						phone_number    = "123-456-7890"
-						status          = "ACTIVE"
+						status          = "active"
 						hidden          = false
 					}
 				`, server.URL),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("cortexcloud_user.u", "user_email", "test@example.com"),
-					resource.TestCheckResourceAttr("cortexcloud_user.u", "status", "ACTIVE"),
+					resource.TestCheckResourceAttr("cortexcloud_user.u", "status", "active"),
 					resource.TestCheckResourceAttr("cortexcloud_user.u", "hidden", "false"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestUnitUserResource(t *testing.T) {
 					resource "cortexcloud_user" "u" {
 						user_email      = "test@example.com"
 						phone_number    = "123-456-7890"
-						status          = "ACTIVE"
+						status          = "active"
 						hidden          = false
 					}
 				`, server.URL),

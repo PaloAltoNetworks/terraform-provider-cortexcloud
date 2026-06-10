@@ -72,15 +72,15 @@ func TestUnitAuthenticationSettingsResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
 					provider "cortexcloud" {
-						cortex_cloud_api_url = "%s"
-						cortex_cloud_api_key = "test"
-						cortex_cloud_api_key_id = 123
+						api_url    = "%s"
+						api_key    = "test"
+						api_key_id = 123
 					}
 					resource "cortexcloud_authentication_settings" "test" {
 						name   = "test-auth-settings"

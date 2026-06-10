@@ -7,14 +7,20 @@ import (
 	"context"
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
+	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
 	complianceModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/compliance"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util/pagination"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// assessmentProfilesListPageSize is the per-call page window the
+// get_assessment_profiles endpoint will honor
+const assessmentProfilesListPageSize = 100
 
 var (
 	_ datasource.DataSource              = &assessmentProfilesDataSource{}
@@ -42,11 +48,15 @@ func (d *assessmentProfilesDataSource) Schema(ctx context.Context, req datasourc
 				Computed:    true,
 			},
 			"search_from": schema.Int64Attribute{
-				Description: "The starting index for pagination.",
+				Description: "The starting index for an explicit pagination window.\n\nWhen both `search_from` and `search_to` are unset, the data source automatically fetches all matching assessment profiles up to `max_results`.\n\nWhen either is set, only that single API page is returned and `max_results` is not enforced.",
 				Optional:    true,
 			},
 			"search_to": schema.Int64Attribute{
-				Description: "The ending index for pagination.",
+				Description: "The inclusive ending index for an explicit pagination window.\n\nSee `search_from` for the interaction with auto-pagination.",
+				Optional:    true,
+			},
+			"max_results": schema.Int64Attribute{
+				Description: "Maximum number of assessment profiles to accumulate when using auto-pagination (when `search_from` and `search_to` are both unconfigured).\n\nIf set to 0, the limit is disabled and all matching assessment profiles will be fetched.\n\nDefaults to 1000.",
 				Optional:    true,
 			},
 			"assessment_profiles": schema.ListNestedAttribute{
@@ -169,13 +179,41 @@ func (d *assessmentProfilesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	result, err := d.client.ListAssessmentProfiles(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Listing Compliance Assessment Profiles", err.Error())
-		return
+	var profiles []complianceTypes.AssessmentProfile
+
+	if listReq.SearchFrom != nil && listReq.SearchTo != nil {
+		result, err := d.client.ListAssessmentProfiles(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing Compliance Assessment Profiles", err.Error())
+			return
+		}
+		profiles = result.AssessmentProfiles
+	} else {
+		maxResults := pagination.ResolveMaxResults(config.MaxResults)
+		all, err := pagination.OffsetAccumulateAll(
+			ctx,
+			assessmentProfilesListPageSize,
+			maxResults,
+			"assessment profiles",
+			func(ctx context.Context, from, to int) ([]complianceTypes.AssessmentProfile, int, error) {
+				pageReq := listReq
+				pageReq.SearchFrom = &from
+				pageReq.SearchTo = &to
+				page, err := d.client.ListAssessmentProfiles(ctx, pageReq)
+				if err != nil {
+					return nil, 0, err
+				}
+				return page.AssessmentProfiles, page.TotalCount, nil
+			},
+		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error Listing Compliance Assessment Profiles", err.Error())
+			return
+		}
+		profiles = all
 	}
 
-	config.RefreshFromRemote(ctx, &resp.Diagnostics, result.AssessmentProfiles)
+	config.RefreshFromRemote(ctx, &resp.Diagnostics, profiles)
 	if resp.Diagnostics.HasError() {
 		return
 	}

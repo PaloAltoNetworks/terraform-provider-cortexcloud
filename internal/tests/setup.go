@@ -34,7 +34,7 @@ var (
 	testAPIKeyID                    int
 	testAPIKeyType                  string
 	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+		"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 	}
 )
 
@@ -42,6 +42,20 @@ func GetProviderConfig(t *testing.T, serverURL *string, envFilePath string, enab
 	err := SetEnvironmentVariables(t, serverURL, envFilePath)
 	if err != nil {
 		t.Logf("Failed to set environment variables from file \"%s\": %v", envFilePath, err)
+		// When the env file is missing and a mock server URL is provided,
+		// use sensible defaults so the generated HCL is valid.
+		if serverURL != nil {
+			testAPIURL = *serverURL
+			if testAPIKey == "" {
+				testAPIKey = "test"
+			}
+			if testAPIKeyIDStr == "" {
+				testAPIKeyIDStr = "1"
+			}
+			if testAPIKeyType == "" {
+				testAPIKeyType = "standard"
+			}
+		}
 	}
 
 	var testSDKLogLevel string

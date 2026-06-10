@@ -179,6 +179,7 @@ var (
 )
 
 func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *testing.T) {
+	updated := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		for strings.Contains(path, "//") {
@@ -274,6 +275,7 @@ func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *tes
 			)
 		// Update
 		case strings.HasPrefix(path, "/"+sdk.NotificationForwardingConfigurationsEndpoint+"/") && r.Method == http.MethodPut:
+			updated = true
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintf(w, `
 			{
@@ -309,12 +311,50 @@ func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *tes
 				testNotificationConfig1CreatedBy,
 				testNotificationConfig1CreatedAt,
 				testNotificationConfig1UpdatedModifiedAt,
-				testNotificationConfig1Enabled,
+				testNotificationConfig1UpdatedEnabled,
 			)
 		// Get
 		case strings.HasPrefix(path, "/"+sdk.NotificationForwardingConfigurationsEndpoint+"/") && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, `
+			if updated {
+				fmt.Fprintf(w, `
+			{
+			  "data": {
+			    "rule_uuid": "%s",
+			    "name": "%s",
+			    "description": "%s",
+			    "filter": {
+			      "filter": {}
+			    },
+			    "applications": [],
+			    "forward_source": {
+			      "syslog": {
+			        "id": %d
+			      }
+			    },
+			    "forward_type": "%s",
+			    "time_zone": "UTC",
+			    "slack_format": null,
+			    "syslog_format": null,
+			    "mail_format": null,
+			    "created_by": "%s",
+			    "created_at": %d,
+			    "modified_at": %d,
+			    "enabled": %s
+			  }
+			}`,
+					testNotificationConfig1ID,
+					testNotificationConfig1UpdatedName,
+					testNotificationConfig1UpdatedDescription,
+					testNotificationConfig1UpdatedSyslogServerID,
+					enums.NotificationForwardingConfigurationTypeAgentAuditLogs.String(),
+					testNotificationConfig1CreatedBy,
+					testNotificationConfig1CreatedAt,
+					testNotificationConfig1UpdatedModifiedAt,
+					testNotificationConfig1UpdatedEnabled,
+				)
+			} else {
+				fmt.Fprintf(w, `
 			{
 			  "data": {
 			    "rule_uuid": "%s",
@@ -372,28 +412,29 @@ func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *tes
 			    "enabled": %s
 			  }
 			}`,
-				testNotificationConfig1ID,
-				testNotificationConfig1Name,
-				testNotificationConfig1Description,
-				testNotificationConfig1Filter1Field,
-				testNotificationConfig1Filter1Type,
-				testNotificationConfig1Filter1Value,
-				testNotificationConfig1Filter2Field,
-				testNotificationConfig1Filter2Type,
-				testNotificationConfig1Filter2Value,
-				testNotificationConfig1Filter3Field,
-				testNotificationConfig1Filter3Type,
-				testNotificationConfig1Filter3Value,
-				testNotificationConfig1EmailAggregation,
-				strings.Join(testNotificationConfig1Emails, "\", \""),
-				testNotificationConfig1EmailSubject,
-				testNotificationConfig1SyslogServerID,
-				enums.NotificationForwardingConfigurationTypeAgentAuditLogs.String(),
-				testNotificationConfig1CreatedBy,
-				testNotificationConfig1CreatedAt,
-				testNotificationConfig1ModifiedAt,
-				testNotificationConfig1Enabled,
-			)
+					testNotificationConfig1ID,
+					testNotificationConfig1Name,
+					testNotificationConfig1Description,
+					testNotificationConfig1Filter1Field,
+					testNotificationConfig1Filter1Type,
+					testNotificationConfig1Filter1Value,
+					testNotificationConfig1Filter2Field,
+					testNotificationConfig1Filter2Type,
+					testNotificationConfig1Filter2Value,
+					testNotificationConfig1Filter3Field,
+					testNotificationConfig1Filter3Type,
+					testNotificationConfig1Filter3Value,
+					testNotificationConfig1EmailAggregation,
+					strings.Join(testNotificationConfig1Emails, "\", \""),
+					testNotificationConfig1EmailSubject,
+					testNotificationConfig1SyslogServerID,
+					enums.NotificationForwardingConfigurationTypeAgentAuditLogs.String(),
+					testNotificationConfig1CreatedBy,
+					testNotificationConfig1CreatedAt,
+					testNotificationConfig1ModifiedAt,
+					testNotificationConfig1Enabled,
+				)
+			}
 		//List
 		case path == "/"+sdk.ListNotificationForwardingConfigurationsEndpoint && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
@@ -746,7 +787,7 @@ func TestUnitNotificationManagementConfigAgentAuditLogsResource_Lifecycle(t *tes
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{

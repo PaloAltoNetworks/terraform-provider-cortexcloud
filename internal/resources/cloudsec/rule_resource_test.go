@@ -91,7 +91,7 @@ func TestUnitCloudSecRuleResource_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +230,7 @@ func TestUnitCloudSecRuleResource_CreateWithCompliance(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -404,7 +404,7 @@ func TestUnitCloudSecRuleResource_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -544,7 +544,7 @@ func TestUnitCloudSecRuleResource_ReadNotFound(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -655,7 +655,7 @@ func TestUnitCloudSecRuleResource_ImportState(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -761,7 +761,7 @@ func TestUnitCloudSecRuleResource_CreateWithoutMetadata(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -897,7 +897,7 @@ func TestUnitCloudSecRuleResource_MetadataNullOnRefresh(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -1062,7 +1062,7 @@ func TestUnitCloudSecRuleResource_MetadataWithNullIssue(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -1175,7 +1175,7 @@ func TestUnitCloudSecRuleResource_CustomControlWithoutStandard(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -1187,6 +1187,7 @@ func TestUnitCloudSecRuleResource_CustomControlWithoutStandard(t *testing.T) {
 					}
 					resource "cortexcloud_cloudsec_rule" "test" {
 						name        = "Rule With Orphan Custom Control"
+						description = "Test rule for orphan custom control validation"
 						class       = "config"
 						asset_types = ["aws-s3-bucket"]
 						severity    = "high"
@@ -1212,7 +1213,7 @@ func TestUnitCloudSecRuleResource_CustomControlWithStandard(t *testing.T) {
 	ruleResponse := `{
 		"id": "test-rule-custom-control",
 		"name": "Rule With Custom Control",
-		"description": "",
+		"description": "Test rule with custom compliance control",
 		"rule_class": "config",
 		"type": "DETECTION",
 		"asset_types": ["aws-s3-bucket"],
@@ -1303,7 +1304,7 @@ func TestUnitCloudSecRuleResource_CustomControlWithStandard(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -1315,6 +1316,7 @@ func TestUnitCloudSecRuleResource_CustomControlWithStandard(t *testing.T) {
 					}
 					resource "cortexcloud_cloudsec_rule" "test" {
 						name        = "Rule With Custom Control"
+						description = "Test rule with custom compliance control"
 						class       = "config"
 						asset_types = ["aws-s3-bucket"]
 						severity    = "high"
@@ -1347,7 +1349,7 @@ func TestUnitCloudSecRuleResource_BuiltInControlSkipsValidation(t *testing.T) {
 	ruleResponse := `{
 		"id": "test-rule-builtin-control",
 		"name": "Rule With Built-in Control",
-		"description": "",
+		"description": "Test rule with built-in compliance control",
 		"rule_class": "config",
 		"type": "DETECTION",
 		"asset_types": ["aws-s3-bucket"],
@@ -1419,7 +1421,7 @@ func TestUnitCloudSecRuleResource_BuiltInControlSkipsValidation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -1431,6 +1433,7 @@ func TestUnitCloudSecRuleResource_BuiltInControlSkipsValidation(t *testing.T) {
 					}
 					resource "cortexcloud_cloudsec_rule" "test" {
 						name        = "Rule With Built-in Control"
+						description = "Test rule with built-in compliance control"
 						class       = "config"
 						asset_types = ["aws-s3-bucket"]
 						severity    = "high"

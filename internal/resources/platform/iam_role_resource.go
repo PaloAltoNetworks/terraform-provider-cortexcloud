@@ -12,6 +12,8 @@ import (
 
 	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -189,6 +191,15 @@ func (r *iamRoleResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.UpdatedTs = types.Int64Null()
 	plan.IsCustom = types.BoolNull()
 
+	// Resolve any unknown permissions values in dataset_permissions before
+	// writing state. The permissions field is Optional+Computed, so Terraform
+	// sets it to unknown during plan when the user omits it. We must resolve
+	// it to null before setting state, otherwise Terraform rejects the apply.
+	resolveDatasetPermissionUnknowns(ctx, &resp.Diagnostics, &plan)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -312,6 +323,13 @@ func (r *iamRoleResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Resolve any unknown permissions values in dataset_permissions before
+	// writing state (same issue as Create — permissions is Optional+Computed).
+	resolveDatasetPermissionUnknowns(ctx, &resp.Diagnostics, &plan)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -329,5 +347,63 @@ func (r *iamRoleResource) Delete(ctx context.Context, req resource.DeleteRequest
 	if err != nil {
 		resp.Diagnostics.AddError("Error Deleting IAM Role", err.Error())
 		return
+	}
+}
+
+// resolveDatasetPermissionUnknowns iterates through the dataset_permissions set
+// and replaces any unknown permissions values with null. This is necessary
+// because the permissions field is Optional+Computed — when a user omits it,
+// Terraform plans it as unknown, but all values must be known after apply.
+// The API does not return dataset permissions in its response, so we resolve
+// unknowns to null (meaning "not specified").
+func resolveDatasetPermissionUnknowns(ctx context.Context, diags *diag.Diagnostics, plan *models.IamRoleModel) {
+	if plan.DatasetPermissions.IsNull() || plan.DatasetPermissions.IsUnknown() {
+		return
+	}
+
+	var dsPermsModels []models.DatasetPermissionModel
+	diags.Append(plan.DatasetPermissions.ElementsAs(ctx, &dsPermsModels, false)...)
+	if diags.HasError() {
+		return
+	}
+
+	needsUpdate := false
+	for i := range dsPermsModels {
+		if dsPermsModels[i].Permissions.IsUnknown() {
+			dsPermsModels[i].Permissions = types.SetNull(types.StringType)
+			needsUpdate = true
+		}
+	}
+
+	if needsUpdate {
+		// Rebuild the set with resolved values.
+		dsPermsAttrType := plan.DatasetPermissions.ElementType(ctx)
+		var dsPermsValues []attr.Value
+		for _, m := range dsPermsModels {
+			obj, objDiags := types.ObjectValue(
+				map[string]attr.Type{
+					"category":    types.StringType,
+					"access_all":  types.BoolType,
+					"permissions": types.SetType{ElemType: types.StringType},
+				},
+				map[string]attr.Value{
+					"category":    m.Category,
+					"access_all":  m.AccessAll,
+					"permissions": m.Permissions,
+				},
+			)
+			diags.Append(objDiags...)
+			if diags.HasError() {
+				return
+			}
+			dsPermsValues = append(dsPermsValues, obj)
+		}
+
+		newSet, setDiags := types.SetValue(dsPermsAttrType, dsPermsValues)
+		diags.Append(setDiags...)
+		if diags.HasError() {
+			return
+		}
+		plan.DatasetPermissions = newSet
 	}
 }

@@ -30,39 +30,35 @@ func TestUnitCloudSecPolicyResource_CreateAllRules(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-all-rules-123",
-					"name": "All Rules Policy",
-					"description": "Policy matching all rules",
-					"labels": ["production"],
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-all-rules-123",
+				"name": "All Rules Policy",
+				"description": "Policy matching all rules",
+				"labels": ["production"],
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-all-rules-123" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-all-rules-123",
-					"name": "All Rules Policy",
-					"description": "Policy matching all rules",
-					"labels": ["production"],
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-all-rules-123",
+				"name": "All Rules Policy",
+				"description": "Policy matching all rules",
+				"labels": ["production"],
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-all-rules-123" && r.Method == http.MethodDelete:
@@ -77,7 +73,7 @@ func TestUnitCloudSecPolicyResource_CreateAllRules(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -128,43 +124,39 @@ func TestUnitCloudSecPolicyResource_CreateSpecificRules(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-specific-rules-456",
-					"name": "Specific Rules Policy",
-					"description": "Policy with specific rule IDs",
-					"labels": ["security", "compliance"],
-					"rule_matching_type": "RULES",
-					"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
-					"asset_matching_type": "ASSET_GROUPS",
-					"associated_asset_group_ids": [100, 200],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-specific-rules-456",
+				"name": "Specific Rules Policy",
+				"description": "Policy with specific rule IDs",
+				"labels": ["security", "compliance"],
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
+				"asset_matching_type": "ASSET_GROUPS",
+				"associated_asset_group_ids": [100, 200],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-specific-rules-456" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-specific-rules-456",
-					"name": "Specific Rules Policy",
-					"description": "Policy with specific rule IDs",
-					"labels": ["security", "compliance"],
-					"rule_matching_type": "RULES",
-					"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
-					"asset_matching_type": "ASSET_GROUPS",
-					"associated_asset_group_ids": [100, 200],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-specific-rules-456",
+				"name": "Specific Rules Policy",
+				"description": "Policy with specific rule IDs",
+				"labels": ["security", "compliance"],
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
+				"asset_matching_type": "ASSET_GROUPS",
+				"associated_asset_group_ids": [100, 200],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-specific-rules-456" && r.Method == http.MethodDelete:
@@ -179,7 +171,7 @@ func TestUnitCloudSecPolicyResource_CreateSpecificRules(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -234,49 +226,45 @@ func TestUnitCloudSecPolicyResource_CreateRuleFilter(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-filter-789",
-					"name": "Filtered Rules Policy",
-					"description": "Policy with rule filter",
-					"rule_matching_type": "RULE_FILTER",
-					"associated_rule_filter": {
-						"SEARCH_FIELD": "severity",
-						"SEARCH_TYPE": "EQ",
-						"SEARCH_VALUE": "high"
-					},
-					"asset_matching_type": "CLOUD_ACCOUNTS",
-					"associated_cloud_account_ids": ["account-1", "account-2"],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-filter-789",
+				"name": "Filtered Rules Policy",
+				"description": "Policy with rule filter",
+				"rule_matching_type": "RULE_FILTER",
+				"associated_rule_filter": {
+					"SEARCH_FIELD": "severity",
+					"SEARCH_TYPE": "EQ",
+					"SEARCH_VALUE": "high"
+				},
+				"asset_matching_type": "CLOUD_ACCOUNTS",
+				"associated_cloud_account_ids": ["account-1", "account-2"],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-filter-789" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-filter-789",
-					"name": "Filtered Rules Policy",
-					"description": "Policy with rule filter",
-					"rule_matching_type": "RULE_FILTER",
-					"associated_rule_filter": {
-						"SEARCH_FIELD": "severity",
-						"SEARCH_TYPE": "EQ",
-						"SEARCH_VALUE": "high"
-					},
-					"asset_matching_type": "CLOUD_ACCOUNTS",
-					"associated_cloud_account_ids": ["account-1", "account-2"],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-filter-789",
+				"name": "Filtered Rules Policy",
+				"description": "Policy with rule filter",
+				"rule_matching_type": "RULE_FILTER",
+				"associated_rule_filter": {
+					"SEARCH_FIELD": "severity",
+					"SEARCH_TYPE": "EQ",
+					"SEARCH_VALUE": "high"
+				},
+				"asset_matching_type": "CLOUD_ACCOUNTS",
+				"associated_cloud_account_ids": ["account-1", "account-2"],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-filter-789" && r.Method == http.MethodDelete:
@@ -291,7 +279,7 @@ func TestUnitCloudSecPolicyResource_CreateRuleFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -349,65 +337,61 @@ func TestUnitCloudSecPolicyResource_CreateComplexFilter(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-complex-filter-999",
-					"name": "Complex Filter Policy",
-					"description": "Policy with nested filter criteria",
-					"rule_matching_type": "RULE_FILTER",
-					"associated_rule_filter": {
-						"AND": [
-							{
-								"SEARCH_FIELD": "severity",
-								"SEARCH_TYPE": "EQ",
-								"SEARCH_VALUE": "critical"
-							},
-							{
-								"SEARCH_FIELD": "cloudType",
-								"SEARCH_TYPE": "CONTAINS",
-								"SEARCH_VALUE": "aws"
-							}
-						]
-					},
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-complex-filter-999",
+				"name": "Complex Filter Policy",
+				"description": "Policy with nested filter criteria",
+				"rule_matching_type": "RULE_FILTER",
+				"associated_rule_filter": {
+					"AND": [
+						{
+							"SEARCH_FIELD": "severity",
+							"SEARCH_TYPE": "EQ",
+							"SEARCH_VALUE": "critical"
+						},
+						{
+							"SEARCH_FIELD": "cloudType",
+							"SEARCH_TYPE": "CONTAINS",
+							"SEARCH_VALUE": "aws"
+						}
+					]
+				},
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-complex-filter-999" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-complex-filter-999",
-					"name": "Complex Filter Policy",
-					"description": "Policy with nested filter criteria",
-					"rule_matching_type": "RULE_FILTER",
-					"associated_rule_filter": {
-						"AND": [
-							{
-								"SEARCH_FIELD": "severity",
-								"SEARCH_TYPE": "EQ",
-								"SEARCH_VALUE": "critical"
-							},
-							{
-								"SEARCH_FIELD": "cloudType",
-								"SEARCH_TYPE": "CONTAINS",
-								"SEARCH_VALUE": "aws"
-							}
-						]
-					},
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-complex-filter-999",
+				"name": "Complex Filter Policy",
+				"description": "Policy with nested filter criteria",
+				"rule_matching_type": "RULE_FILTER",
+				"associated_rule_filter": {
+					"AND": [
+						{
+							"SEARCH_FIELD": "severity",
+							"SEARCH_TYPE": "EQ",
+							"SEARCH_VALUE": "critical"
+						},
+						{
+							"SEARCH_FIELD": "cloudType",
+							"SEARCH_TYPE": "CONTAINS",
+							"SEARCH_VALUE": "aws"
+						}
+					]
+				},
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-complex-filter-999" && r.Method == http.MethodDelete:
@@ -422,7 +406,7 @@ func TestUnitCloudSecPolicyResource_CreateComplexFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -485,63 +469,23 @@ func TestUnitCloudSecPolicyResource_Update(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-update-111",
-					"name": "Original Policy Name",
-					"description": "Original description",
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-update-111",
+				"name": "Original Policy Name",
+				"description": "Original description",
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-update-111" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			if updated {
 				fmt.Fprintln(w, `{
-					"data": {
-						"id": "policy-update-111",
-						"name": "Updated Policy Name",
-						"description": "Updated description",
-						"labels": ["updated", "test"],
-						"rule_matching_type": "ALL_RULES",
-						"asset_matching_type": "ALL_ASSETS",
-						"enabled": false,
-						"mode": "CUSTOM",
-						"creation_time": 1678886400000,
-						"created_by": "test-user",
-						"modification_time": 1678886500000,
-						"modified_by": "test-user"
-					}
-				}`)
-			} else {
-				fmt.Fprintln(w, `{
-					"data": {
-						"id": "policy-update-111",
-						"name": "Original Policy Name",
-						"description": "Original description",
-						"rule_matching_type": "ALL_RULES",
-						"asset_matching_type": "ALL_ASSETS",
-						"enabled": true,
-						"mode": "CUSTOM",
-						"creation_time": 1678886400000,
-						"created_by": "test-user",
-						"modification_time": 1678886400000,
-						"modified_by": "test-user"
-					}
-				}`)
-			}
-
-		case path == "/public_api/v1/policy/policy-update-111" && r.Method == http.MethodPatch:
-			updated = true
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, `{
-				"data": {
 					"id": "policy-update-111",
 					"name": "Updated Policy Name",
 					"description": "Updated description",
@@ -554,7 +498,39 @@ func TestUnitCloudSecPolicyResource_Update(t *testing.T) {
 					"created_by": "test-user",
 					"modification_time": 1678886500000,
 					"modified_by": "test-user"
-				}
+				}`)
+			} else {
+				fmt.Fprintln(w, `{
+					"id": "policy-update-111",
+					"name": "Original Policy Name",
+					"description": "Original description",
+					"rule_matching_type": "ALL_RULES",
+					"asset_matching_type": "ALL_ASSETS",
+					"enabled": true,
+					"mode": "CUSTOM",
+					"creation_time": 1678886400000,
+					"created_by": "test-user",
+					"modification_time": 1678886400000,
+					"modified_by": "test-user"
+				}`)
+			}
+
+		case path == "/public_api/v1/policy/policy-update-111" && r.Method == http.MethodPatch:
+			updated = true
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, `{
+				"id": "policy-update-111",
+				"name": "Updated Policy Name",
+				"description": "Updated description",
+				"labels": ["updated", "test"],
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": false,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886500000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-update-111" && r.Method == http.MethodDelete:
@@ -569,7 +545,7 @@ func TestUnitCloudSecPolicyResource_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -619,8 +595,8 @@ func TestUnitCloudSecPolicyResource_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "id", "policy-update-111"),
 					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "name", "Updated Policy Name"),
 					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "description", "Updated description"),
-					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "labels.0", "updated"),
-					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "labels.1", "test"),
+					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "labels.0", "test"),
+					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "labels.1", "updated"),
 					resource.TestCheckResourceAttr("cortexcloud_cloudsec_policy.test", "enabled", "false"),
 				),
 			},
@@ -643,60 +619,22 @@ func TestUnitCloudSecPolicyResource_UpdateSwitchMatchingType(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-switch-222",
-					"name": "Switching Policy",
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-switch-222",
+				"name": "Switching Policy",
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-switch-222" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			if updated {
 				fmt.Fprintln(w, `{
-					"data": {
-						"id": "policy-switch-222",
-						"name": "Switching Policy",
-						"rule_matching_type": "RULES",
-						"associated_rule_ids": ["rule-1", "rule-2"],
-						"asset_matching_type": "ALL_ASSETS",
-						"enabled": true,
-						"mode": "CUSTOM",
-						"creation_time": 1678886400000,
-						"created_by": "test-user",
-						"modification_time": 1678886500000,
-						"modified_by": "test-user"
-					}
-				}`)
-			} else {
-				fmt.Fprintln(w, `{
-					"data": {
-						"id": "policy-switch-222",
-						"name": "Switching Policy",
-						"rule_matching_type": "ALL_RULES",
-						"asset_matching_type": "ALL_ASSETS",
-						"enabled": true,
-						"mode": "CUSTOM",
-						"creation_time": 1678886400000,
-						"created_by": "test-user",
-						"modification_time": 1678886400000,
-						"modified_by": "test-user"
-					}
-				}`)
-			}
-
-		case path == "/public_api/v1/policy/policy-switch-222" && r.Method == http.MethodPatch:
-			updated = true
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, `{
-				"data": {
 					"id": "policy-switch-222",
 					"name": "Switching Policy",
 					"rule_matching_type": "RULES",
@@ -708,7 +646,37 @@ func TestUnitCloudSecPolicyResource_UpdateSwitchMatchingType(t *testing.T) {
 					"created_by": "test-user",
 					"modification_time": 1678886500000,
 					"modified_by": "test-user"
-				}
+				}`)
+			} else {
+				fmt.Fprintln(w, `{
+					"id": "policy-switch-222",
+					"name": "Switching Policy",
+					"rule_matching_type": "ALL_RULES",
+					"asset_matching_type": "ALL_ASSETS",
+					"enabled": true,
+					"mode": "CUSTOM",
+					"creation_time": 1678886400000,
+					"created_by": "test-user",
+					"modification_time": 1678886400000,
+					"modified_by": "test-user"
+				}`)
+			}
+
+		case path == "/public_api/v1/policy/policy-switch-222" && r.Method == http.MethodPatch:
+			updated = true
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, `{
+				"id": "policy-switch-222",
+				"name": "Switching Policy",
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-1", "rule-2"],
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886500000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-switch-222" && r.Method == http.MethodDelete:
@@ -723,7 +691,7 @@ func TestUnitCloudSecPolicyResource_UpdateSwitchMatchingType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -791,18 +759,16 @@ func TestUnitCloudSecPolicyResource_ReadNotFound(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-404",
-					"name": "Policy to be deleted",
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-404",
+				"name": "Policy to be deleted",
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		case path == "/public_api/v1/policy/policy-404" && r.Method == http.MethodGet:
@@ -814,18 +780,16 @@ func TestUnitCloudSecPolicyResource_ReadNotFound(t *testing.T) {
 				// First GET returns the policy
 				w.WriteHeader(http.StatusOK)
 				fmt.Fprintln(w, `{
-					"data": {
-						"id": "policy-404",
-						"name": "Policy to be deleted",
-						"rule_matching_type": "ALL_RULES",
-						"asset_matching_type": "ALL_ASSETS",
-						"enabled": true,
-						"mode": "CUSTOM",
-						"creation_time": 1678886400000,
-						"created_by": "test-user",
-						"modification_time": 1678886400000,
-						"modified_by": "test-user"
-					}
+					"id": "policy-404",
+					"name": "Policy to be deleted",
+					"rule_matching_type": "ALL_RULES",
+					"asset_matching_type": "ALL_ASSETS",
+					"enabled": true,
+					"mode": "CUSTOM",
+					"creation_time": 1678886400000,
+					"created_by": "test-user",
+					"modification_time": 1678886400000,
+					"modified_by": "test-user"
 				}`)
 			}
 
@@ -843,7 +807,7 @@ func TestUnitCloudSecPolicyResource_ReadNotFound(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -894,43 +858,39 @@ func TestUnitCloudSecPolicyResource_ImportState(t *testing.T) {
 		case path == "/public_api/v1/policy" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "import-policy-id",
-					"name": "Imported Policy",
-					"description": "Policy imported from existing infrastructure",
-					"labels": ["imported"],
-					"rule_matching_type": "RULES",
-					"associated_rule_ids": ["rule-a", "rule-b"],
-					"asset_matching_type": "ASSET_GROUPS",
-					"associated_asset_group_ids": [500],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "admin",
-					"modification_time": 1678886400000,
-					"modified_by": "admin"
-				}
+				"id": "import-policy-id",
+				"name": "Imported Policy",
+				"description": "Policy imported from existing infrastructure",
+				"labels": ["imported"],
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-a", "rule-b"],
+				"asset_matching_type": "ASSET_GROUPS",
+				"associated_asset_group_ids": [500],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "admin",
+				"modification_time": 1678886400000,
+				"modified_by": "admin"
 			}`)
 
 		case path == "/public_api/v1/policy/import-policy-id" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "import-policy-id",
-					"name": "Imported Policy",
-					"description": "Policy imported from existing infrastructure",
-					"labels": ["imported"],
-					"rule_matching_type": "RULES",
-					"associated_rule_ids": ["rule-a", "rule-b"],
-					"asset_matching_type": "ASSET_GROUPS",
-					"associated_asset_group_ids": [500],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "admin",
-					"modification_time": 1678886400000,
-					"modified_by": "admin"
-				}
+				"id": "import-policy-id",
+				"name": "Imported Policy",
+				"description": "Policy imported from existing infrastructure",
+				"labels": ["imported"],
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-a", "rule-b"],
+				"asset_matching_type": "ASSET_GROUPS",
+				"associated_asset_group_ids": [500],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "admin",
+				"modification_time": 1678886400000,
+				"modified_by": "admin"
 			}`)
 
 		case path == "/public_api/v1/policy/import-policy-id" && r.Method == http.MethodDelete:
@@ -945,7 +905,7 @@ func TestUnitCloudSecPolicyResource_ImportState(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test")()),
+			"cortexcloud": providerserver.NewProtocol6WithError(provider.New("test", "test")()),
 		},
 		Steps: []resource.TestStep{
 			{
