@@ -26,8 +26,15 @@ data "cortexcloud_appsec_rules" "custom" {
 ### Optional
 
 - `is_custom` (Boolean) Indicates whether the rule is custom.
-- `limit` (Number) Maximum number of rules returned by the API request.
-- `offset` (Number) Number of rules at the beginning of the API response to skip.
+- `limit` (Number) Page size for an explicit single-page request.
+
+When both `limit` and `offset` are unset, the data source automatically fetches all matching rules up to `max_results`. When either attribute is set, only that single API page is returned and `max_results` is not enforced. When not configured, falls through to the platform default value of 100.
+- `max_results` (Number) Maximum number of rules to accumulate when using auto-pagination (when `limit` and `offset` are both unconfigured).
+
+If set to 0, the limit is disabled and all matching rules will be fetched. When not configured, falls through to the platform default value of 1000.
+- `offset` (Number) Starting index for an explicit single-page request. 
+
+See `limit` attribute's description for the interaction with auto-pagination. When not configured, falls through to the platform default value of 0.
 
 ### Read-Only
 

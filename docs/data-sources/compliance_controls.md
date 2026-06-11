@@ -33,8 +33,19 @@ data "cortexcloud_compliance_controls" "custom" {
 - `filter` (Block, Optional) Filter criteria for the controls. 
 
 Note: for the 'is_custom' field, use operator 'in' (the API does not support 'eq'; if 'eq' is specified it will be automatically converted to 'in'). (see [below for nested schema](#nestedblock--filter))
-- `search_from` (Number) The starting index for pagination.
-- `search_to` (Number) The ending index for pagination.
+- `max_results` (Number) Maximum number of controls to accumulate when using auto-pagination (when `search_from` and `search_to` are both unconfigured).
+
+If set to 0, the limit is disabled and all matching controls will be fetched.
+
+Defaults to 1000.
+- `search_from` (Number) The starting index for an explicit pagination window.
+
+When both `search_from` and `search_to` are unset, the data source automatically fetches all matching controls up to `max_results`.
+
+When either is set, only that single API page is returned and `max_results` is not enforced.
+- `search_to` (Number) The inclusive ending index for an explicit pagination window.
+
+See `search_from` for the interaction with auto-pagination.
 
 ### Read-Only
 

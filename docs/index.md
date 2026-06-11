@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.5"
+      version = "1.0.7"
     }
   }
 }
@@ -196,7 +196,30 @@ provider "cortexcloud" {
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
 
+### v1.0.7
+
+#### Enhancements
+* Updated provider documentation and schema reference for all resources and data sources
+* Fixed version reference in provider usage example
+
+### v1.0.6
+
+#### Enhancements
+* Enriched User-Agent header with Terraform provider and CLI version information
+* Added auto-pagination for compliance and AppSec data sources
+* Added input validation for various resource attributes
+* Updated Azure cloud integration template documentation with onboarding instructions
+* Improved resource examples across multiple domains
+
+#### Bug Fixes
+* Fixed compliance data sources not honoring practitioner-configured pagination controls
+
 ### v1.0.5
+
+#### Enhancements
+* Removed Cortex API credentials from debug log messages
+
+### v1.0.4
 
 #### Features
 * **New Resource**: `cortexcloud_appsec_rule`

@@ -63,7 +63,7 @@ resource "cortexcloud_asset_group" "example" {
 ### Required
 
 - `name` (String) The name of the asset group.
-- `type` (String) The type of the asset group.
+- `type` (String) The type of the asset group. Allowed value: Dynamic.
 
 ### Optional
 
