@@ -19,7 +19,7 @@ resource "cortexcloud_authentication_settings" "example" {
   domain = "example.com"
 
   # SAML attribute mappings
-  mappings {
+  mappings = {
     email      = "emailaddress"
     first_name = "givenname"
     last_name  = "surname"
