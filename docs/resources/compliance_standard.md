@@ -35,7 +35,7 @@ resource "cortexcloud_compliance_standard" "custom_framework" {
 
 - `controls_ids` (Set of String) The set of control IDs associated with this standard.
 - `description` (String) The description of the compliance standard.
-- `labels` (Set of String) The set of labels for this standard.
+- `labels` (Set of String) The set of labels for this standard. Allowed values: aws, azure, gcp, oci, alibaba_cloud, gke, k8s, linux, on_prem, win, aks, eks, llm, code, docker, openshift, snowflake, databricks, microsoft_365, jamf_pro, ping_identity, datadog, salesforce, okta.
 
 ### Read-Only
 

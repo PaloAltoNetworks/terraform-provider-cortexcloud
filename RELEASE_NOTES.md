@@ -1,5 +1,11 @@
 ## Release Notes
 
+### v1.0.7
+
+#### Enhancements
+* Updated provider documentation and schema reference for all resources and data sources
+* Fixed version reference in provider usage example
+
 ### v1.0.6
 
 #### Enhancements

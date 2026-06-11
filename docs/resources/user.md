@@ -45,9 +45,9 @@ resource "cortexcloud_user" "minimal_example" {
 
 - `group_ids` (List of String) Desired group IDs for the user (write intent).
 - `hidden` (Boolean) The hidden status of the user.
-- `phone_number` (String) The phone number of the user.
+- `phone_number` (String) The phone number of the user. Must not be empty when provided.
 - `role_name` (String) The role name of the user.
-- `status` (String) The status of the user.
+- `status` (String) The status of the user. Allowed values: active, inactive.
 
 ### Read-Only
 
