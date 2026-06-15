@@ -303,10 +303,10 @@ resource "cortexcloud_indicator" "test" {
 	})
 }
 
-// TestUnitIndicatorResource_Rename covers the delete-old + insert-new
-// branch of Update: when the `indicator` string changes, the provider
-// deletes the old record by name and inserts a fresh one (no rule_id), so
-// the new record gets a new rule_id.
+// TestUnitIndicatorResource_Rename covers the rename path of Update: when
+// the `indicator` string changes, the provider submits the existing rule_id
+// as the upsert key, so the record is overwritten in place and keeps its
+// rule_id rather than being recreated.
 func TestUnitIndicatorResource_Rename(t *testing.T) {
 	mock := newIndicatorMockServer()
 	srv := httptest.NewServer(mock.handler(t))
@@ -335,9 +335,9 @@ resource "cortexcloud_indicator" "test" {
 				Config: providerBlock(srv.URL) + fmt.Sprintf(cfgTmpl, "new.example.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("cortexcloud_indicator.test", "indicator", "new.example.com"),
-					// Rename takes the delete-then-insert path, so the new
-					// record gets a freshly allocated rule_id (102).
-					resource.TestCheckResourceAttr("cortexcloud_indicator.test", "rule_id", "102"),
+					// Rename takes the rule_id-keyed upsert path, so the
+					// record is overwritten in place and keeps rule_id 101.
+					resource.TestCheckResourceAttr("cortexcloud_indicator.test", "rule_id", "101"),
 				),
 			},
 		},

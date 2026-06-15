@@ -26,12 +26,13 @@ import (
 )
 
 // IndicatorResource manages a single Cortex IOC via the upsert
-// `/public_api/v1/indicators/insert` endpoint. Updates submit the
-// server-assigned `rule_id` from state so the API overwrites the existing
-// record in place. Indicator renames (changes to the `indicator` string
-// itself) are applied as delete-old + insert-new to avoid leaving an
-// orphan, since the OpenAPI spec does not promise that the `indicator`
-// field is mutable within a rule_id-keyed upsert.
+// `/public_api/v1/indicators/insert` endpoint. Every update — including a
+// change to the `indicator` string itself (a rename) — submits the
+// server-assigned `rule_id` carried in state, so the API matches the
+// existing record by its stable identity and overwrites it in place. The
+// `rule_id` is the record's canonical key; the `indicator` string is just
+// another mutable field on it, so a rename preserves `rule_id` and
+// `creation_time` rather than orphaning the old record.
 var (
 	_ resource.Resource                = &IndicatorResource{}
 	_ resource.ResourceWithImportState = &IndicatorResource{}
@@ -95,11 +96,11 @@ func (r *IndicatorResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		Description: "Manages a single Indicator of Compromise (IOC) in Cortex. " +
 			"Backed by the upsert `/public_api/v1/indicators/insert` endpoint: " +
-			"in-place edits submit the server-assigned `rule_id` carried in " +
-			"state so the API overwrites the existing record. Renames " +
-			"(changes to the `indicator` value itself) are applied as " +
-			"delete-old + insert-new — same Terraform-level `~ in-place` " +
-			"plan, two API calls under the hood.",
+			"every edit submits the server-assigned `rule_id` carried in " +
+			"state so the API overwrites the existing record in place. A " +
+			"rename (a change to the `indicator` value itself) is just another " +
+			"field update on that `rule_id`, so it preserves the record's " +
+			"identity rather than recreating it.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Mirror of `indicator`; the resource identity used for state " +
@@ -109,9 +110,9 @@ func (r *IndicatorResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"indicator": schema.StringAttribute{
 				Description: "The IOC value (hash, IP, domain, filename, or path). " +
-					"Changes are applied in place via delete-then-insert (the rule_id " +
-					"is regenerated server-side); other fields update via the documented " +
-					"upsert path keyed on `rule_id`.",
+					"Unique per tenant. Changes are applied in place via the " +
+					"`rule_id`-keyed upsert path — the same path used for every other " +
+					"field — so `rule_id` is preserved across a rename.",
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -175,14 +176,15 @@ func (r *IndicatorResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"rule_id": schema.Int64Attribute{
-				Description: "Server-assigned numeric ID. Surfaced for cross-reference; not " +
-					"used for identity by the resource (rename path keys on the indicator " +
-					"string, not on rule_id). Stable across in-place updates; regenerated on rename.",
+				Description: "Server-assigned numeric ID — the record's canonical identity. " +
+					"The upsert path keys on this value, so it is stable across every " +
+					"update, including a rename of the `indicator` string.",
 				Computed: true,
 			},
 			"creation_time": schema.Int64Attribute{
 				Description: "Unix epoch milliseconds when the indicator was first created. " +
-					"Regenerated when the `indicator` value changes (rename path is delete + insert).",
+					"Stable across updates, including a rename, since the record is " +
+					"upserted in place rather than recreated.",
 				Computed: true,
 			},
 			"modification_time": schema.Int64Attribute{
@@ -250,8 +252,7 @@ func (r *IndicatorResource) upsertSingle(ctx context.Context, ioc platformTypes.
 
 // deleteByName removes the record whose `indicator` field equals the given
 // value via the filter-bodied /indicators/delete endpoint. Used by the
-// Delete CRUD method and by Update when the indicator string itself
-// changes (rename path).
+// Delete CRUD method (the API exposes no by-rule_id delete).
 //
 // A zero-length return slice means the filter matched nothing. We treat
 // that as success (idempotent delete) — callers can pre-flight a find if
@@ -342,18 +343,12 @@ func (r *IndicatorResource) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// Update applies content changes in place. Two paths:
-//
-//   - When the `indicator` string is unchanged, the SDK payload carries the
-//     server-assigned `rule_id` from state and the API overwrites the
-//     existing record in a single call (documented upsert path).
-//   - When the `indicator` string itself changed, the prior record is
-//     deleted by its old value and a fresh record is inserted without a
-//     `rule_id`. The new `rule_id` is then re-read from the API. This
-//     branch exists because the OpenAPI spec does not promise that the
-//     `indicator` field is mutable inside a rule_id-keyed upsert
-//     (interpretation: safer to assume `indicator` is part of the natural
-//     key on the backend than to risk leaving an orphaned record).
+// Update applies content changes in place via the rule_id-keyed upsert. The
+// SDK payload carries the server-assigned `rule_id` from prior state, so the
+// API matches the existing record by its canonical identity and overwrites
+// it in a single call — even when the `indicator` string itself changed. A
+// rename is therefore just another field edit: `rule_id` and `creation_time`
+// are preserved, and no record is orphaned.
 func (r *IndicatorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer util.PanicHandler(&resp.Diagnostics)
 
@@ -371,21 +366,11 @@ func (r *IndicatorResource) Update(ctx context.Context, req resource.UpdateReque
 
 	payload := plan.ToSDKIndicator()
 
-	oldName := state.Indicator.ValueString()
-	newName := plan.Indicator.ValueString()
-	if oldName != newName {
-		// Rename path: drop the old record by its name, then insert fresh.
-		// Leave payload.RuleID at zero so the SDK omits the field and the
-		// API assigns a new one.
-		if err := r.deleteByName(ctx, oldName); err != nil {
-			resp.Diagnostics.AddError("Error Renaming Indicator (delete old)", err.Error())
-			return
-		}
-	} else {
-		// rule_id is the upsert key; pull it from the prior state so the
-		// API matches the existing record and overwrites it in place.
-		payload.RuleID = int(state.RuleID.ValueInt64())
-	}
+	// rule_id is the upsert key: pull it from prior state so the API matches
+	// the existing record and overwrites it in place. A change to the
+	// `indicator` string is just another field edit on that rule_id, so a
+	// rename keeps the record's identity (rule_id, creation_time) intact.
+	payload.RuleID = int(state.RuleID.ValueInt64())
 
 	if err := r.upsertSingle(ctx, payload); err != nil {
 		resp.Diagnostics.AddError("Error Updating Indicator", err.Error())

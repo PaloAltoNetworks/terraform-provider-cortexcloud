@@ -50,9 +50,9 @@ func indicatorResourceConfig(indicator, indicatorType, severity, reputation, rel
 
 // TestAccIndicatorResourceLifecycle exercises the full create → in-place
 // update → rename → delete cycle of the cortexcloud_indicator resource
-// against a live tenant. Rename uses delete-then-insert under the hood,
-// which regenerates `rule_id` and `creation_time`; the steady-state
-// update path is rule_id-keyed and preserves both.
+// against a live tenant. Both the steady-state update and the rename go
+// through the rule_id-keyed upsert, which overwrites the record in place
+// and preserves `rule_id`; the rename step asserts that stability directly.
 func TestAccIndicatorResourceLifecycle(t *testing.T) {
 	providerConfig := getProviderConfig(t, dotEnvPath, true)
 
@@ -61,6 +61,10 @@ func TestAccIndicatorResourceLifecycle(t *testing.T) {
 	renamedName := originalName + "-renamed"
 
 	fqResourceName := fmt.Sprintf("%s.%s", indicatorResourceType, indicatorResourceLocalID)
+
+	// Captured after Create so the rename step can assert rule_id is
+	// preserved across the in-place upsert (not regenerated).
+	var ruleIDAfterCreate string
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -83,6 +87,10 @@ func TestAccIndicatorResourceLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(fqResourceName, "status", "ENABLED"),
 					resource.TestCheckResourceAttrSet(fqResourceName, "rule_id"),
 					resource.TestCheckResourceAttrSet(fqResourceName, "creation_time"),
+					resource.TestCheckResourceAttrWith(fqResourceName, "rule_id", func(value string) error {
+						ruleIDAfterCreate = value
+						return nil
+					}),
 				),
 			},
 			// In-place update (rule_id-keyed upsert): severity, reputation,
@@ -100,8 +108,9 @@ func TestAccIndicatorResourceLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(fqResourceName, "comment", "updated"),
 				),
 			},
-			// Rename (delete-then-insert). rule_id will regenerate, but the
-			// observable contract is just that the indicator value moves.
+			// Rename (rule_id-keyed upsert). The indicator value moves and
+			// rule_id stays put — the record is overwritten in place, not
+			// recreated.
 			{
 				PreConfig: func() { t.Log("Executing Rename test step") },
 				Config: providerConfig + indicatorResourceConfig(
@@ -110,6 +119,7 @@ func TestAccIndicatorResourceLifecycle(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(fqResourceName, "indicator", renamedName),
+					resource.TestCheckResourceAttrPtr(fqResourceName, "rule_id", &ruleIDAfterCreate),
 				),
 			},
 			// Empty step → triggers terraform destroy.
