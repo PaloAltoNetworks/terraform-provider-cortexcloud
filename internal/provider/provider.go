@@ -278,6 +278,8 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 		platformDataSources.NewIamPermissionConfigDataSource,
+		platformDataSources.NewBIOCDataSource,
+		platformDataSources.NewBIOCsDataSource,
 	)
 
 	tflog.Debug(ctx, "Registering Compliance data sources")
