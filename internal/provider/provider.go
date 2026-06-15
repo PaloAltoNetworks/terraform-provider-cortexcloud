@@ -217,6 +217,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewNotificationForwardingConfigManagementAuditLogsResource,
 		platformResources.NewNotificationForwardingConfigIssuesResource,
 		platformResources.NewNotificationForwardingConfigCasesResource,
+		platformResources.NewBIOCResource,
 	)
 
 	tflog.Debug(ctx, "Registering Compliance resources")
