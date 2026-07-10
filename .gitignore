@@ -37,3 +37,6 @@ terraform.tfstate
 terraform.tfvars
 .terraform.lock.hcl
 /terraform.tfstate.backup
+
+# Local verification harnesses (not tracked)
+scripts/

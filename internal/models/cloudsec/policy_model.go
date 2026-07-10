@@ -32,22 +32,22 @@ type CloudSecPolicyResourceModel struct {
 // RuleMatchingModel represents the rule matching configuration.
 type RuleMatchingModel struct {
 	Type           types.String `tfsdk:"type"`
-	Rules          types.List   `tfsdk:"rules"`
+	Rules          types.Set    `tfsdk:"rules"`
 	FilterCriteria types.Object `tfsdk:"filter_criteria"`
 }
 
 // AssetMatchingModel represents the asset matching configuration.
 type AssetMatchingModel struct {
 	Type            types.String `tfsdk:"type"`
-	AssetGroupIDs   types.List   `tfsdk:"asset_group_ids"`
-	CloudAccountIDs types.List   `tfsdk:"cloud_account_ids"`
+	AssetGroupIDs   types.Set    `tfsdk:"asset_group_ids"`
+	CloudAccountIDs types.Set    `tfsdk:"cloud_account_ids"`
 }
 
 // GetRuleMatchingAttrTypes returns the attribute types for rule matching.
 func GetRuleMatchingAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"type":            types.StringType,
-		"rules":           types.ListType{ElemType: types.StringType},
+		"rules":           types.SetType{ElemType: types.StringType},
 		"filter_criteria": types.ObjectType{AttrTypes: GetFilterCriteriaAttrTypes()},
 	}
 }
@@ -56,8 +56,8 @@ func GetRuleMatchingAttrTypes() map[string]attr.Type {
 func GetAssetMatchingAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"type":              types.StringType,
-		"asset_group_ids":   types.ListType{ElemType: types.Int64Type},
-		"cloud_account_ids": types.ListType{ElemType: types.StringType},
+		"asset_group_ids":   types.SetType{ElemType: types.Int64Type},
+		"cloud_account_ids": types.SetType{ElemType: types.StringType},
 	}
 }
 
@@ -237,7 +237,7 @@ func (m *CloudSecPolicyResourceModel) FromSDKResponse(ctx context.Context, diags
 	m.ID = types.StringValue(remote.ID)
 	m.Name = types.StringValue(remote.Name)
 
-	// Description - set to null if empty to match Terraform's null handling
+	// null if empty, to match Terraform null handling
 	if remote.Description == "" {
 		m.Description = types.StringNull()
 	} else {
@@ -251,7 +251,7 @@ func (m *CloudSecPolicyResourceModel) FromSDKResponse(ctx context.Context, diags
 	m.UpdatedAt = types.Int64Value(remote.ModificationTime)
 	m.UpdatedBy = types.StringValue(remote.ModifiedBy)
 
-	// Labels - use Set (unordered) to avoid order mismatch with API response
+	// Set (unordered): API label order is not significant
 	if len(remote.Labels) > 0 {
 		elements := make([]attr.Value, len(remote.Labels))
 		for i, label := range remote.Labels {
@@ -267,16 +267,17 @@ func (m *CloudSecPolicyResourceModel) FromSDKResponse(ctx context.Context, diags
 	// Rule Matching
 	ruleMatchingAttrs := map[string]attr.Value{
 		"type":            types.StringValue(remote.RuleMatchingType),
-		"rules":           types.ListNull(types.StringType),
+		"rules":           types.SetNull(types.StringType),
 		"filter_criteria": types.ObjectNull(GetFilterCriteriaAttrTypes()),
 	}
 
 	switch remote.RuleMatchingType {
 	case "RULES":
 		if len(remote.AssociatedRuleIDs) > 0 {
-			rulesList, d := types.ListValueFrom(ctx, types.StringType, remote.AssociatedRuleIDs)
+			// Set (unordered): avoids "inconsistent result" diffs when the API reorders rule IDs
+			rulesSet, d := types.SetValueFrom(ctx, types.StringType, remote.AssociatedRuleIDs)
 			diags.Append(d...)
-			ruleMatchingAttrs["rules"] = rulesList
+			ruleMatchingAttrs["rules"] = rulesSet
 		}
 	case "RULE_FILTER":
 		if remote.AssociatedRuleFilter != nil {
@@ -291,27 +292,28 @@ func (m *CloudSecPolicyResourceModel) FromSDKResponse(ctx context.Context, diags
 	// Asset Matching
 	assetMatchingAttrs := map[string]attr.Value{
 		"type":              types.StringValue(remote.AssetMatchingType),
-		"asset_group_ids":   types.ListNull(types.Int64Type),
-		"cloud_account_ids": types.ListNull(types.StringType),
+		"asset_group_ids":   types.SetNull(types.Int64Type),
+		"cloud_account_ids": types.SetNull(types.StringType),
 	}
 
 	switch remote.AssetMatchingType {
 	case "ASSET_GROUPS":
 		if len(remote.AssociatedAssetGroupIDs) > 0 {
-			// Convert int32 to int64
 			assetGroupIDs := make([]int64, len(remote.AssociatedAssetGroupIDs))
 			for i, id := range remote.AssociatedAssetGroupIDs {
 				assetGroupIDs[i] = int64(id)
 			}
-			assetGroupsList, d := types.ListValueFrom(ctx, types.Int64Type, assetGroupIDs)
+			// Set (unordered): avoids order mismatch with the API
+			assetGroupsSet, d := types.SetValueFrom(ctx, types.Int64Type, assetGroupIDs)
 			diags.Append(d...)
-			assetMatchingAttrs["asset_group_ids"] = assetGroupsList
+			assetMatchingAttrs["asset_group_ids"] = assetGroupsSet
 		}
 	case "CLOUD_ACCOUNTS":
 		if len(remote.AssociatedCloudAccountIDs) > 0 {
-			cloudAccountsList, d := types.ListValueFrom(ctx, types.StringType, remote.AssociatedCloudAccountIDs)
+			// Set (unordered): avoids order mismatch with the API
+			cloudAccountsSet, d := types.SetValueFrom(ctx, types.StringType, remote.AssociatedCloudAccountIDs)
 			diags.Append(d...)
-			assetMatchingAttrs["cloud_account_ids"] = cloudAccountsList
+			assetMatchingAttrs["cloud_account_ids"] = cloudAccountsSet
 		}
 	}
 

@@ -86,6 +86,16 @@ func (d *ruleDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 							Description: "The remediation steps that will appear on the rule's findings.",
 							Computed:    true,
 						},
+						"remediation_ids": schema.ListAttribute{
+							Description: "The remediation identifiers associated with the framework definition.",
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+						"resource_types": schema.ListAttribute{
+							Description: "The resource types associated with the framework definition.",
+							Computed:    true,
+							ElementType: types.StringType,
+						},
 					},
 				},
 			},
@@ -121,6 +131,46 @@ func (d *ruleDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 			"updated_at": schema.StringAttribute{
 				Description: "The timestamp when the rule was updated.",
 				Computed:    true,
+			},
+			"short_description": schema.StringAttribute{
+				Description: "A short description of the rule.",
+				Computed:    true,
+			},
+			"doc_link": schema.StringAttribute{
+				Description: "A link to the Cortex documentation.",
+				Computed:    true,
+			},
+			"detection_method": schema.StringAttribute{
+				Description: "The security scanner used to detect findings of this rule.",
+				Computed:    true,
+			},
+			"finding_docs": schema.StringAttribute{
+				Description: "Documentation associated with the rule's findings.",
+				Computed:    true,
+			},
+			"finding_type_id": schema.Int64Attribute{
+				Description: "The finding type ID.",
+				Computed:    true,
+			},
+			"owner": schema.StringAttribute{
+				Description: "The owner of the rule.",
+				Computed:    true,
+			},
+			"mitre_tactics": schema.ListAttribute{
+				Description: "The associated MITRE ATT&CK tactics.",
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"mitre_techniques": schema.ListAttribute{
+				Description: "The associated MITRE ATT&CK techniques.",
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"cspm_rule_id": schema.StringAttribute{
+				Description: "The Cloud Security (CSPM) rule this rule maps to. This is a " +
+					"write-only field the API does not return on read, so it is null " +
+					"in data source output.",
+				Computed: true,
 			},
 		},
 	}

@@ -14,8 +14,13 @@ Manages a CloudSec detection rule for CSPM (Cloud Security Posture Management).
 
 ```terraform
 # Cloud Security rule for detecting S3 buckets with access logging disabled.
+# NOTE: "name" must be unique within your tenant, including across the built-in
+# Cortex detection rules. The API rejects a create request with a 409 Conflict
+# ("a detection rule with the same name already exists") if the name is already
+# in use. The name below is deliberately example-scoped to avoid colliding with
+# a built-in rule; change it to suit your environment.
 resource "cortexcloud_cloudsec_rule" "aws-s3-access-logging-disabled" {
-  name        = "AWS Access logging not enabled on S3 buckets"
+  name        = "Example - S3 access logging disabled"
   description = <<-EOF
 Overly permissive key policies on AWS S3 buckets encrypted with Customer Managed Keys (CMKs) allow unauthorized access to sensitive data, leading to data breaches and compliance violations.
 
@@ -58,9 +63,9 @@ EOF
 
 ```terraform
 # Minimal CloudSec detection rule with only required fields
-resource "cortexcloud_cloudsec_rule" "ec2_public_ip_minimal" {
-  name        = "AWS EC2 Instance with Public IP"
-  description = "Detects EC2 instances that have a public IP address assigned"
+resource "cortexcloud_cloudsec_rule" "s3_logging_disabled_minimal" {
+  name        = "AWS S3 Bucket without Access Logging"
+  description = "Detects S3 buckets that do not have server access logging enabled"
   class       = "config"
   asset_types = ["S3_BUCKET"]
   severity    = "high"

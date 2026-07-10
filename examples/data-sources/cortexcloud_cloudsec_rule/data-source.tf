@@ -44,12 +44,12 @@ resource "cortexcloud_cloudsec_policy" "example_policy" {
   name        = "Policy for ${data.cortexcloud_cloudsec_rule.example.name}"
   description = "Policy applying rule: ${data.cortexcloud_cloudsec_rule.example.description}"
 
-  rule_matching {
-    type     = "RULES"
-    rule_ids = [data.cortexcloud_cloudsec_rule.example.id]
+  rule_matching = {
+    type  = "RULES"
+    rules = [data.cortexcloud_cloudsec_rule.example.id]
   }
 
-  asset_matching {
+  asset_matching = {
     type = "ALL_ASSETS"
   }
 

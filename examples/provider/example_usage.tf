@@ -2,7 +2,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.7"
+      version = "1.0.8"
     }
   }
 }

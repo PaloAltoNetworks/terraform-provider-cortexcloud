@@ -44,14 +44,26 @@ func (m *UserModel) ToEditRequest() platformtypes.IamUserEditRequest {
 	}
 
 	return platformtypes.IamUserEditRequest{
-		FirstName:   m.FirstName.ValueStringPointer(),
-		LastName:    m.LastName.ValueStringPointer(),
-		RoleId:      m.RoleName.ValueStringPointer(),
-		PhoneNumber: m.PhoneNumber.ValueStringPointer(),
-		Status:      m.Status.ValueStringPointer(),
+		FirstName: m.FirstName.ValueStringPointer(),
+		LastName:  m.LastName.ValueStringPointer(),
+		// nil (not "") for omitted Optional+Computed fields, else the API rejects
+		// empty strings (e.g. HTTP 400 "Invalid attribute status: ''").
+		RoleId:      nilIfEmptyString(m.RoleName),
+		PhoneNumber: nilIfEmptyString(m.PhoneNumber),
+		Status:      nilIfEmptyString(m.Status),
 		Hidden:      m.Hidden.ValueBoolPointer(),
 		UserGroups:  groups,
 	}
+}
+
+// nilIfEmptyString returns nil for null/unknown/empty values so Optional fields
+// are omitted from the request (via the SDK's `omitempty` tags).
+func nilIfEmptyString(v types.String) *string {
+	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
+		return nil
+	}
+	s := v.ValueString()
+	return &s
 }
 
 // RefreshFromRemote populates the model from the SDK's IamUser object.
@@ -64,8 +76,7 @@ func (m *UserModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 	m.FirstName = types.StringValue(remote.FirstName)
 	m.LastName = types.StringValue(remote.LastName)
 	m.PhoneNumber = types.StringValue(remote.PhoneNumber)
-	// Normalize status to lowercase — the API returns "Active"/"Inactive"
-	// but the provider's canonical form is "active"/"inactive".
+	// API returns "Active"/"Inactive"; canonical form is lowercase.
 	m.Status = types.StringValue(strings.ToLower(remote.Status))
 	m.RoleName = types.StringValue(remote.RoleName)
 	m.LastLoggedIn = types.Int64Value(remote.LastLoggedIn)

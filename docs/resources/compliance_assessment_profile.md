@@ -13,6 +13,13 @@ Manages a compliance assessment profile.
 ## Example Usage
 
 ```terraform
+# A compliance standard to assess against.
+resource "cortexcloud_compliance_standard" "custom_framework" {
+  name        = "Custom Security Framework 2026"
+  description = "Internal security compliance framework"
+  labels      = ["aws"]
+}
+
 # Compliance assessment profile
 resource "cortexcloud_compliance_assessment_profile" "monthly_aws" {
   name             = "Monthly AWS Compliance Check"

@@ -1,7 +1,7 @@
 # Minimal CloudSec detection rule with only required fields
-resource "cortexcloud_cloudsec_rule" "ec2_public_ip_minimal" {
-  name        = "AWS EC2 Instance with Public IP"
-  description = "Detects EC2 instances that have a public IP address assigned"
+resource "cortexcloud_cloudsec_rule" "s3_logging_disabled_minimal" {
+  name        = "AWS S3 Bucket without Access Logging"
+  description = "Detects S3 buckets that do not have server access logging enabled"
   class       = "config"
   asset_types = ["S3_BUCKET"]
   severity    = "high"

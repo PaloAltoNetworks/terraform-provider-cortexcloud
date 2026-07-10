@@ -44,9 +44,19 @@ resource "cortexcloud_cloud_integration_template_aws" "account_auto_deploy" {
   }
 }
 
-# Using the value of the template resource's `cloudformation_template_url` 
+# Using the value of the template resource's `cloudformation_template_url`
 # attribute as the argument for the CloudFormation stack resource's
 # `template_url` attribute.
+#
+# PREREQUISITE: This example uses the `aws_cloudformation_stack` resource from
+# the official AWS Terraform provider (hashicorp/aws). To apply it you must:
+#   1. Declare the `aws` provider in your configuration's `required_providers`
+#      block and run `terraform init`.
+#   2. Configure the AWS provider with valid credentials for the target
+#      account (for example via the `AWS_ACCESS_KEY_ID` /
+#      `AWS_SECRET_ACCESS_KEY` environment variables, a shared credentials
+#      profile, or an assumed IAM role). The credentials must have permission
+#      to create CloudFormation stacks and the named IAM resources they define.
 #
 # Note: the `CAPABILITY_NAMED_IAM` capability is required in order to
 # successfully deploy the CloudFormation stack.

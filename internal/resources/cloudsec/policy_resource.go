@@ -129,8 +129,8 @@ func (r *CloudSecPolicyResource) Schema(ctx context.Context, req resource.Schema
 							stringvalidator.OneOf("ALL_RULES", "RULES", "RULE_FILTER"),
 						},
 					},
-					"rules": schema.ListAttribute{
-						Description: "List of rule UUIDs. Required when type is RULES.",
+					"rules": schema.SetAttribute{
+						Description: "Set of rule UUIDs. Required when type is RULES. Order is not significant.",
 						Optional:    true,
 						ElementType: types.StringType,
 					},
@@ -152,13 +152,13 @@ func (r *CloudSecPolicyResource) Schema(ctx context.Context, req resource.Schema
 							stringvalidator.OneOf("ALL_ASSETS", "ASSET_GROUPS", "CLOUD_ACCOUNTS"),
 						},
 					},
-					"asset_group_ids": schema.ListAttribute{
-						Description: "List of asset group IDs. Required when type is ASSET_GROUPS.",
+					"asset_group_ids": schema.SetAttribute{
+						Description: "Set of asset group IDs. Required when type is ASSET_GROUPS. Order is not significant.",
 						Optional:    true,
 						ElementType: types.Int64Type,
 					},
-					"cloud_account_ids": schema.ListAttribute{
-						Description: "List of cloud account IDs. Required when type is CLOUD_ACCOUNTS.",
+					"cloud_account_ids": schema.SetAttribute{
+						Description: "Set of cloud account IDs. Required when type is CLOUD_ACCOUNTS. Order is not significant.",
 						Optional:    true,
 						ElementType: types.StringType,
 					},
@@ -251,12 +251,8 @@ func (r *CloudSecPolicyResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	// WORKAROUND: The CloudSec Create API endpoint ignores the "enabled" field,
-	// always creating policies as enabled. When the user wants enabled=false,
-	// we fire a subsequent PATCH to disable it.
-	//
-	// Remove this workaround once the upstream API bug is fixed.
-	//
+	// WORKAROUND: Create API ignores "enabled" (always creates enabled); PATCH to
+	// disable when enabled=false. Remove once the upstream API bug is fixed.
 	// See SDK test: TestAccPolicy_CreateDisabledBugDetection
 	if !plan.Enabled.IsNull() &&
 		!plan.Enabled.IsUnknown() &&
@@ -443,7 +439,9 @@ func validateRuleMatching(ctx context.Context, model *cloudsecModels.CloudSecPol
 
 	switch matchingType {
 	case "RULES":
-		if ruleMatching.Rules.IsNull() || ruleMatching.Rules.IsUnknown() {
+		// Defer the required-field check to apply time when `rules` is unknown
+		// (e.g. computed from a data source), rather than failing at plan time.
+		if ruleMatching.Rules.IsNull() {
 			diags.AddAttributeError(
 				path.Root("rule_matching").AtName("rules"),
 				"Missing Required Field",
@@ -451,7 +449,8 @@ func validateRuleMatching(ctx context.Context, model *cloudsecModels.CloudSecPol
 			)
 		}
 	case "RULE_FILTER":
-		if ruleMatching.FilterCriteria.IsNull() || ruleMatching.FilterCriteria.IsUnknown() {
+		// Same unknown-tolerance as above: defer to apply time when unknown.
+		if ruleMatching.FilterCriteria.IsNull() {
 			diags.AddAttributeError(
 				path.Root("rule_matching").AtName("filter_criteria"),
 				"Missing Required Field",

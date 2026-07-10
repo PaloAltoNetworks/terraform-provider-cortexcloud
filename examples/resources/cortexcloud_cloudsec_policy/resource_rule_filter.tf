@@ -1,104 +1,84 @@
 # CloudSec policy using rule filters to dynamically match rules
-# This example shows how to use filter criteria with AND/OR logic
+# This example shows how to use filter criteria with an operator + criteria list.
+#
+# Valid rule-filter search fields are: cloudType, complianceStandards, severity,
+# labels. The "complianceStandards" field requires the "ARRAY_CONTAINS" search
+# type; the others use "EQ".
 
 resource "cortexcloud_cloudsec_policy" "high_severity_aws_rules" {
   name        = "High Severity AWS Rules Policy"
-  description = "Applies all high and critical severity AWS rules to production cloud accounts"
+  description = "Applies high severity AWS rules to all assets"
 
-  # Use rule filter to dynamically match rules based on criteria
+  # Use rule filter to dynamically match rules based on criteria.
+  # filter_criteria uses an "operator" (AND/OR) and a "criteria" list where each
+  # entry has "field", "type" and "value".
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Filter criteria: (severity = high OR severity = critical) AND cloudType = aws
+    # Filter criteria: severity = high AND cloudType = aws
     filter_criteria = {
-      and = {
-        # First AND condition: severity must be high or critical
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "high"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "critical"
-        }
-      }
-      and = {
-        # Second AND condition: must be AWS rules
-        search_field = "cloudType"
-        search_type  = "EQ"
-        search_value = "aws"
-      }
+      operator = "AND"
+      criteria = [
+        {
+          field = "severity"
+          type  = "EQ"
+          value = "high"
+        },
+        {
+          field = "cloudType"
+          type  = "EQ"
+          value = "aws"
+        },
+      ]
     }
   }
 
-  # Apply to specific cloud accounts
+  # Apply to all assets.
+  # Note: the "CLOUD_ACCOUNTS" asset matching type is only supported when
+  # rule_matching.type is "RULES"; with "RULE_FILTER" use "ALL_ASSETS" or
+  # "ASSET_GROUPS".
   asset_matching = {
-    type               = "CLOUD_ACCOUNTS"
-    cloud_account_ids = [
-      "123456789012", # Production AWS Account 1
-      "987654321098", # Production AWS Account 2
-    ]
+    type = "ALL_ASSETS"
   }
 
   # Custom labels
-  labels = ["AWS", "High Priority", "Production"]
+  labels = ["aws", "high-priority", "production"]
 
   # Enable the policy
   enabled = true
 }
 
-# Example: Policy with nested filter criteria for compliance rules
+# Example: Policy matching compliance rules using an OR operator.
 resource "cortexcloud_cloudsec_policy" "compliance_rules" {
   name        = "Compliance Rules Policy"
-  description = "Applies compliance-related rules (PCI-DSS or HIPAA) with medium or higher severity"
+  description = "Applies compliance-related rules (PCI-DSS or HIPAA)"
 
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Complex filter: ((compliance contains PCI-DSS OR compliance contains HIPAA) AND 
-    #                  (severity = medium OR severity = high OR severity = critical))
+    # Filter: complianceStandards contains PCI-DSS OR complianceStandards contains HIPAA.
+    # The complianceStandards field must use the ARRAY_CONTAINS search type.
     filter_criteria = {
-      and = {
-        # Compliance standards filter
-        or = {
-          search_field = "complianceStandard"
-          search_type  = "CONTAINS"
-          search_value = "PCI-DSS"
-        }
-        or = {
-          search_field = "complianceStandard"
-          search_type  = "CONTAINS"
-          search_value = "HIPAA"
-        }
-      }
-      and = {
-        # Severity filter
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "medium"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "high"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "critical"
-        }
-      }
+      operator = "OR"
+      criteria = [
+        {
+          field = "complianceStandards"
+          type  = "ARRAY_CONTAINS"
+          value = "PCI-DSS"
+        },
+        {
+          field = "complianceStandards"
+          type  = "ARRAY_CONTAINS"
+          value = "HIPAA"
+        },
+      ]
     }
   }
 
-  # Apply to all assets
   asset_matching = {
     type = "ALL_ASSETS"
   }
 
-  labels  = ["Compliance", "PCI-DSS", "HIPAA"]
+  labels  = ["compliance"]
   enabled = true
 }

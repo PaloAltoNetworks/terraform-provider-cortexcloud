@@ -40,6 +40,7 @@ output "user_groups" {
 
 ### Read-Only
 
+- `group_ids` (List of String) The IDs of the groups the user belongs to.
 - `groups` (Attributes List) The groups of the user. (see [below for nested schema](#nestedatt--groups))
 - `hidden` (Boolean) The hidden status of the user.
 - `last_logged_in` (Number) The last logged in timestamp of the user.
