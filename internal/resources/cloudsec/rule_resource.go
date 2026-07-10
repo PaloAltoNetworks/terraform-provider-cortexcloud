@@ -293,7 +293,7 @@ func (r *CloudSecRuleResource) Create(ctx context.Context, req resource.CreateRe
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating CloudSec Rule",
-			fmt.Sprintf("Could not create rule: %s", err.Error()),
+			cloudSecRuleCreateErrorDetail(err, createReq.ComplianceMetadata),
 		)
 		return
 	}
@@ -490,6 +490,26 @@ func extractControlIDs(cms []cloudsecTypes.ComplianceMetadataInput) []string {
 		ids[i] = cm.ControlID
 	}
 	return ids
+}
+
+// cloudSecRuleCreateErrorDetail builds an actionable error detail for a failed
+// rule creation. When the API returns an opaque HTTP 400 and the request
+// included compliance_metadata, the most common cause is a custom control that
+// is not (yet) associated with a compliance standard. In that case we append
+// guidance pointing the user to the correct workflow.
+func cloudSecRuleCreateErrorDetail(err error, cm []cloudsecTypes.ComplianceMetadataInput) string {
+	base := fmt.Sprintf("Could not create rule: %s", err.Error())
+	if len(cm) == 0 {
+		return base
+	}
+	if !strings.Contains(err.Error(), "400") {
+		return base
+	}
+	return base + "\n\nThis request included compliance_metadata. A common cause of an " +
+		"HTTP 400 here is a custom compliance control that is not associated with a " +
+		"compliance standard. Ensure each control_id is associated with a standard via " +
+		"cortexcloud_compliance_standard.controls_ids (with a depends_on reference for " +
+		"ordering) before referencing it in compliance_metadata."
 }
 
 // isCustomControlID determines whether a control ID is a custom (hex) ID or a built-in ID.

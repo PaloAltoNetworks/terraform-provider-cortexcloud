@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.7"
+      version = "1.0.8"
     }
   }
 }
@@ -108,6 +108,20 @@ provider "cortexcloud" {
 
 ## Release Notes
 
+### v1.0.8
+
+#### Enhancements
+* Added `cspm_rule_id` attribute to AppSec rule `frameworks` blocks, enabling custom Application Security rules to be mapped to a Cloud Security (CSPM) rule
+* Exposed additional read-only AppSec rule attributes: `short_description`, and framework-level `remediation_ids` and `resource_types`
+
+#### Bug Fixes
+* Fixed a provider crash when creating a `cortexcloud_cloud_integration_template_aws` resource caused by large millisecond timestamps returned by the API
+* Fixed a provider crash when reading the `cortexcloud_user` data source
+* Fixed `cortexcloud_iam_role` creation failing when a role was configured without dataset permissions
+* Fixed `cortexcloud_cloudsec_rules` data source values not being accepted as `rules` in a `cortexcloud_cloudsec_policy` `rule_matching` block at plan time
+* Corrected `cortexcloud_iam_role` and `cortexcloud_scope` documentation and examples, including the `datasets_rows` attribute assignment syntax
+* Corrected `cortexcloud_cloudsec_policy`, `cortexcloud_scope`, and `cortexcloud_user` documentation examples so they plan and apply successfully out of the box
+
 ### v1.0.7
 
 #### Enhancements
@@ -194,3 +208,5 @@ provider "cortexcloud" {
 
 #### Features
 * Initial GA release
+
+<!---Protected_by_PANW_Code_Armor_2024 eGRyfC94ZHIvZGV2ZWxvcG1lbnQvY29ydGV4Y2xvdWQtdGVycmFmb3JtLXByb3ZpZGVyL3RlcnJhZm9ybXwzNDE1fG1hc3Rlcg== --->

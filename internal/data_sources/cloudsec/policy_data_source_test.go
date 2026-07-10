@@ -31,20 +31,18 @@ func TestUnitCloudSecPolicyDataSource_ReadAllRules(t *testing.T) {
 		case path == "/public_api/v1/policy/policy-all-rules-123" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-all-rules-123",
-					"name": "All Rules Policy",
-					"description": "Policy matching all rules",
-					"labels": ["production", "security"],
-					"rule_matching_type": "ALL_RULES",
-					"asset_matching_type": "ALL_ASSETS",
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-all-rules-123",
+				"name": "All Rules Policy",
+				"description": "Policy matching all rules",
+				"labels": ["production", "security"],
+				"rule_matching_type": "ALL_RULES",
+				"asset_matching_type": "ALL_ASSETS",
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		default:
@@ -105,22 +103,20 @@ func TestUnitCloudSecPolicyDataSource_ReadSpecificRules(t *testing.T) {
 		case path == "/public_api/v1/policy/policy-specific-rules-456" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-specific-rules-456",
-					"name": "Specific Rules Policy",
-					"description": "Policy with specific rule IDs",
-					"labels": ["security", "compliance"],
-					"rule_matching_type": "RULES",
-					"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
-					"asset_matching_type": "ASSET_GROUPS",
-					"associated_asset_group_ids": [100, 200, 300],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-specific-rules-456",
+				"name": "Specific Rules Policy",
+				"description": "Policy with specific rule IDs",
+				"labels": ["security", "compliance"],
+				"rule_matching_type": "RULES",
+				"associated_rule_ids": ["rule-id-1", "rule-id-2", "rule-id-3"],
+				"asset_matching_type": "ASSET_GROUPS",
+				"associated_asset_group_ids": [100, 200, 300],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		default:
@@ -154,13 +150,15 @@ func TestUnitCloudSecPolicyDataSource_ReadSpecificRules(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "labels.*", "security"),
 					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "labels.*", "compliance"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.type", "RULES"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.0", "rule-id-1"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.1", "rule-id-2"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.2", "rule-id-3"),
+					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.#", "3"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.*", "rule-id-1"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.*", "rule-id-2"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.rules.*", "rule-id-3"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.type", "ASSET_GROUPS"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.0", "100"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.1", "200"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.2", "300"),
+					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.#", "3"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.*", "100"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.*", "200"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.asset_group_ids.*", "300"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "mode", "CUSTOM"),
 				),
@@ -183,26 +181,24 @@ func TestUnitCloudSecPolicyDataSource_ReadRuleFilter(t *testing.T) {
 		case path == "/public_api/v1/policy/policy-filter-789" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "policy-filter-789",
-					"name": "Filtered Rules Policy",
-					"description": "Policy with rule filter",
-					"labels": ["high-severity"],
-					"rule_matching_type": "RULE_FILTER",
-					"associated_rule_filter": {
-						"SEARCH_FIELD": "severity",
-						"SEARCH_TYPE": "EQ",
-						"SEARCH_VALUE": "high"
-					},
-					"asset_matching_type": "CLOUD_ACCOUNTS",
-					"associated_cloud_account_ids": ["account-1", "account-2"],
-					"enabled": true,
-					"mode": "CUSTOM",
-					"creation_time": 1678886400000,
-					"created_by": "test-user",
-					"modification_time": 1678886400000,
-					"modified_by": "test-user"
-				}
+				"id": "policy-filter-789",
+				"name": "Filtered Rules Policy",
+				"description": "Policy with rule filter",
+				"labels": ["high-severity"],
+				"rule_matching_type": "RULE_FILTER",
+				"associated_rule_filter": {
+					"SEARCH_FIELD": "severity",
+					"SEARCH_TYPE": "EQ",
+					"SEARCH_VALUE": "high"
+				},
+				"asset_matching_type": "CLOUD_ACCOUNTS",
+				"associated_cloud_account_ids": ["account-1", "account-2"],
+				"enabled": true,
+				"mode": "CUSTOM",
+				"creation_time": 1678886400000,
+				"created_by": "test-user",
+				"modification_time": 1678886400000,
+				"modified_by": "test-user"
 			}`)
 
 		default:
@@ -239,8 +235,9 @@ func TestUnitCloudSecPolicyDataSource_ReadRuleFilter(t *testing.T) {
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.filter_criteria.type", "EQ"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "rule_matching.filter_criteria.value", "high"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.type", "CLOUD_ACCOUNTS"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.cloud_account_ids.0", "account-1"),
-					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.cloud_account_ids.1", "account-2"),
+					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.cloud_account_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.cloud_account_ids.*", "account-1"),
+					resource.TestCheckTypeSetElemAttr("data.cortexcloud_cloudsec_policy.test", "asset_matching.cloud_account_ids.*", "account-2"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("data.cortexcloud_cloudsec_policy.test", "mode", "CUSTOM"),
 				),
@@ -289,7 +286,7 @@ func TestUnitCloudSecPolicyDataSource_NotFound(t *testing.T) {
 						id = "non-existent-policy-id"
 					}
 				`, server.URL),
-				ExpectError: regexp.MustCompile("Error Reading CloudSec Policy|Could not read policy"),
+				ExpectError: regexp.MustCompile("CloudSec Policy Not Found|was not found|Error Reading CloudSec Policy|Could not read policy"),
 			},
 		},
 	})

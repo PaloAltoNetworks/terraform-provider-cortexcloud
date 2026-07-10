@@ -12,8 +12,10 @@ import (
 
 	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -78,6 +80,11 @@ func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 				Description: "The user type of the user.",
 				Computed:    true,
 			},
+			"group_ids": schema.ListAttribute{
+				Description: "The IDs of the groups the user belongs to.",
+				Computed:    true,
+				ElementType: types.StringType,
+			},
 			"groups": schema.ListNestedAttribute{
 				Description: "The groups of the user.",
 				Computed:    true,
@@ -130,6 +137,25 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	state.RefreshFromRemote(ctx, &resp.Diagnostics, user)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// The shared UserModel carries a write-intent `group_ids` field that
+	// RefreshFromRemote intentionally leaves untouched (so the resource does
+	// not drift). For the data source, `group_ids` is a computed convenience
+	// mirror of the user's group IDs, so populate it explicitly here.
+	if len(user.Groups) == 0 {
+		state.GroupIDs = types.ListNull(types.StringType)
+	} else {
+		ids := make([]attr.Value, 0, len(user.Groups))
+		for _, g := range user.Groups {
+			ids = append(ids, types.StringValue(g.GroupID))
+		}
+		lv, d := types.ListValue(types.StringType, ids)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.GroupIDs = lv
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

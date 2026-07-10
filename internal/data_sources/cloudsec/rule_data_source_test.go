@@ -28,31 +28,29 @@ func TestUnitCloudSecRuleDataSource_Read(t *testing.T) {
 		}
 
 		switch {
-		case path == "/public_api/v1/policy/test-rule-id-123" && r.Method == http.MethodGet:
+		case path == "/public_api/v1/rule/test-rule-id-123" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "test-rule-id-123",
-					"name": "Test S3 Bucket Rule",
-					"description": "Test rule for S3 buckets",
-					"class": "config",
-					"type": "DETECTION",
-					"asset_types": ["aws-s3-bucket"],
-					"severity": "high",
-					"query": {
-						"xql": "config from cloud.resource where cloud.type = 'aws' AND api.name = 's3api.get_bucket_acl'"
-					},
-					"enabled": true,
-					"providers": ["aws"],
-					"system_default": false,
-					"created_by": "test-user",
-					"created_on": 1678886400000,
-					"last_modified_by": "test-user",
-					"last_modified_on": 1678886400000,
-					"deleted": false,
-					"deleted_at": 0,
-					"deleted_by": ""
-				}
+				"id": "test-rule-id-123",
+				"name": "Test S3 Bucket Rule",
+				"description": "Test rule for S3 buckets",
+				"rule_class": "config",
+				"type": "DETECTION",
+				"asset_types": ["aws-s3-bucket"],
+				"severity": "high",
+				"query": {
+					"xql": "config from cloud.resource where cloud.type = 'aws' AND api.name = 's3api.get_bucket_acl'"
+				},
+				"enabled": true,
+				"providers": ["aws"],
+				"system_default": false,
+				"created_by": "test-user",
+				"created_on": 1678886400000,
+				"last_modified_by": "test-user",
+				"last_modified_on": 1678886400000,
+				"deleted": false,
+				"deleted_at": 0,
+				"deleted_by": ""
 			}`)
 
 		default:
@@ -112,51 +110,49 @@ func TestUnitCloudSecRuleDataSource_ReadWithCompliance(t *testing.T) {
 		}
 
 		switch {
-		case path == "/public_api/v1/policy/test-rule-id-456" && r.Method == http.MethodGet:
+		case path == "/public_api/v1/rule/test-rule-id-456" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{
-				"data": {
-					"id": "test-rule-id-456",
-					"name": "CIS Compliance Rule",
-					"description": "Rule with compliance metadata",
-					"class": "config",
-					"type": "DETECTION",
-					"asset_types": ["aws-s3-bucket"],
-					"severity": "critical",
-					"query": {
-						"xql": "config from cloud.resource where cloud.type = 'aws'"
+				"id": "test-rule-id-456",
+				"name": "CIS Compliance Rule",
+				"description": "Rule with compliance metadata",
+				"rule_class": "config",
+				"type": "DETECTION",
+				"asset_types": ["aws-s3-bucket"],
+				"severity": "critical",
+				"query": {
+					"xql": "config from cloud.resource where cloud.type = 'aws'"
+				},
+				"metadata": {
+					"issue": {
+						"recommendation": "Enable encryption at rest"
+					}
+				},
+				"compliance_metadata": [
+					{
+						"control_id": "CIS-AWS-2.1.5",
+						"standard_id": "CIS-AWS",
+						"standard_name": "CIS Amazon Web Services Foundations Benchmark",
+						"control_name": "Ensure S3 bucket encryption is enabled"
 					},
-					"metadata": {
-						"issue": {
-							"recommendation": "Enable encryption at rest"
-						}
-					},
-					"compliance_metadata": [
-						{
-							"control_id": "CIS-AWS-2.1.5",
-							"standard_id": "CIS-AWS",
-							"standard_name": "CIS Amazon Web Services Foundations Benchmark",
-							"control_name": "Ensure S3 bucket encryption is enabled"
-						},
-						{
-							"control_id": "NIST-800-53-SC-28",
-							"standard_id": "NIST-800-53",
-							"standard_name": "NIST Special Publication 800-53",
-							"control_name": "Protection of Information at Rest"
-						}
-					],
-					"labels": ["security", "encryption", "compliance"],
-					"enabled": true,
-					"providers": ["aws"],
-					"system_default": false,
-					"created_by": "test-user",
-					"created_on": 1678886400000,
-					"last_modified_by": "test-user",
-					"last_modified_on": 1678886400000,
-					"deleted": false,
-					"deleted_at": 0,
-					"deleted_by": ""
-				}
+					{
+						"control_id": "NIST-800-53-SC-28",
+						"standard_id": "NIST-800-53",
+						"standard_name": "NIST Special Publication 800-53",
+						"control_name": "Protection of Information at Rest"
+					}
+				],
+				"labels": ["security", "encryption", "compliance"],
+				"enabled": true,
+				"providers": ["aws"],
+				"system_default": false,
+				"created_by": "test-user",
+				"created_on": 1678886400000,
+				"last_modified_by": "test-user",
+				"last_modified_on": 1678886400000,
+				"deleted": false,
+				"deleted_at": 0,
+				"deleted_by": ""
 			}`)
 
 		default:
@@ -217,7 +213,7 @@ func TestUnitCloudSecRuleDataSource_NotFound(t *testing.T) {
 		}
 
 		switch {
-		case path == "/public_api/v1/policy/non-existent-rule-id" && r.Method == http.MethodGet:
+		case path == "/public_api/v1/rule/non-existent-rule-id" && r.Method == http.MethodGet:
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintln(w, `{
 				"error": "Rule not found"
@@ -246,7 +242,7 @@ func TestUnitCloudSecRuleDataSource_NotFound(t *testing.T) {
 						id = "non-existent-rule-id"
 					}
 				`, server.URL),
-				ExpectError: regexp.MustCompile("Error Reading CloudSec Rule|Could not read rule"),
+				ExpectError: regexp.MustCompile("CloudSec Rule Not Found|Error Reading CloudSec Rule|Could not read rule"),
 			},
 		},
 	})

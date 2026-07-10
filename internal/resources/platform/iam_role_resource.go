@@ -149,7 +149,10 @@ func (r *iamRoleResource) Create(ctx context.Context, req resource.CreateRequest
 			return
 		}
 		for _, m := range dsPermsModels {
-			var perms []string
+			// Initialize to a non-nil empty slice so the field marshals as
+			// an empty JSON array ("permissions": []) rather than null when
+			// the user omits it. The API rejects a null value with a 500.
+			perms := []string{}
 			if !m.Permissions.IsNull() && !m.Permissions.IsUnknown() {
 				resp.Diagnostics.Append(m.Permissions.ElementsAs(ctx, &perms, false)...)
 				if resp.Diagnostics.HasError() {
@@ -278,7 +281,10 @@ func (r *iamRoleResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 		for _, dsPermsModel := range dsPermsModels {
-			var permissions []string
+			// Initialize to a non-nil empty slice so the field marshals as
+			// an empty JSON array ("permissions": []) rather than null when
+			// the user omits it. The API rejects a null value with a 500.
+			permissions := []string{}
 			if !dsPermsModel.Permissions.IsNull() && !dsPermsModel.Permissions.IsUnknown() {
 				resp.Diagnostics.Append(dsPermsModel.Permissions.ElementsAs(ctx, &permissions, false)...)
 				if resp.Diagnostics.HasError() {

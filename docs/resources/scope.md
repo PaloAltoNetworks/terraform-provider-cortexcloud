@@ -14,65 +14,108 @@ Manages a Cortex Cloud scope.
 
 ```terraform
 # Basic scope configuration for a user
+# NOTE: entity_id must reference a user that already exists in your tenant.
+# The API rejects the request with a 400 Bad Request if the user is not found.
+# Replace "user@example.com" with a real user email from your environment
+# (e.g. from the cortexcloud_user data source). Likewise, the asset_group_id
+# values below must reference existing asset groups.
 resource "cortexcloud_scope" "example" {
   entity_type = "user"
-  entity_id   = "user@example.com"
+  entity_id   = "user@example.com" # replace with a real user email
 
-  # Asset scope - limit access to specific assets
-  assets {
-    asset_groups = ["production-servers", "development-servers"]
+  # Asset scope - limit access to specific asset groups.
+  # mode is required; the API expects "scope" to restrict access to the
+  # listed asset groups. asset_groups are referenced by their numeric IDs.
+  assets = {
+    mode = "scope"
+    asset_groups = [
+      # These are placeholder IDs. Replace 101/102 with real asset group IDs
+      # from your tenant (e.g. from the cortexcloud asset group resource).
+      { asset_group_id = 101 },
+      { asset_group_id = 102 },
+    ]
   }
 
-  # Dataset rows scope - limit access to specific dataset rows
-  datasets_rows {
-    dataset_name = "security_logs"
-    filter_json = jsonencode({
-      field    = "severity"
-      operator = "equals"
-      value    = "high"
-    })
+  # Dataset rows scope - limit access to specific dataset rows.
+  # default_filter_mode is required (one of "no_scope", "see_all").
+  # filter is a raw XQL query string that selects the rows in scope.
+  datasets_rows = {
+    default_filter_mode = "no_scope"
+    filters = [
+      {
+        # Replace "amazon_aws_raw" with a real dataset name that exists in
+        # your tenant (this is only an example dataset name).
+        dataset = "amazon_aws_raw"
+        filter  = "severity = \"high\""
+      },
+    ]
   }
 }
 ```
 
 ```terraform
 # Scope configuration for a user group with multiple scope types
+# NOTE: entity_id must reference a user group that already exists in your
+# tenant. The API rejects the request with a 400 Bad Request ("Group not
+# found") if the group does not exist. entity_id expects the group's UUID
+# (not its display name); use the group UUID from your environment (e.g. from
+# the cortexcloud_user_group data source). The asset_group_id, tag, and
+# endpoint values below must likewise reference existing objects in your tenant.
 resource "cortexcloud_scope" "group_example" {
-  entity_type = "group"
-  entity_id   = "security-team"
+  entity_type = "user-group"
+  # Replace with a real user-group UUID (the API expects the group UUID, not
+  # the group name).
+  entity_id = "00000000-0000-0000-0000-000000000000"
 
-  # Asset scope - limit access to specific asset groups
-  assets {
-    asset_groups = ["production-assets", "staging-assets"]
+  # Asset scope - limit access to specific asset groups (by numeric ID).
+  # mode is required; the API expects "scope" to restrict access to the
+  # listed asset groups.
+  assets = {
+    mode = "scope"
+    asset_groups = [
+      # These are placeholder IDs. Replace 201/202 with real asset group IDs
+      # from your tenant.
+      { asset_group_id = 201 },
+      { asset_group_id = 202 },
+    ]
   }
 
-  # Cases and issues scope
-  cases_issues {
-    case_types = ["security_incident", "compliance_violation"]
+  # Cases and issues scope - limit access by tags.
+  cases_issues = {
+    mode = "scope"
+    tags = [
+      { tag_name = "security_incident" },
+      { tag_name = "compliance_violation" },
+    ]
   }
 
-  # Endpoints scope - limit access to specific endpoints
-  endpoints {
-    endpoint_groups = ["corporate-laptops", "servers"]
+  # Endpoints scope - limit access to specific endpoint groups and/or tags.
+  endpoints = {
+    endpoint_groups = {
+      mode = "scope"
+      tags = [
+        { tag_name = "corporate-laptops" },
+        { tag_name = "servers" },
+      ]
+    }
   }
 
-  # Dataset rows scope with multiple datasets
-  datasets_rows {
-    dataset_name = "audit_logs"
-    filter_json = jsonencode({
-      field    = "department"
-      operator = "equals"
-      value    = "security"
-    })
-  }
-
-  datasets_rows {
-    dataset_name = "threat_intelligence"
-    filter_json = jsonencode({
-      field    = "severity"
-      operator = "in"
-      value    = ["critical", "high"]
-    })
+  # Dataset rows scope with multiple datasets.
+  # filter is a raw XQL query string that selects the rows in scope.
+  # Replace the dataset names below with real dataset names that exist in your
+  # tenant (these are only example dataset names).
+  datasets_rows = {
+    default_filter_mode = "no_scope"
+    filters = [
+      {
+        dataset = "amazon_aws_raw"
+        filter  = "department = \"security\""
+      },
+      {
+        dataset = "msft_azure_raw"
+        filter  = "severity in (\"critical\", \"high\")"
+      },
+    ]
   }
 }
 ```

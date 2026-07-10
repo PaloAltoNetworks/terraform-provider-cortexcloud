@@ -23,22 +23,34 @@ var metadataKeyRe = regexp.MustCompile(`(\r?\n)metadata:[ \t]*(\r?\n)`)
 
 // RuleModel is the Terraform model for an AppSec rule.
 type RuleModel struct {
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Severity        types.String `tfsdk:"severity"`
-	Scanner         types.String `tfsdk:"scanner"`
-	Category        types.String `tfsdk:"category"`
-	SubCategory     types.String `tfsdk:"sub_category"`
-	Description     types.String `tfsdk:"description"`
-	Frameworks      types.List   `tfsdk:"frameworks"`
-	Labels          types.List   `tfsdk:"labels"`
-	IsCustom        types.Bool   `tfsdk:"is_custom"`
-	IsEnabled       types.Bool   `tfsdk:"is_enabled"`
-	CloudProvider   types.String `tfsdk:"cloud_provider"`
-	Domain          types.String `tfsdk:"domain"`
-	FindingCategory types.String `tfsdk:"finding_category"`
-	CreatedAt       types.String `tfsdk:"created_at"`
-	UpdatedAt       types.String `tfsdk:"updated_at"`
+	ID               types.String `tfsdk:"id"`
+	Name             types.String `tfsdk:"name"`
+	Severity         types.String `tfsdk:"severity"`
+	Scanner          types.String `tfsdk:"scanner"`
+	Category         types.String `tfsdk:"category"`
+	SubCategory      types.String `tfsdk:"sub_category"`
+	Description      types.String `tfsdk:"description"`
+	Frameworks       types.List   `tfsdk:"frameworks"`
+	Labels           types.List   `tfsdk:"labels"`
+	IsCustom         types.Bool   `tfsdk:"is_custom"`
+	IsEnabled        types.Bool   `tfsdk:"is_enabled"`
+	CloudProvider    types.String `tfsdk:"cloud_provider"`
+	Domain           types.String `tfsdk:"domain"`
+	FindingCategory  types.String `tfsdk:"finding_category"`
+	CreatedAt        types.String `tfsdk:"created_at"`
+	UpdatedAt        types.String `tfsdk:"updated_at"`
+	ShortDescription types.String `tfsdk:"short_description"`
+	// The following are read-only fields populated by the API on read.
+	DocLink         types.String `tfsdk:"doc_link"`
+	DetectionMethod types.String `tfsdk:"detection_method"`
+	FindingDocs     types.String `tfsdk:"finding_docs"`
+	FindingTypeID   types.Int64  `tfsdk:"finding_type_id"`
+	Owner           types.String `tfsdk:"owner"`
+	MitreTactics    types.List   `tfsdk:"mitre_tactics"`
+	MitreTechniques types.List   `tfsdk:"mitre_techniques"`
+	// Write-only: API accepts it on create/update but never returns it; value is
+	// preserved from config/state.
+	CspmRuleId types.String `tfsdk:"cspm_rule_id"`
 }
 
 // FrameworkModel represents a framework definition.
@@ -47,6 +59,21 @@ type FrameworkModel struct {
 	Definition             types.String `tfsdk:"definition"`
 	DefinitionLink         types.String `tfsdk:"definition_link"`
 	RemediationDescription types.String `tfsdk:"remediation_description"`
+	RemediationIds         types.List   `tfsdk:"remediation_ids"`
+	ResourceTypes          types.List   `tfsdk:"resource_types"`
+}
+
+// frameworkAttrTypes returns the attribute types for a framework object,
+// used when building framework list values from the SDK response.
+func frameworkAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":                    types.StringType,
+		"definition":              types.StringType,
+		"definition_link":         types.StringType,
+		"remediation_description": types.StringType,
+		"remediation_ids":         types.ListType{ElemType: types.StringType},
+		"resource_types":          types.ListType{ElemType: types.StringType},
+	}
 }
 
 // RefreshFromRemote updates the Terraform model from the SDK response.
@@ -60,9 +87,7 @@ func (m *RuleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 
 	m.ID = types.StringValue(remote.Id)
 
-	// The AppSec API lowercases the name and description fields on create/update.
-	// Use case-insensitive comparison to preserve the user's original casing
-	// and prevent spurious Terraform state drift.
+	// API lowercases name/description; preserve the user's casing to avoid drift.
 	m.Name = preserveCaseIfEqual(m.Name, remote.Name)
 	m.Description = preserveCaseIfEqual(m.Description, remote.Description)
 
@@ -77,12 +102,31 @@ func (m *RuleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 	m.FindingCategory = types.StringValue(remote.FindingCategory)
 	m.CreatedAt = types.StringValue(remote.CreatedAt.Value)
 	m.UpdatedAt = types.StringValue(remote.UpdatedAt.Value)
+	m.ShortDescription = stringValueOrNull(remote.ShortDescription)
 
-	// Convert frameworks.
-	// The AppSec API may auto-add companion frameworks (e.g., TERRAFORMPLAN
-	// when TERRAFORM is sent). Filter the API response to only include
-	// frameworks the user configured, preventing Terraform's "block count
-	// changed" error.
+	// Read-only fields populated by the API on read.
+	m.DocLink = stringValueOrNull(remote.DocLink)
+	if remote.DetectionMethod != nil {
+		m.DetectionMethod = stringValueOrNull(*remote.DetectionMethod)
+	} else {
+		m.DetectionMethod = types.StringNull()
+	}
+	m.FindingDocs = stringValueOrNull(remote.FindingDocs)
+	m.FindingTypeID = types.Int64Value(int64(remote.FindingTypeId))
+	m.Owner = stringValueOrNull(remote.Owner)
+
+	mitreTactics, mtDiags := stringSliceToListOrNull(ctx, remote.MitreTactics)
+	diags.Append(mtDiags...)
+	mitreTechniques, mtechDiags := stringSliceToListOrNull(ctx, remote.MitreTechniques)
+	diags.Append(mtechDiags...)
+	if diags.HasError() {
+		return
+	}
+	m.MitreTactics = mitreTactics
+	m.MitreTechniques = mitreTechniques
+
+	// API may auto-add companion frameworks (e.g. TERRAFORMPLAN for TERRAFORM);
+	// filter to configured ones to avoid a "block count changed" error.
 	configuredNames := m.configuredFrameworkNames(ctx, diags)
 	if diags.HasError() {
 		return
@@ -95,17 +139,9 @@ func (m *RuleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 	}
 
 	if len(remoteFrameworks) == 0 {
-		m.Frameworks = types.ListNull(types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"name":                    types.StringType,
-				"definition":              types.StringType,
-				"definition_link":         types.StringType,
-				"remediation_description": types.StringType,
-			},
-		})
+		m.Frameworks = types.ListNull(types.ObjectType{AttrTypes: frameworkAttrTypes()})
 	} else {
-		// Build a map of configured definitions (from current model) so we can
-		// preserve the user's original value when the normalized forms match.
+		// Preserve the user's definition when normalized forms match.
 		configuredDefs := m.configuredFrameworkDefinitions(ctx, diags)
 
 		frameworkElements := make([]attr.Value, len(remoteFrameworks))
@@ -113,18 +149,23 @@ func (m *RuleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 			normalizedRemoteDef := stripDefinitionMetadata(fw.Definition)
 			defValue := preserveDefinitionIfEqual(configuredDefs[fw.Name], normalizedRemoteDef)
 
+			remediationIds, riDiags := stringSliceToListOrNull(ctx, fw.RemediationIds)
+			diags.Append(riDiags...)
+			resourceTypes, rtDiags := stringSliceToListOrNull(ctx, fw.ResourceTypes)
+			diags.Append(rtDiags...)
+			if diags.HasError() {
+				return
+			}
+
 			fwObj, fwDiags := types.ObjectValue(
-				map[string]attr.Type{
-					"name":                    types.StringType,
-					"definition":              types.StringType,
-					"definition_link":         types.StringType,
-					"remediation_description": types.StringType,
-				},
+				frameworkAttrTypes(),
 				map[string]attr.Value{
 					"name":                    types.StringValue(fw.Name),
 					"definition":              defValue,
 					"definition_link":         stringValueOrNull(fw.DefinitionLink),
 					"remediation_description": stringValueOrNull(fw.RemediationDescription),
+					"remediation_ids":         remediationIds,
+					"resource_types":          resourceTypes,
 				},
 			)
 			diags.Append(fwDiags...)
@@ -134,14 +175,7 @@ func (m *RuleModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagnosti
 			frameworkElements[i] = fwObj
 		}
 		fwList, fwListDiags := types.ListValue(
-			types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"name":                    types.StringType,
-					"definition":              types.StringType,
-					"definition_link":         types.StringType,
-					"remediation_description": types.StringType,
-				},
-			},
+			types.ObjectType{AttrTypes: frameworkAttrTypes()},
 			frameworkElements,
 		)
 		diags.Append(fwListDiags...)
@@ -179,12 +213,10 @@ func (m *RuleModel) ToCreateRequest(ctx context.Context, diags *diag.Diagnostics
 		Category:    m.Category.ValueString(),
 		SubCategory: m.SubCategory.ValueString(),
 		Description: m.Description.ValueString(),
+		CspmRuleId:  cspmRuleIdPointerOrNil(m.CspmRuleId),
 	}
 
-	// Convert frameworks.
-	// Note: outbound uses ValueString() (null→"") which the API accepts.
-	// Inbound (RefreshFromRemote) uses stringValueOrNull (""→null) to match
-	// Terraform's expectation for unset Optional attributes.
+	// Outbound uses ValueString() (null→""); inbound uses stringValueOrNull (""→null).
 	if !m.Frameworks.IsNull() && !m.Frameworks.IsUnknown() {
 		var frameworks []FrameworkModel
 		diags.Append(m.Frameworks.ElementsAs(ctx, &frameworks, false)...)
@@ -218,6 +250,16 @@ func (m *RuleModel) ToCreateRequest(ctx context.Context, diags *diag.Diagnostics
 	return req
 }
 
+// cspmRuleIdPointerOrNil returns nil for unset/empty values so the optional
+// field is omitted from the request.
+func cspmRuleIdPointerOrNil(v types.String) *string {
+	if v.IsNull() || v.IsUnknown() || v.ValueString() == "" {
+		return nil
+	}
+	s := v.ValueString()
+	return &s
+}
+
 // ToUpdateRequest converts the Terraform model to an SDK update request.
 func (m *RuleModel) ToUpdateRequest(ctx context.Context, diags *diag.Diagnostics) appsecTypes.UpdateRequest {
 	tflog.Debug(ctx, "Converting rule model to update request")
@@ -229,6 +271,7 @@ func (m *RuleModel) ToUpdateRequest(ctx context.Context, diags *diag.Diagnostics
 		Category:    m.Category.ValueString(),
 		SubCategory: m.SubCategory.ValueString(),
 		Description: m.Description.ValueString(),
+		CspmRuleId:  cspmRuleIdPointerOrNil(m.CspmRuleId),
 	}
 
 	// Convert frameworks
@@ -265,9 +308,8 @@ func (m *RuleModel) ToUpdateRequest(ctx context.Context, diags *diag.Diagnostics
 	return req
 }
 
-// configuredFrameworkNames returns the set of framework names currently in the
-// model's Frameworks list. If the list is null or unknown (e.g., during import),
-// it returns nil to indicate that no filtering should be applied.
+// configuredFrameworkNames returns the configured framework names, or nil (no
+// filtering) when the list is null/unknown.
 func (m *RuleModel) configuredFrameworkNames(ctx context.Context, diags *diag.Diagnostics) map[string]struct{} {
 	if m.Frameworks.IsNull() || m.Frameworks.IsUnknown() {
 		return nil
@@ -288,9 +330,7 @@ func (m *RuleModel) configuredFrameworkNames(ctx context.Context, diags *diag.Di
 	return names
 }
 
-// filterFrameworks returns only the frameworks whose names are in the
-// configuredNames set. If configuredNames is nil (e.g., during import or when
-// no frameworks are configured), all frameworks are returned unfiltered.
+// filterFrameworks keeps only frameworks in configuredNames; nil means no filtering.
 func filterFrameworks(frameworks []appsecTypes.FrameworkData, configuredNames map[string]struct{}) []appsecTypes.FrameworkData {
 	if configuredNames == nil {
 		return frameworks
@@ -305,10 +345,7 @@ func filterFrameworks(frameworks []appsecTypes.FrameworkData, configuredNames ma
 	return filtered
 }
 
-// stringValueOrNull returns types.StringNull() for empty strings and
-// types.StringValue(v) otherwise. This prevents Terraform state drift for
-// Optional schema attributes that the user did not set — Terraform expects
-// null, not an empty string.
+// stringValueOrNull returns null for empty strings to avoid drift on unset Optional attrs.
 func stringValueOrNull(v string) types.String {
 	if v == "" {
 		return types.StringNull()
@@ -316,36 +353,32 @@ func stringValueOrNull(v string) types.String {
 	return types.StringValue(v)
 }
 
-// stripDefinitionMetadata normalizes a framework definition string returned
-// by the AppSec API. It performs two normalizations:
-//
-//  1. Strips the API-appended "metadata:" YAML section. The API appends rule
-//     metadata (name, category, severity, guidelines) to the definition field
-//     in GET responses, causing Terraform to detect spurious drift on updates.
-//
-//  2. Trims trailing whitespace/newlines. Terraform heredocs (<<-EOT) always
-//     add a trailing newline, but the API strips it, causing a mismatch.
-//
-// The function looks for "\nmetadata:\n" as a top-level YAML key (at column 0)
-// and truncates everything from that point onward.
+// stringSliceToListOrNull returns a typed null list for empty slices to avoid drift.
+func stringSliceToListOrNull(ctx context.Context, values []string) (types.List, diag.Diagnostics) {
+	if len(values) == 0 {
+		return types.ListNull(types.StringType), nil
+	}
+	return types.ListValueFrom(ctx, types.StringType, values)
+}
+
+// stripDefinitionMetadata normalizes an API-returned definition: it drops the
+// API-appended top-level "metadata:" YAML section (which causes spurious drift)
+// and trims trailing whitespace (heredocs add a newline the API strips).
 func stripDefinitionMetadata(definition string) string {
 	if definition == "" {
 		return definition
 	}
 
-	// Use the package-level compiled regex to find a top-level "metadata:" key
-	// at column 0, not indented (which would be a nested value).
+	// Top-level "metadata:" key at column 0 (not nested): truncate from there.
 	loc := metadataKeyRe.FindStringIndex(definition)
 	if loc != nil {
 		return strings.TrimRight(definition[:loc[0]], " \t\r\n")
 	}
 
-	// Also handle the edge case where "metadata:" is at the very start.
 	if strings.HasPrefix(definition, "metadata:") {
 		return ""
 	}
 
-	// Trim trailing whitespace/newlines to match API behavior.
 	return strings.TrimRight(definition, " \t\r\n")
 }
 

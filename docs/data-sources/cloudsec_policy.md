@@ -52,7 +52,7 @@ output "policy_labels" {
 # Example: Reference policy's rule IDs in another resource
 output "policy_rule_ids" {
   description = "Rule IDs used by the policy (if type is RULES)"
-  value       = data.cortexcloud_cloudsec_policy.example.rule_matching.rule_ids
+  value       = data.cortexcloud_cloudsec_policy.example.rule_matching.rules
 }
 
 # Example: Check if policy applies to specific asset groups
@@ -67,17 +67,21 @@ resource "cortexcloud_cloudsec_policy" "similar_policy" {
   description = "Similar to: ${data.cortexcloud_cloudsec_policy.example.description}"
 
   # Reuse the same rule matching configuration
-  rule_matching {
-    type     = data.cortexcloud_cloudsec_policy.example.rule_matching.type
-    rule_ids = data.cortexcloud_cloudsec_policy.example.rule_matching.rule_ids
+  rule_matching = {
+    type  = data.cortexcloud_cloudsec_policy.example.rule_matching.type
+    rules = data.cortexcloud_cloudsec_policy.example.rule_matching.rules
   }
 
   # Apply to all assets instead
-  asset_matching {
+  asset_matching = {
     type = "ALL_ASSETS"
   }
 
-  labels  = concat(data.cortexcloud_cloudsec_policy.example.labels, ["copy"])
+  # labels is a set of strings and may be null when the source policy has no
+  # labels. coalesce() substitutes an empty set for null, then it is converted
+  # to a list for concat (concat only accepts lists/tuples) and re-deduplicated
+  # via toset.
+  labels  = toset(concat(tolist(coalesce(data.cortexcloud_cloudsec_policy.example.labels, toset([]))), ["copy"]))
   enabled = true
 }
 ```
@@ -108,8 +112,8 @@ resource "cortexcloud_cloudsec_policy" "similar_policy" {
 
 Read-Only:
 
-- `asset_group_ids` (List of Number) List of asset group IDs (when type is ASSET_GROUPS).
-- `cloud_account_ids` (List of String) List of cloud account IDs (when type is CLOUD_ACCOUNTS).
+- `asset_group_ids` (Set of Number) Set of asset group IDs (when type is ASSET_GROUPS).
+- `cloud_account_ids` (Set of String) Set of cloud account IDs (when type is CLOUD_ACCOUNTS).
 - `type` (String) Asset matching type (ALL_ASSETS, ASSET_GROUPS, CLOUD_ACCOUNTS).
 
 
@@ -119,7 +123,7 @@ Read-Only:
 Read-Only:
 
 - `filter_criteria` (Attributes) Filter criteria for rules (when type is RULE_FILTER). (see [below for nested schema](#nestedatt--rule_matching--filter_criteria))
-- `rules` (List of String) List of rule IDs (when type is RULES).
+- `rules` (Set of String) Set of rule IDs (when type is RULES).
 - `type` (String) Rule matching type (ALL_RULES, RULES, RULE_FILTER).
 
 <a id="nestedatt--rule_matching--filter_criteria"></a>

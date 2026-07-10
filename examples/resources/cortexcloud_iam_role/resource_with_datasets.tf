@@ -1,30 +1,24 @@
-# IAM role with component and dataset permissions
+# IAM role with component and dataset permissions.
+#
+# Valid component permission tokens and dataset categories are tenant-specific
+# and can be discovered from the cortexcloud_iam_permission_config data source.
+# Dataset categories are values such as: System, Lookup, Raw, Snapshot.
 resource "cortexcloud_iam_role" "with_datasets" {
   pretty_name = "Data Analyst"
   description = "Role for data analysts with access to specific datasets"
 
   component_permissions = [
     "actions_center_action",
-    "file_search"
   ]
 
   dataset_permissions = [
     {
-      category   = "security_logs"
+      category   = "System"
       access_all = false
-      permissions = [
-        "read",
-        "query"
-      ]
     },
     {
-      category   = "network_traffic"
+      category   = "Lookup"
       access_all = true
-      permissions = [
-        "read",
-        "query",
-        "export",
-      ]
     },
   ]
 }

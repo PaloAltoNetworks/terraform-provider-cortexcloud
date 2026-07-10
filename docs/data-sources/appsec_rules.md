@@ -49,17 +49,26 @@ Read-Only:
 - `category` (String) Custom rule IaC category.
 - `cloud_provider` (String) The cloud provider.
 - `created_at` (String) The timestamp when the rule was created.
+- `cspm_rule_id` (String) The Cloud Security (CSPM) rule this rule maps to. This is a write-only field the API does not return on read, so it is null in data source output.
 - `description` (String) The rule description.
+- `detection_method` (String) The security scanner used to detect findings of this rule.
+- `doc_link` (String) A link to the Cortex documentation.
 - `domain` (String) The domain associated with the rule.
 - `finding_category` (String) The finding category.
+- `finding_docs` (String) Documentation associated with the rule's findings.
+- `finding_type_id` (Number) The finding type ID.
 - `frameworks` (Attributes List) The framework or language that the Application Security rule applies to. (see [below for nested schema](#nestedatt--rules--frameworks))
 - `id` (String) Unique identifier for the rule.
 - `is_custom` (Boolean) Indicates whether the rule is custom.
 - `is_enabled` (Boolean) Indicates whether the rule is enabled.
 - `labels` (List of String) Labels assigned to the rule.
+- `mitre_tactics` (List of String) The associated MITRE ATT&CK tactics.
+- `mitre_techniques` (List of String) The associated MITRE ATT&CK techniques.
 - `name` (String) Name of the rule.
+- `owner` (String) The owner of the rule.
 - `scanner` (String) The type of security scanner used to detect findings of this rule.
 - `severity` (String) The severity level of the rule (CRITICAL, HIGH, MEDIUM, LOW).
+- `short_description` (String) A short description of the rule.
 - `sub_category` (String) Custom rule subcategory.
 - `updated_at` (String) The timestamp when the rule was updated.
 
@@ -72,3 +81,5 @@ Read-Only:
 - `definition_link` (String) HTTP link to the definition documentation.
 - `name` (String) Name of the configured frameworks.
 - `remediation_description` (String) The remediation steps that will appear on the rule's findings.
+- `remediation_ids` (List of String) The remediation identifiers associated with the framework definition.
+- `resource_types` (List of String) The resource types associated with the framework definition.

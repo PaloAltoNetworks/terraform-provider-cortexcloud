@@ -38,89 +38,33 @@ resource "cortexcloud_cloudsec_policy" "all_rules_all_assets" {
 ```
 
 ```terraform
-# CloudSec policy with very complex nested filter criteria
-# This example demonstrates the full power of the filter_criteria structure
-# with multiple levels of nested AND/OR logic
+# CloudSec policy examples using filter criteria.
+# filter_criteria is expressed as an "operator" (AND/OR) plus a "criteria" list,
+# where each criterion has "field", "type" and "value".
 
+# Example: match enabled, non-informational rules across clouds.
 resource "cortexcloud_cloudsec_policy" "advanced_security_policy" {
   name        = "Advanced Multi-Cloud Security Policy"
-  description = "Complex policy demonstrating nested filter criteria for multi-cloud environments"
+  description = "Enabled rules of high or critical severity"
 
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Complex nested filter structure:
-    # (
-    #   (cloudType = aws AND (severity = high OR severity = critical)) OR
-    #   (cloudType = azure AND severity = critical) OR
-    #   (cloudType = gcp AND labels contains 'data-protection')
-    # ) AND
-    # (
-    #   enabled = true AND systemDefault = false
-    # )
+    # severity = high OR severity = critical
     filter_criteria = {
-      # Top-level AND: cloud-specific rules AND enabled custom rules
-      and = {
-        # First condition: Match cloud-specific severity rules
-        or = {
-          # AWS high or critical severity rules
-          and = {
-            search_field = "cloudType"
-            search_type  = "EQ"
-            search_value = "aws"
-          }
-          and ={
-            or = {
-              search_field = "severity"
-              search_type  = "EQ"
-              search_value = "high"
-            }
-            or = {
-              search_field = "severity"
-              search_type  = "EQ"
-              search_value = "critical"
-            }
-          }
-        }
-        or = {
-          # Azure critical severity rules only
-          and = {
-            search_field = "cloudType"
-            search_type  = "EQ"
-            search_value = "azure"
-          }
-          and = {
-            search_field = "severity"
-            search_type  = "EQ"
-            search_value = "critical"
-          }
-        }
-        or = {
-          # GCP rules with data-protection label
-          and = {
-            search_field = "cloudType"
-            search_type  = "EQ"
-            search_value = "gcp"
-          }
-          and = {
-            search_field = "labels"
-            search_type  = "ARRAY_CONTAINS"
-            search_value = "data-protection"
-          }
-        }
-      }
-      and = {
-        # Second condition: Must be enabled
-        search_field = "enabled"
-        search_type  = "EQ"
-        search_value = true
-      }
-      and = {
-        # Third condition: Exclude system default rules
-        search_field = "systemDefault"
-        search_type  = "EQ"
-        search_value = false
-      }
+      operator = "OR"
+      criteria = [
+        {
+          field = "severity"
+          type  = "EQ"
+          value = "high"
+        },
+        {
+          field = "severity"
+          type  = "EQ"
+          value = "critical"
+        },
+      ]
     }
   }
 
@@ -129,37 +73,55 @@ resource "cortexcloud_cloudsec_policy" "advanced_security_policy" {
     type = "ALL_ASSETS"
   }
 
-  labels = ["Multi-Cloud", "Advanced", "Custom Rules"]
+  labels  = ["multi-cloud", "advanced"]
   enabled = true
 }
 
-# Example: Policy with exclusion logic using NEQ operator
+# Example: combine severity and cloud filters.
+# Note: the "severity" field only supports the "EQ" search type, so
+# non-informational severities are enumerated explicitly with an OR group.
 resource "cortexcloud_cloudsec_policy" "non_informational_rules" {
   name        = "Production Security Rules (Non-Informational)"
-  description = "All production rules excluding informational severity"
+  description = "AWS rules of low, medium, high or critical severity"
 
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Filter: enabled = true AND severity != informational AND labels contains 'production'
+    # (severity = low OR medium OR high OR critical) AND cloudType = aws
     filter_criteria = {
-      and = {
-        search_field = "enabled"
-        search_type  = "EQ"
-        search_value = true
-      }
-      and = {
-        # Exclude informational severity
-        search_field = "severity"
-        search_type  = "NEQ"
-        search_value = "informational"
-      }
-      and = {
-        # Must have production label
-        search_field = "labels"
-        search_type  = "ARRAY_CONTAINS"
-        search_value = "production"
-      }
+      operator = "AND"
+      criteria = [
+        {
+          operator = "OR"
+          criteria = [
+            {
+              field = "severity"
+              type  = "EQ"
+              value = "low"
+            },
+            {
+              field = "severity"
+              type  = "EQ"
+              value = "medium"
+            },
+            {
+              field = "severity"
+              type  = "EQ"
+              value = "high"
+            },
+            {
+              field = "severity"
+              type  = "EQ"
+              value = "critical"
+            },
+          ]
+        },
+        {
+          field = "cloudType"
+          type  = "EQ"
+          value = "aws"
+        },
+      ]
     }
   }
 
@@ -167,170 +129,94 @@ resource "cortexcloud_cloudsec_policy" "non_informational_rules" {
     type = "ALL_ASSETS"
   }
 
-  labels  = ["Production", "Active Monitoring"]
-  enabled = true
-}
-# Example: Policy targeting specific asset types with rule filters
-
-resource "cortexcloud_cloudsec_policy" "database_security" {
-  name        = "Database Security Policy"
-  description = "Security rules for database resources across all clouds"
-
-  rule_matching = {
-    type = "RULE_FILTER"
-
-    # Filter: assetTypes contains database-related resources
-    filter_criteria = {
-      and = {
-        or = {
-          search_field = "assetTypes"
-          search_type  = "ARRAY_CONTAINS"
-          search_value = "aws-rds-db-instance"
-        }
-        or = {
-          search_field = "assetTypes"
-          search_type  = "ARRAY_CONTAINS"
-          search_value = "azure-sql-database"
-        }
-        or = {
-          search_field = "assetTypes"
-          search_type  = "ARRAY_CONTAINS"
-          search_value = "gcp-sql-instance"
-        }
-      }
-      and = {
-        # Only medium severity and above
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "medium"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "high"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "critical"
-        }
-      }
-    }
-  }
-
-  asset_matching = {
-    type = "ALL_ASSETS"
-  }
-
-  labels  = ["Database", "Data Security", "Multi-Cloud"]
+  labels  = ["production"]
   enabled = true
 }
 ```
 
 ```terraform
 # CloudSec policy using rule filters to dynamically match rules
-# This example shows how to use filter criteria with AND/OR logic
+# This example shows how to use filter criteria with an operator + criteria list.
+#
+# Valid rule-filter search fields are: cloudType, complianceStandards, severity,
+# labels. The "complianceStandards" field requires the "ARRAY_CONTAINS" search
+# type; the others use "EQ".
 
 resource "cortexcloud_cloudsec_policy" "high_severity_aws_rules" {
   name        = "High Severity AWS Rules Policy"
-  description = "Applies all high and critical severity AWS rules to production cloud accounts"
+  description = "Applies high severity AWS rules to all assets"
 
-  # Use rule filter to dynamically match rules based on criteria
+  # Use rule filter to dynamically match rules based on criteria.
+  # filter_criteria uses an "operator" (AND/OR) and a "criteria" list where each
+  # entry has "field", "type" and "value".
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Filter criteria: (severity = high OR severity = critical) AND cloudType = aws
+    # Filter criteria: severity = high AND cloudType = aws
     filter_criteria = {
-      and = {
-        # First AND condition: severity must be high or critical
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "high"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "critical"
-        }
-      }
-      and = {
-        # Second AND condition: must be AWS rules
-        search_field = "cloudType"
-        search_type  = "EQ"
-        search_value = "aws"
-      }
+      operator = "AND"
+      criteria = [
+        {
+          field = "severity"
+          type  = "EQ"
+          value = "high"
+        },
+        {
+          field = "cloudType"
+          type  = "EQ"
+          value = "aws"
+        },
+      ]
     }
   }
 
-  # Apply to specific cloud accounts
+  # Apply to all assets.
+  # Note: the "CLOUD_ACCOUNTS" asset matching type is only supported when
+  # rule_matching.type is "RULES"; with "RULE_FILTER" use "ALL_ASSETS" or
+  # "ASSET_GROUPS".
   asset_matching = {
-    type               = "CLOUD_ACCOUNTS"
-    cloud_account_ids = [
-      "123456789012", # Production AWS Account 1
-      "987654321098", # Production AWS Account 2
-    ]
+    type = "ALL_ASSETS"
   }
 
   # Custom labels
-  labels = ["AWS", "High Priority", "Production"]
+  labels = ["aws", "high-priority", "production"]
 
   # Enable the policy
   enabled = true
 }
 
-# Example: Policy with nested filter criteria for compliance rules
+# Example: Policy matching compliance rules using an OR operator.
 resource "cortexcloud_cloudsec_policy" "compliance_rules" {
   name        = "Compliance Rules Policy"
-  description = "Applies compliance-related rules (PCI-DSS or HIPAA) with medium or higher severity"
+  description = "Applies compliance-related rules (PCI-DSS or HIPAA)"
 
   rule_matching = {
     type = "RULE_FILTER"
 
-    # Complex filter: ((compliance contains PCI-DSS OR compliance contains HIPAA) AND 
-    #                  (severity = medium OR severity = high OR severity = critical))
+    # Filter: complianceStandards contains PCI-DSS OR complianceStandards contains HIPAA.
+    # The complianceStandards field must use the ARRAY_CONTAINS search type.
     filter_criteria = {
-      and = {
-        # Compliance standards filter
-        or = {
-          search_field = "complianceStandard"
-          search_type  = "CONTAINS"
-          search_value = "PCI-DSS"
-        }
-        or = {
-          search_field = "complianceStandard"
-          search_type  = "CONTAINS"
-          search_value = "HIPAA"
-        }
-      }
-      and = {
-        # Severity filter
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "medium"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "high"
-        }
-        or = {
-          search_field = "severity"
-          search_type  = "EQ"
-          search_value = "critical"
-        }
-      }
+      operator = "OR"
+      criteria = [
+        {
+          field = "complianceStandards"
+          type  = "ARRAY_CONTAINS"
+          value = "PCI-DSS"
+        },
+        {
+          field = "complianceStandards"
+          type  = "ARRAY_CONTAINS"
+          value = "HIPAA"
+        },
+      ]
     }
   }
 
-  # Apply to all assets
   asset_matching = {
     type = "ALL_ASSETS"
   }
 
-  labels  = ["Compliance", "PCI-DSS", "HIPAA"]
+  labels  = ["compliance"]
   enabled = true
 }
 ```
@@ -339,48 +225,62 @@ resource "cortexcloud_cloudsec_policy" "compliance_rules" {
 # CloudSec policy that applies specific rules to specific asset groups
 # This example shows how to create a targeted policy for S3 security
 
-# First, create the CloudSec rules
+# First, create the CloudSec rules.
+# The XQL query must select from the "asset_inventory" dataset and its final
+# "fields" stage must include an "asset_type_id" column (the API requires it).
+# NOTE: rule "name" and policy "name" must be unique within your tenant. The
+# API returns a 409 Conflict if a rule or policy with the same name already
+# exists. Change the names below if they collide with existing objects.
 resource "cortexcloud_cloudsec_rule" "s3_public_access" {
-  name        = "S3 Bucket Public Access"
+  name        = "Example - S3 bucket public access"
   description = "Detects S3 buckets with public access via ACL grants"
   class       = "config"
-  asset_types = ["aws-s3-bucket"]
+  asset_types = ["S3_BUCKET"]
   severity    = "high"
 
   query = {
-    xql = "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-acl' AND json.rule = acl.grants[?(@.grantee=='AllUsers')] exists"
+    xql = "dataset = asset_inventory | filter xdm.asset.provider = \"aws\" and xdm.asset.type.id = \"S3_BUCKET\" | fields xdm.asset.id as asset_id, xdm.asset.type.id as asset_type_id, xdm.asset.name as asset_name"
   }
 }
 
 resource "cortexcloud_cloudsec_rule" "s3_encryption" {
-  name        = "S3 Bucket Encryption Disabled"
+  name        = "Example - S3 bucket encryption disabled"
   description = "Detects S3 buckets without server-side encryption configured"
   class       = "config"
-  asset_types = ["aws-s3-bucket"]
+  asset_types = ["S3_BUCKET"]
   severity    = "medium"
 
   query = {
-    xql = "config from cloud.resource where cloud.type = 'aws' AND api.name = 'aws-s3api-get-bucket-encryption' AND json.rule = serverSideEncryptionConfiguration does not exist"
+    xql = "dataset = asset_inventory | filter xdm.asset.provider = \"aws\" and xdm.asset.type.id = \"S3_BUCKET\" | fields xdm.asset.id as asset_id, xdm.asset.type.id as asset_type_id, xdm.asset.name as asset_name"
   }
 }
 
-# Create an asset group for production S3 buckets
+# Create an asset group for production S3 buckets.
+# Use filterable asset fields such as "xdm.asset.type.id" and "xdm.asset.name".
+# NOTE: depends_on serializes this create after the rules above. Creating many
+# platform objects concurrently in a single apply can intermittently trip a
+# backend 500; ordering the creates avoids that race.
 resource "cortexcloud_asset_group" "production_s3" {
   name        = "production-s3-buckets"
   type        = "Dynamic"
   description = "Production S3 bucket assets"
 
+  depends_on = [
+    cortexcloud_cloudsec_rule.s3_public_access,
+    cortexcloud_cloudsec_rule.s3_encryption,
+  ]
+
   membership_predicate = {
     and = [
       {
-        search_field = "xdm.asset.type"
+        search_field = "xdm.asset.type.id"
         search_type  = "EQ"
-        search_value = "aws-s3-bucket"
+        search_value = "S3_BUCKET"
       },
       {
-        search_field = "xdm.asset.tags.environment"
-        search_type  = "EQ"
-        search_value = "production"
+        search_field = "xdm.asset.name"
+        search_type  = "CONTAINS"
+        search_value = "prod"
       }
     ]
   }
@@ -391,10 +291,10 @@ resource "cortexcloud_cloudsec_policy" "s3_security_policy" {
   name        = "S3 Security Policy for Production"
   description = "Applies S3 security rules to production S3 buckets"
 
-  # Match specific rules by their IDs
+  # Match specific rules by their IDs. Order is not significant.
   rule_matching = {
     type = "RULES"
-    rule_ids = [
+    rules = [
       cortexcloud_cloudsec_rule.s3_public_access.id,
       cortexcloud_cloudsec_rule.s3_encryption.id,
     ]
@@ -447,8 +347,8 @@ Required:
 
 Optional:
 
-- `asset_group_ids` (List of Number) List of asset group IDs. Required when type is ASSET_GROUPS.
-- `cloud_account_ids` (List of String) List of cloud account IDs. Required when type is CLOUD_ACCOUNTS.
+- `asset_group_ids` (Set of Number) Set of asset group IDs. Required when type is ASSET_GROUPS. Order is not significant.
+- `cloud_account_ids` (Set of String) Set of cloud account IDs. Required when type is CLOUD_ACCOUNTS. Order is not significant.
 
 
 <a id="nestedatt--rule_matching"></a>
@@ -461,7 +361,7 @@ Required:
 Optional:
 
 - `filter_criteria` (Attributes) Filter criteria for rules. Required when type is RULE_FILTER. (see [below for nested schema](#nestedatt--rule_matching--filter_criteria))
-- `rules` (List of String) List of rule UUIDs. Required when type is RULES.
+- `rules` (Set of String) Set of rule UUIDs. Required when type is RULES. Order is not significant.
 
 <a id="nestedatt--rule_matching--filter_criteria"></a>
 ### Nested Schema for `rule_matching.filter_criteria`

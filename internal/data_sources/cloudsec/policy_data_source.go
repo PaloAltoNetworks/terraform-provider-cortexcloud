@@ -105,8 +105,8 @@ func (d *CloudSecPolicyDataSource) Schema(_ context.Context, _ datasource.Schema
 						Description: "Rule matching type (ALL_RULES, RULES, RULE_FILTER).",
 						Computed:    true,
 					},
-					"rules": schema.ListAttribute{
-						Description: "List of rule IDs (when type is RULES).",
+					"rules": schema.SetAttribute{
+						Description: "Set of rule IDs (when type is RULES).",
 						Computed:    true,
 						ElementType: types.StringType,
 					},
@@ -125,13 +125,13 @@ func (d *CloudSecPolicyDataSource) Schema(_ context.Context, _ datasource.Schema
 						Description: "Asset matching type (ALL_ASSETS, ASSET_GROUPS, CLOUD_ACCOUNTS).",
 						Computed:    true,
 					},
-					"asset_group_ids": schema.ListAttribute{
-						Description: "List of asset group IDs (when type is ASSET_GROUPS).",
+					"asset_group_ids": schema.SetAttribute{
+						Description: "Set of asset group IDs (when type is ASSET_GROUPS).",
 						Computed:    true,
 						ElementType: types.Int64Type,
 					},
-					"cloud_account_ids": schema.ListAttribute{
-						Description: "List of cloud account IDs (when type is CLOUD_ACCOUNTS).",
+					"cloud_account_ids": schema.SetAttribute{
+						Description: "Set of cloud account IDs (when type is CLOUD_ACCOUNTS).",
 						Computed:    true,
 						ElementType: types.StringType,
 					},

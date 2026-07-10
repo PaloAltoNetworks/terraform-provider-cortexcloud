@@ -5,6 +5,7 @@ package platform_test
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -115,6 +116,18 @@ func TestUnitIamRoleResource_DatasetPermissionsWithoutPermissions(t *testing.T) 
 
 		switch {
 		case path == "/platform/iam/v1/role" && r.Method == http.MethodPost:
+			// Regression guard: when dataset_permissions is set without the
+			// optional permissions field, the request body must serialize
+			// "permissions" as an empty JSON array ([]), never null. The
+			// Cortex API rejects a null value with an HTTP 500.
+			body, _ := io.ReadAll(r.Body)
+			bodyStr := string(body)
+			if strings.Contains(bodyStr, `"permissions":null`) {
+				t.Errorf("request body contains \"permissions\":null; expected \"permissions\":[]. body: %s", bodyStr)
+			}
+			if !strings.Contains(bodyStr, `"permissions":[]`) {
+				t.Errorf("request body missing \"permissions\":[]; body: %s", bodyStr)
+			}
 			w.WriteHeader(http.StatusCreated)
 			fmt.Fprintln(w, `{
 				"data": {

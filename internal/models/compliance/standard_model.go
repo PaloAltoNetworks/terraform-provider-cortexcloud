@@ -44,7 +44,13 @@ func (m *StandardModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagn
 	// Set simple fields
 	m.ID = types.StringValue(remote.ID)
 	m.Name = types.StringValue(remote.Name)
-	m.Description = types.StringValue(remote.Description)
+	// Normalize an empty description to null so an omitted (null) `description`
+	// in configuration does not perpetually drift against the API's "" echo.
+	if remote.Description == "" {
+		m.Description = types.StringNull()
+	} else {
+		m.Description = types.StringValue(remote.Description)
+	}
 	m.Version = types.StringValue(remote.Version)
 	m.AssessmentsProfilesCount = types.Int64Value(int64(remote.AssessmentsProfilesCount))
 	m.Revision = types.Int64Value(remote.Revision)

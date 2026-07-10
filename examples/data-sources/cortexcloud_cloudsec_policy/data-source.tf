@@ -37,7 +37,7 @@ output "policy_labels" {
 # Example: Reference policy's rule IDs in another resource
 output "policy_rule_ids" {
   description = "Rule IDs used by the policy (if type is RULES)"
-  value       = data.cortexcloud_cloudsec_policy.example.rule_matching.rule_ids
+  value       = data.cortexcloud_cloudsec_policy.example.rule_matching.rules
 }
 
 # Example: Check if policy applies to specific asset groups
@@ -52,16 +52,20 @@ resource "cortexcloud_cloudsec_policy" "similar_policy" {
   description = "Similar to: ${data.cortexcloud_cloudsec_policy.example.description}"
 
   # Reuse the same rule matching configuration
-  rule_matching {
-    type     = data.cortexcloud_cloudsec_policy.example.rule_matching.type
-    rule_ids = data.cortexcloud_cloudsec_policy.example.rule_matching.rule_ids
+  rule_matching = {
+    type  = data.cortexcloud_cloudsec_policy.example.rule_matching.type
+    rules = data.cortexcloud_cloudsec_policy.example.rule_matching.rules
   }
 
   # Apply to all assets instead
-  asset_matching {
+  asset_matching = {
     type = "ALL_ASSETS"
   }
 
-  labels  = concat(data.cortexcloud_cloudsec_policy.example.labels, ["copy"])
+  # labels is a set of strings and may be null when the source policy has no
+  # labels. coalesce() substitutes an empty set for null, then it is converted
+  # to a list for concat (concat only accepts lists/tuples) and re-deduplicated
+  # via toset.
+  labels  = toset(concat(tolist(coalesce(data.cortexcloud_cloudsec_policy.example.labels, toset([]))), ["copy"]))
   enabled = true
 }
