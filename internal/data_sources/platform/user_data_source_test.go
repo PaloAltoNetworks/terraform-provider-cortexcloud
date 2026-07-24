@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestUnitUserDataSource is a regression test for the user data
+// TestUnitUserDataSource is a regression test for a data-source drift issue: the user data
 // source previously crashed with "Struct defines fields not found in object:
 // group_ids" because the shared UserModel declared a `group_ids` field that the
 // data source schema did not define. This test reads a user (with groups) via

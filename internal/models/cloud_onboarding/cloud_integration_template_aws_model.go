@@ -53,6 +53,15 @@ func (m *CloudIntegrationTemplateAwsModel) ToCreateRequest(ctx context.Context, 
 	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
 	diagnostics.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
 
+	// The API requires registry_scanning and registry_scanning_options to be
+	// either both provided or both omitted. The schema applies a computed
+	// default to registry_scanning_options, so it is always populated even when
+	// registry scanning is disabled. Drop the options when scanning is off so
+	// the request satisfies the API contract.
+	if additionalCapabilities.RegistryScanning != nil && !*additionalCapabilities.RegistryScanning {
+		additionalCapabilities.RegistryScanningOptions = nil
+	}
+
 	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
 	diagnostics.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
 

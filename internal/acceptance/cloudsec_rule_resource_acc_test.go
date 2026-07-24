@@ -23,9 +23,9 @@ const (
 	ruleBasicDescInitial    = "Acceptance test basic rule"
 	ruleBasicClass          = "config"
 	ruleBasicType           = "DETECTION"
-	ruleBasicAssetType      = "aws-s3-bucket"
+	ruleBasicAssetType      = "S3_BUCKET"
 	ruleBasicSeverity       = "high"
-	ruleBasicXQL            = "config from cloud.resource where cloud.type = 'aws' AND api.name = 's3api.get_bucket_acl'"
+	ruleBasicXQL            = "dataset = asset_inventory | filter xdm.asset.provider = \"aws\" and xdm.asset.type.id = \"S3_BUCKET\" | fields xdm.asset.id as asset_id, xdm.asset.type.id as asset_type_id, xdm.asset.name as asset_name"
 	ruleBasicEnabled        = true
 	ruleBasicLabel1         = "test-label-1"
 	ruleBasicLabel2         = "test-label-2"
@@ -35,7 +35,7 @@ const (
 	ruleBasicNameUpdated       = "tf-acctest-rule-basic-updated"
 	ruleBasicDescUpdated       = "Acceptance test basic rule updated"
 	ruleBasicSeverityUpdated   = "critical"
-	ruleBasicXQLUpdated        = "config from cloud.resource where cloud.type = 'aws' AND api.name = 's3api.get_bucket_encryption'"
+	ruleBasicXQLUpdated        = "dataset = asset_inventory | filter xdm.asset.provider = \"aws\" and xdm.asset.type.id = \"S3_BUCKET\" | fields xdm.asset.id as asset_id, xdm.asset.type.id as asset_type_id, xdm.asset.name as asset_name"
 	ruleBasicLabel3            = "test-label-3"
 	ruleBasicRecommendationUpd = "Enable bucket encryption and versioning"
 
@@ -56,7 +56,9 @@ resource "%s" "%s" {
 	 enabled     = %t
 
 	 query = {
-	   xql = "%s"
+	   xql = <<-XQL
+%s
+XQL
 	 }
 
 	 metadata = {
@@ -77,7 +79,9 @@ resource "%s" "%s" {
 	 severity    = "%s"
 
 	 query = {
-	   xql = "%s"
+	   xql = <<-XQL
+%s
+XQL
 	 }
 
 	 compliance_metadata {
@@ -163,7 +167,7 @@ func TestAccCloudSecRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "asset_types.#", "1"),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "asset_types.0", ruleBasicAssetType),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "severity", ruleBasicSeverity),
-					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "query.xql", ruleBasicXQL),
+					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "query.xql", ruleBasicXQL+"\n"),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "metadata.issue.recommendation", ruleBasicRecommendation),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "labels.#", "2"),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "enabled", "true"),
@@ -189,7 +193,7 @@ func TestAccCloudSecRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "name", ruleBasicNameUpdated),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "description", ruleBasicDescUpdated),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "severity", ruleBasicSeverityUpdated),
-					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "query.xql", ruleBasicXQLUpdated),
+					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "query.xql", ruleBasicXQLUpdated+"\n"),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "metadata.issue.recommendation", ruleBasicRecommendationUpd),
 					resource.TestCheckResourceAttr(cloudSecRuleBasicResourceNameFull, "labels.#", "2"),
 					resource.TestCheckResourceAttrSet(cloudSecRuleBasicResourceNameFull, "last_modified_by"),

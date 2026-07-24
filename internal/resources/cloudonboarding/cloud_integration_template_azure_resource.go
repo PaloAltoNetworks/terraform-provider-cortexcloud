@@ -108,20 +108,36 @@ func (r *CloudIntegrationTemplateAzureResource) Schema(ctx context.Context, req 
 						Description: "Whether to enable registry scanning, " +
 							"a container registry scanner that scans " +
 							"registry images for vulnerabilities, malware, " +
-							"and secrets. Default value is \"true\".",
+							"and secrets. Default value is \"true\". " +
+							"When set to \"false\", any configured " +
+							"\"registry_scanning_options\" are ignored and " +
+							"omitted from the request, as the API requires " +
+							"registry scanning and its options to be provided " +
+							"together or not at all.",
 						MarkdownDescription: "Whether to enable registry scanning, " +
 							"a container registry scanner that scans " +
 							"registry images for vulnerabilities, malware, " +
-							"and secrets. Default value is `true`.",
+							"and secrets. Default value is `true`. " +
+							"When set to `false`, any configured " +
+							"`registry_scanning_options` are ignored and " +
+							"omitted from the request, as the API requires " +
+							"registry scanning and its options to be provided " +
+							"together or not at all.",
 						Optional: true,
 						Computed: true,
 						Default:  booldefault.StaticBool(true),
 					},
 					"registry_scanning_options": schema.SingleNestedAttribute{
-						Description:         "Additional configuration options for registy scanning.",
-						MarkdownDescription: "Additional configuration options for registy scanning.",
-						Optional:            true,
-						Computed:            true,
+						Description: "Additional configuration options for registy scanning. " +
+							"Only applies when \"registry_scanning\" is \"true\"; " +
+							"ignored and omitted from the request when registry " +
+							"scanning is disabled.",
+						MarkdownDescription: "Additional configuration options for registy scanning. " +
+							"Only applies when `registry_scanning` is `true`; " +
+							"ignored and omitted from the request when registry " +
+							"scanning is disabled.",
+						Optional: true,
+						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"type": schema.StringAttribute{
 								Description: "Type of registry scanning.",
