@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.8"
+      version = "1.0.9"
     }
   }
 }
@@ -195,6 +195,15 @@ provider "cortexcloud" {
 
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
+
+### v1.0.9
+
+#### Bug Fixes
+* Fixed AWS cloud integration template creation failing with an HTTP 422 error when registry scanning is disabled; `registry_scanning_options` is now omitted from the request when registry scanning is turned off
+* Fixed spurious drift on CloudSec and Compliance resources, and improved handling of opaque HTTP 400 responses to surface clearer error messages
+
+#### Maintenance
+* Consolidated the underlying Cortex Cloud Go SDK into a single unified module
 
 ### v1.0.8
 

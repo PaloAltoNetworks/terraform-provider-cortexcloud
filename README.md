@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.8"
+      version = "1.0.9"
     }
   }
 }
@@ -107,6 +107,15 @@ provider "cortexcloud" {
 ```
 
 ## Release Notes
+
+### v1.0.9
+
+#### Bug Fixes
+* Fixed AWS cloud integration template creation failing with an HTTP 422 error when registry scanning is disabled; `registry_scanning_options` is now omitted from the request when registry scanning is turned off
+* Fixed spurious drift on CloudSec and Compliance resources, and improved handling of opaque HTTP 400 responses to surface clearer error messages
+
+#### Maintenance
+* Consolidated the underlying Cortex Cloud Go SDK into a single unified module
 
 ### v1.0.8
 
@@ -208,5 +217,3 @@ provider "cortexcloud" {
 
 #### Features
 * Initial GA release
-
-<!---Protected_by_PANW_Code_Armor_2024 eGRyfC94ZHIvZGV2ZWxvcG1lbnQvY29ydGV4Y2xvdWQtdGVycmFmb3JtLXByb3ZpZGVyL3RlcnJhZm9ybXwzNDE1fG1hc3Rlcg== --->

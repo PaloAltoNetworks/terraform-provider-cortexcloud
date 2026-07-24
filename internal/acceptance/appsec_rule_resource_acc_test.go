@@ -37,7 +37,7 @@ resource "%s" "%s" {
 	
 	frameworks {
 		name       = "TERRAFORM"
-		definition = "resource \"aws_security_group\" \"example\" { ingress { cidr_blocks = [\"0.0.0.0/0\"] } }"
+		definition = "scope:\n  provider: aws\ndefinition:\n  cond_type: attribute\n  resource_types:\n    - aws_security_group\n  attribute: ingress.cidr_blocks\n  operator: not_contains\n  value: 0.0.0.0/0"
 	}
 	
 	labels = ["test", "terraform"]

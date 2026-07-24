@@ -238,6 +238,36 @@ resource "cortexcloud_cloud_integration_template_aws" "account_minimum_config" {
 ```
 
 ```terraform
+# AWS account onboarding template with registry scanning disabled.
+#
+# When `registry_scanning` is set to `false`, do NOT set
+# `registry_scanning_options`. The API requires registry scanning and its
+# options to be provided together or not at all. The provider automatically
+# omits the computed default options when registry scanning is disabled, so a
+# configuration like the one below applies cleanly.
+resource "cortexcloud_cloud_integration_template_aws" "account_registry_scanning_disabled" {
+  scope         = "ACCOUNT"
+  instance_name = "AWS Account (registry scanning disabled)"
+  scan_mode     = "MANAGED"
+
+  scope_modifications = {
+    regions = {
+      enabled = true
+      type    = "INCLUDE"
+      regions = [
+        "us-east-1",
+        "us-east-2",
+      ]
+    }
+  }
+
+  additional_capabilities = {
+    registry_scanning = false
+  }
+}
+```
+
+```terraform
 # AWS organization onboarding template.
 #
 # This template will be created with the following configuration:
@@ -344,8 +374,8 @@ Optional:
 
 - `agentless_disk_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `data_security_posture_management` (Boolean) Whether to enable data security posture management, an agentless data security scanner that discovers, classifies, protects, and governs sensitive data. Default value is `true`.
-- `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`.
-- `registry_scanning_options` (Attributes) Additional configuration options for registy scanning. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
+- `registry_scanning` (Boolean) Whether to enable registry scanning, a container registry scanner that scans registry images for vulnerabilities, malware, and secrets. Default value is `true`. When set to `false`, any configured `registry_scanning_options` are ignored and omitted from the request, as the API requires registry scanning and its options to be provided together or not at all.
+- `registry_scanning_options` (Attributes) Additional configuration options for registy scanning. Only applies when `registry_scanning` is `true`; ignored and omitted from the request when registry scanning is disabled. (see [below for nested schema](#nestedatt--additional_capabilities--registry_scanning_options))
 - `serverless_scanning` (Boolean) Whether to enable agentless disk scanning to remotely detect and remediate vulnerabilities during the development lifecycle. Default value is `true`.
 - `xsiam_analytics` (Boolean) Whether to enable XSIAM analytics to analyze your endpoint data to develop a baseline and raise Analytics and Analytics BIOC alerts when anomalies and malicious behaviors are detected. Default value is `true`.
 
