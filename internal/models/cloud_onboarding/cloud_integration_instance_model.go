@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -47,6 +48,17 @@ var lastScanCoverageAttrTypes = map[string]attr.Type{
 	"unsupported": types.Int32Type,
 }
 
+var securityCapabilityAttrTypes = map[string]attr.Type{
+	"name":               types.StringType,
+	"description":        types.StringType,
+	"status_code":        types.Int32Type,
+	"status":             types.StringType,
+	"last_scan_coverage": types.ObjectType{AttrTypes: lastScanCoverageAttrTypes},
+}
+
+// securityCapabilitySetType is the element type of the security_capabilities set.
+var securityCapabilitySetType = types.ObjectType{AttrTypes: securityCapabilityAttrTypes}
+
 func securityCapabilityStatusToString(statusCode int) string {
 	switch statusCode {
 	case 0:
@@ -67,6 +79,46 @@ func securityCapabilityStatusToString(statusCode int) string {
 func (m *CloudIntegrationInstanceModel) ToGetRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.GetIntegrationInstanceRequest {
 	tflog.Debug(ctx, "Creating GetIntegrationInstanceRequest from CloudIntegrationInstanceModel")
 	return cloudOnboardingTypes.NewGetIntegrationInstanceRequest(m.ID.ValueString())
+}
+
+func (m *CloudIntegrationInstanceModel) ToEditRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.EditIntegrationInstanceRequest {
+	tflog.Debug(ctx, "Creating EditIntegrationInstanceRequest from CloudIntegrationInstanceModel")
+
+	// A null additional_capabilities object is tolerated: leave the target as a
+	// zero-value AdditionalCapabilities rather than attempting a conversion that
+	// would emit diagnostics.
+	var additionalCapabilities cloudOnboardingTypes.AdditionalCapabilities
+	if !m.AdditionalCapabilities.IsNull() && !m.AdditionalCapabilities.IsUnknown() {
+		diags.Append(m.AdditionalCapabilities.As(ctx, &additionalCapabilities, basetypes.ObjectAsOptions{})...)
+	}
+
+	var collectionConfiguration cloudOnboardingTypes.CollectionConfiguration
+	if !m.CollectionConfiguration.IsNull() && !m.CollectionConfiguration.IsUnknown() {
+		diags.Append(m.CollectionConfiguration.As(ctx, &collectionConfiguration, basetypes.ObjectAsOptions{})...)
+	}
+
+	var customResourcesTags []cloudOnboardingTypes.Tag
+	if !m.CustomResourcesTags.IsNull() && !m.CustomResourcesTags.IsUnknown() {
+		diags.Append(m.CustomResourcesTags.ElementsAs(ctx, &customResourcesTags, false)...)
+	}
+
+	if diags.HasError() {
+		return nil
+	}
+
+	options := []cloudOnboardingTypes.EditIntegrationInstanceRequestOption{
+		cloudOnboardingTypes.WithEditAdditionalCapabilities(additionalCapabilities),
+		cloudOnboardingTypes.WithEditCloudProvider(m.CloudProvider.ValueString()),
+		cloudOnboardingTypes.WithEditCollectionConfiguration(collectionConfiguration),
+		cloudOnboardingTypes.WithEditCustomResourcesTags(customResourcesTags),
+	}
+
+	// instance_name is optional/omitempty: only set it when configured.
+	if !m.InstanceName.IsNull() && !m.InstanceName.IsUnknown() {
+		options = append(options, cloudOnboardingTypes.WithEditInstanceName(m.InstanceName.ValueString()))
+	}
+
+	return cloudOnboardingTypes.NewEditIntegrationInstanceRequest(m.ID.ValueString(), options...)
 }
 
 func (m *CloudIntegrationInstanceModel) ToListRequest(ctx context.Context, diags *diag.Diagnostics) *cloudOnboardingTypes.ListIntegrationInstancesRequest {

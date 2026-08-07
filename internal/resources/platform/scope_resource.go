@@ -144,9 +144,13 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				),
 			},
 			"datasets_rows": schema.SingleNestedAttribute{
-				Description: "The datasets rows scope.",
-				Optional:    true,
-				Computed:    true,
+				Description: "The datasets rows scope. This block is coupled to the tenant's " +
+					"dataset-level Scope-Based Access Control (SBAC) capability: it MUST be " +
+					"configured when dataset SBAC is enabled for the tenant, and MUST be omitted " +
+					"when it is disabled. Configuring it on a tenant without dataset SBAC returns " +
+					"an API error asking you to remove the datasets_rows section; omitting it on a " +
+					"tenant with dataset SBAC enabled returns an API error asking you to add it.",
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"default_filter_mode": schema.StringAttribute{
 						Description: fmt.Sprintf("The default filter mode of the datasets rows scope. Possible values are: \"%s\"", strings.Join([]string{"no_scope", "see_all"}, "\", \"")),
@@ -187,33 +191,6 @@ func (r *scopeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 						),
 					},
 				},
-				Default: objectdefault.StaticValue(
-					types.ObjectValueMust(
-						map[string]attr.Type{
-							"default_filter_mode": types.StringType,
-							"filters": types.SetType{
-								ElemType: types.ObjectType{
-									AttrTypes: map[string]attr.Type{
-										"dataset": types.StringType,
-										"filter":  types.StringType,
-									},
-								},
-							},
-						},
-						map[string]attr.Value{
-							"default_filter_mode": types.StringValue("no_scope"),
-							"filters": types.SetValueMust(
-								types.ObjectType{
-									AttrTypes: map[string]attr.Type{
-										"dataset": types.StringType,
-										"filter":  types.StringType,
-									},
-								},
-								[]attr.Value{},
-							),
-						},
-					),
-				),
 			},
 			"endpoints": schema.SingleNestedAttribute{
 				Description: "The endpoints scope.",
@@ -453,7 +430,7 @@ func (r *scopeResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// Apply changes via PUT /scope
 	request := plan.ToEditRequest()
 	if err := r.client.EditScope(ctx, plan.EntityType.ValueString(), plan.EntityID.ValueString(), request); err != nil {
-		resp.Diagnostics.AddError("Error creating scope", err.Error())
+		resp.Diagnostics.AddError("Error creating scope", enrichScopeError(err))
 		return
 	}
 
@@ -515,7 +492,7 @@ func (r *scopeResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	request := plan.ToEditRequest()
 	if err := r.client.EditScope(ctx, plan.EntityType.ValueString(), plan.EntityID.ValueString(), request); err != nil {
-		resp.Diagnostics.AddError("Error updating scope", err.Error())
+		resp.Diagnostics.AddError("Error updating scope", enrichScopeError(err))
 		return
 	}
 
@@ -555,10 +532,6 @@ func (r *scopeResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			Mode:          "see_all",
 			AssetGroupIDs: make([]int, 0),
 		},
-		DatasetsRows: &platformtypes.EditDatasetsRows{
-			DefaultFilterMode: "see_all",
-			Filters:           make([]platformtypes.Filter, 0),
-		},
 		Endpoints: &platformtypes.EditEndpoints{
 			EndpointGroups: &platformtypes.EditEndpointGroups{
 				Mode:  "see_all",
@@ -575,8 +548,17 @@ func (r *scopeResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		},
 	}
 
+	// Only reset datasets_rows when the managed scope had it; sending it on an
+	// SBAC-disabled tenant would fail the destroy.
+	if state.DatasetsRows != nil {
+		reset.DatasetsRows = &platformtypes.EditDatasetsRows{
+			DefaultFilterMode: "see_all",
+			Filters:           make([]platformtypes.Filter, 0),
+		}
+	}
+
 	if err := r.client.EditScope(ctx, entityType, entityID, reset); err != nil {
-		resp.Diagnostics.AddError("Error deleting scope", err.Error())
+		resp.Diagnostics.AddError("Error deleting scope", enrichScopeError(err))
 		return
 	}
 
@@ -588,4 +570,28 @@ func (r *scopeResource) ImportState(ctx context.Context, req resource.ImportStat
 	defer util.PanicHandler(&resp.Diagnostics)
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// enrichScopeError appends an actionable hint to the dataset-SBAC coupling
+// errors and passes all other errors through unchanged.
+func enrichScopeError(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	lower := strings.ToLower(msg)
+
+	switch {
+	case strings.Contains(lower, "sbac") && strings.Contains(lower, "not enabled"):
+		return msg + "\n\nHint: dataset-level SBAC is disabled for this tenant, so the " +
+			"`datasets_rows` block is not allowed. Remove the `datasets_rows` block from " +
+			"this cortexcloud_scope resource, or enable dataset SBAC for the tenant."
+	case strings.Contains(lower, "sbac") && strings.Contains(lower, "enabled") &&
+		strings.Contains(lower, "add"):
+		return msg + "\n\nHint: dataset-level SBAC is enabled for this tenant, so the " +
+			"`datasets_rows` block is required. Add a `datasets_rows` block to this " +
+			"cortexcloud_scope resource (e.g. default_filter_mode = \"no_scope\")."
+	default:
+		return msg
+	}
 }

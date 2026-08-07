@@ -40,3 +40,7 @@ terraform.tfvars
 
 # Local verification harnesses (not tracked)
 scripts/
+
+# Go workspace (local SDK dev only — never committed; go.mod stays public-shape)
+go.work
+go.work.sum
