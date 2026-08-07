@@ -98,10 +98,10 @@ func (m *ScopeModel) ToEditRequest() platformtypes.EditScopeRequestData {
 	}
 
 	// ---------- DatasetsRows ----------
-	var datasetsRows *platformtypes.EditDatasetsRows = &platformtypes.EditDatasetsRows{
-		Filters:           make([]platformtypes.Filter, 0),
-		DefaultFilterMode: "no_scope",
-	}
+	// Leave nil when unconfigured so the omitempty SDK field drops the key
+	// entirely; the API couples datasets_rows presence to the tenant's
+	// dataset-SBAC capability (required when enabled, forbidden when disabled).
+	var datasetsRows *platformtypes.EditDatasetsRows
 	if m.DatasetsRows != nil {
 		filters := make([]platformtypes.Filter, 0, len(m.DatasetsRows.Filters))
 		for _, f := range m.DatasetsRows.Filters {

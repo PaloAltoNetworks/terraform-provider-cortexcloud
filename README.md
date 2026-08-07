@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.9"
+      version = "1.0.10"
     }
   }
 }
@@ -107,6 +107,27 @@ provider "cortexcloud" {
 ```
 
 ## Release Notes
+
+### v1.0.10
+
+#### Enhancements
+* Added a new `cortexcloud_cloud_integration_instance` resource that manages an existing connected cloud integration instance. Changes to its configuration, such as toggling `additional_capabilities`, are now applied in place via the platform's edit API instead of forcing the integration to be destroyed and recreated. The instance is adopted into Terraform with `terraform import`.
+
+#### Bug Fixes
+* Fixed cloud integration instance updates silently disabling capabilities that were not declared in the configuration. Because the platform's edit API replaces the full capability set, changing one capability could clear the others that were active on the instance. Capabilities are now merged individually against the instance's current state, so any capability left unset in the configuration retains its existing value
+* Setting `custom_resources_tags` to an empty list on a `cortexcloud_cloud_integration_instance` is now reported during `terraform plan` instead of failing part-way through the apply. The platform rejects an empty tag list, so the attribute now requires at least one tag when it is declared. Omit the attribute entirely to leave the instance's existing tags unchanged
+* Fixed `cortexcloud_scope` failing on tenants where scope-based access control is not enabled. The `datasets_rows` attribute is now optional and is omitted from the request when it is not configured, instead of being sent as an empty value that the platform rejects
+* Corrected the `cortexcloud_scope` documentation and examples so they plan and apply successfully out of the box
+
+#### Known Issues
+
+The following issues are present in this release. Those attributed to the Cortex Cloud platform APIs are being tracked by the respective service teams and are resolved server-side, in most cases without requiring a provider upgrade.
+
+* **Updating `custom_resources_tags` on a `cortexcloud_cloud_integration_instance` removes any tag that is not declared in the configuration.** The platform's edit API replaces the whole tag list with the one it receives, so tags that were applied to the instance outside Terraform are dropped when an update declares a different set. Review the instance's existing tags before setting this attribute, and declare every tag the instance should keep.
+* **Reading a `cortexcloud_compliance_standard` can fail with a "Duplicate Set Element" error.** The platform's compliance API may return the standard's `controls_ids` as a list of empty strings rather than control identifiers, which Terraform rejects because a set cannot contain duplicates. Configurations that declare a `cortexcloud_compliance_standard` as a prerequisite, including the documentation examples for `cortexcloud_cloudsec_rule` and `cortexcloud_compliance_assessment_profile`, are affected indirectly. This is a platform API issue and is not new in this release.
+* **Listing compliance controls can fail with a type error mentioning the `SUPPORTED` field.** The platform's compliance API returns this field as a string when listing controls but as a boolean when fetching a single control, and a single mismatched value causes the entire page of results to fail. Retrieving individual controls is unaffected. This is a platform API issue and is not new in this release.
+* **A `cortexcloud_cloud_integration_template_aws`, `_azure`, or `_gcp` resource created with `additional_capabilities.registry_scanning` set to `false` is reported as needing replacement on every subsequent plan.** The template resource is create-only and its deletion is not propagated to Cortex Cloud, so allowing the replacement to proceed creates a second template and leaves the original in the console. Setting `registry_scanning` to `true` is unaffected.
+* **Destroying a `cortexcloud_cloud_integration_template_aws`, `_azure`, or `_gcp` resource removes it from Terraform state only.** The integration template continues to exist in Cortex Cloud and must be removed from the console. The same applies to `cortexcloud_cloud_integration_instance`, which emits a warning during destroy to make this explicit; the connected integration keeps collecting data and scanning until it is deleted under `Settings > Data Sources`.
 
 ### v1.0.9
 

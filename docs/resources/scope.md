@@ -14,39 +14,36 @@ Manages a Cortex Cloud scope.
 
 ```terraform
 # Basic scope configuration for a user
-# NOTE: entity_id must reference a user that already exists in your tenant.
-# The API rejects the request with a 400 Bad Request if the user is not found.
-# Replace "user@example.com" with a real user email from your environment
-# (e.g. from the cortexcloud_user data source). Likewise, the asset_group_id
-# values below must reference existing asset groups.
 resource "cortexcloud_scope" "example" {
   entity_type = "user"
-  entity_id   = "user@example.com" # replace with a real user email
+  entity_id   = "user@example.com" # replace with a real user email in your tenant
 
   # Asset scope - limit access to specific asset groups.
-  # mode is required; the API expects "scope" to restrict access to the
-  # listed asset groups. asset_groups are referenced by their numeric IDs.
+  # mode is required; use "scope" to restrict to the listed groups,
+  # "no_scope" for none, or "see_all" for all.
+  # asset_groups are referenced by their numeric IDs - replace the
+  # placeholder IDs below with real asset group IDs from your tenant.
   assets = {
     mode = "scope"
     asset_groups = [
-      # These are placeholder IDs. Replace 101/102 with real asset group IDs
-      # from your tenant (e.g. from the cortexcloud asset group resource).
-      { asset_group_id = 101 },
-      { asset_group_id = 102 },
+      { asset_group_id = 101 }, # replace with a real asset group ID
+      { asset_group_id = 102 }, # replace with a real asset group ID
     ]
   }
 
-  # Dataset rows scope - limit access to specific dataset rows.
+  # Dataset rows scope. Include this block only when dataset-level SBAC is
+  # enabled on your tenant, and omit it entirely when SBAC is disabled.
   # default_filter_mode is required (one of "no_scope", "see_all").
-  # filter is a raw XQL query string that selects the rows in scope.
+  # Each filter's `dataset` must be a real dataset in your tenant and
+  # `filter` must be a valid XQL predicate referencing fields that exist
+  # in that dataset's schema. The example below uses the built-in
+  # amazon_aws_raw dataset; adjust the field/value to match your data.
   datasets_rows = {
     default_filter_mode = "no_scope"
     filters = [
       {
-        # Replace "amazon_aws_raw" with a real dataset name that exists in
-        # your tenant (this is only an example dataset name).
         dataset = "amazon_aws_raw"
-        filter  = "severity = \"high\""
+        filter  = "eventSource = \"s3.amazonaws.com\""
       },
     ]
   }
@@ -55,65 +52,57 @@ resource "cortexcloud_scope" "example" {
 
 ```terraform
 # Scope configuration for a user group with multiple scope types
-# NOTE: entity_id must reference a user group that already exists in your
-# tenant. The API rejects the request with a 400 Bad Request ("Group not
-# found") if the group does not exist. entity_id expects the group's UUID
-# (not its display name); use the group UUID from your environment (e.g. from
-# the cortexcloud_user_group data source). The asset_group_id, tag, and
-# endpoint values below must likewise reference existing objects in your tenant.
 resource "cortexcloud_scope" "group_example" {
   entity_type = "user-group"
-  # Replace with a real user-group UUID (the API expects the group UUID, not
-  # the group name).
+  # For a user group, entity_id is the group's UUID (not its display name).
+  # Replace the placeholder below with a real group ID from your tenant.
   entity_id = "00000000-0000-0000-0000-000000000000"
 
   # Asset scope - limit access to specific asset groups (by numeric ID).
-  # mode is required; the API expects "scope" to restrict access to the
-  # listed asset groups.
+  # Replace the placeholder IDs with real asset group IDs from your tenant.
   assets = {
     mode = "scope"
     asset_groups = [
-      # These are placeholder IDs. Replace 201/202 with real asset group IDs
-      # from your tenant.
-      { asset_group_id = 201 },
-      { asset_group_id = 202 },
+      { asset_group_id = 201 }, # replace with a real asset group ID
+      { asset_group_id = 202 }, # replace with a real asset group ID
     ]
   }
 
   # Cases and issues scope - limit access by tags.
+  # tag_name values must be real case/issue tags that exist in your tenant.
   cases_issues = {
     mode = "scope"
     tags = [
-      { tag_name = "security_incident" },
-      { tag_name = "compliance_violation" },
+      { tag_name = "example-case-tag" },  # replace with a real case/issue tag
+      { tag_name = "example-issue-tag" }, # replace with a real case/issue tag
     ]
   }
 
   # Endpoints scope - limit access to specific endpoint groups and/or tags.
+  # tag_name values must be real endpoint tags that exist in your tenant.
   endpoints = {
     endpoint_groups = {
       mode = "scope"
       tags = [
-        { tag_name = "corporate-laptops" },
-        { tag_name = "servers" },
+        { tag_name = "example-endpoint-tag-1" }, # replace with a real endpoint tag
+        { tag_name = "example-endpoint-tag-2" }, # replace with a real endpoint tag
       ]
     }
   }
 
   # Dataset rows scope with multiple datasets.
-  # filter is a raw XQL query string that selects the rows in scope.
-  # Replace the dataset names below with real dataset names that exist in your
-  # tenant (these are only example dataset names).
+  # Each `dataset` must be a real dataset in your tenant and each `filter`
+  # must be a valid XQL predicate referencing fields in that dataset's schema.
   datasets_rows = {
     default_filter_mode = "no_scope"
     filters = [
       {
         dataset = "amazon_aws_raw"
-        filter  = "department = \"security\""
+        filter  = "eventSource = \"s3.amazonaws.com\""
       },
       {
-        dataset = "msft_azure_raw"
-        filter  = "severity in (\"critical\", \"high\")"
+        dataset = "amazon_aws_raw"
+        filter  = "eventName in (\"DeleteBucket\", \"PutBucketPolicy\")"
       },
     ]
   }
@@ -132,7 +121,7 @@ resource "cortexcloud_scope" "group_example" {
 
 - `assets` (Attributes) The assets scope. (see [below for nested schema](#nestedatt--assets))
 - `cases_issues` (Attributes) The cases issues scope. (see [below for nested schema](#nestedatt--cases_issues))
-- `datasets_rows` (Attributes) The datasets rows scope. (see [below for nested schema](#nestedatt--datasets_rows))
+- `datasets_rows` (Attributes) The datasets rows scope. This block is coupled to the tenant's dataset-level Scope-Based Access Control (SBAC) capability: it MUST be configured when dataset SBAC is enabled for the tenant, and MUST be omitted when it is disabled. Configuring it on a tenant without dataset SBAC returns an API error asking you to remove the datasets_rows section; omitting it on a tenant with dataset SBAC enabled returns an API error asking you to add it. (see [below for nested schema](#nestedatt--datasets_rows))
 - `endpoints` (Attributes) The endpoints scope. (see [below for nested schema](#nestedatt--endpoints))
 
 ### Read-Only
