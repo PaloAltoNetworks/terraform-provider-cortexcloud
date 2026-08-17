@@ -218,6 +218,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		platformResources.NewNotificationForwardingConfigManagementAuditLogsResource,
 		platformResources.NewNotificationForwardingConfigIssuesResource,
 		platformResources.NewNotificationForwardingConfigCasesResource,
+		platformResources.NewBIOCResource,
 	)
 
 	tflog.Debug(ctx, "Registering Compliance resources")
@@ -278,6 +279,8 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 		platformDataSources.NewIamRoleDataSource,
 		platformDataSources.NewGroupDataSource,
 		platformDataSources.NewIamPermissionConfigDataSource,
+		platformDataSources.NewBIOCDataSource,
+		platformDataSources.NewBIOCsDataSource,
 	)
 
 	tflog.Debug(ctx, "Registering Compliance data sources")
