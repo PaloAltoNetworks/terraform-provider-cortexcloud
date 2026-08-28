@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
 	complianceModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/compliance"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
+	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

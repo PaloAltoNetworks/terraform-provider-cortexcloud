@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/version"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/version"
 	"github.com/stretchr/testify/require"
 )
 

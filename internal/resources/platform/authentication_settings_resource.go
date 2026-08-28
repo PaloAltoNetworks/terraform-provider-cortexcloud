@@ -11,8 +11,8 @@ import (
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	platformTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

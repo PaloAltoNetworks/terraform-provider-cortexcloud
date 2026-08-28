@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	platformtypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )

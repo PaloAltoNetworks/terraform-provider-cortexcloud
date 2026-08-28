@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	cloudsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudsec"
-	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
 	cloudsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloudsec"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
+	cloudsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudsec"
+	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"

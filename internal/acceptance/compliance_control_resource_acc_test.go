@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
-	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/log"
+	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"

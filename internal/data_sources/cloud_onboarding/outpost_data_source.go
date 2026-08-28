@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudonboarding"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
