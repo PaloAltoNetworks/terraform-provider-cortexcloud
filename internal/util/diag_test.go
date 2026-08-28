@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	sdkErrors "github.com/PaloAltoNetworks/cortex-cloud-go/errors"
+	sdkErrors "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/errors"
 )
 
 // TestFormatAPIError_PerFieldDetails synthesises a 422 response that mirrors

@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	sdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	sharedModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/shared"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
+	sdk "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"

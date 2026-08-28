@@ -66,7 +66,7 @@ endef
 # Phony Targets
 #------------------------------------------------------------------------------
 
-.PHONY: format build copyright-check copyright docs test test-unit test-acc lint ci clean checkos workspace verify-public
+.PHONY: format build copyright-check copyright docs test test-unit test-acc lint ci clean checkos verify-public
 
 # -----------------------------------------------------------------------------
 # Main Targets
@@ -145,34 +145,17 @@ test-acc: build
 # Run linter
 lint:
 	@echo "Running linter..."
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run . ./internal/... ./vendor/github.com/PaloAltoNetworks/cortex-cloud-go/...
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run . ./internal/... ./sdk/...
 
-# Generate the gitignored go.work for LOCAL development/QA against the in-repo
-# ./cortex-cloud-go checkout (e.g. to test against an unpublished SDK change).
-# go.mod stays public-shape; go.work is never committed (see .gitignore).
-# Point ./cortex-cloud-go at the SDK branch/commit you want BEFORE running this.
-workspace:
-	@if [ ! -d "./cortex-cloud-go" ]; then \
-		echo "ERROR: ./cortex-cloud-go checkout not found. Clone/checkout the SDK there first."; \
-		exit 1; \
-	fi
-	@echo "Generating gitignored go.work (provider + ./cortex-cloud-go)..."
-	@rm -f go.work go.work.sum
-	@go work init . ./cortex-cloud-go
-	@go work edit -go=1.25.0
-	@echo ""
-	@echo "Done! Local builds now resolve the SDK from ./cortex-cloud-go."
-	@echo "Remove it with 'rm go.work go.work.sum' or build the public shape with 'GOWORK=off'."
-
-# Verify the TRUE public build (the exact shape customers consume): ignore any
-# local go.work and build/tidy/test against the published go.mod pin.
+# Verify the build in the exact shape customers consume: a single module with
+# the SDK vendored in-tree under ./sdk.
 verify-public:
-	@echo "Verifying public-shape build (GOWORK=off)..."
-	@GOWORK=off go build ./...
-	@GOWORK=off go vet ./...
-	@GOWORK=off TF_ACC=0 go test $$(go list ./... | grep -v /acceptance)
+	@echo "Verifying build..."
+	@go build ./...
+	@go vet ./...
+	@TF_ACC=0 go test $$(go list ./... | grep -v /acceptance)
 	@echo ""
-	@echo "Done! Public go.mod builds cleanly without go.work."
+	@echo "Done! go.mod builds cleanly as a single module."
 
 # Run all CI checks
 ci: verify-public lint copyright-check test-unit

@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	cwpTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cwp"
+	cwpTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cwp"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
