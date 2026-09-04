@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	sdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
+	sdk "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
 
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/tests"

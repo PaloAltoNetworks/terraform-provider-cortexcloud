@@ -12,8 +12,8 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
 
-	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	platformtypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	platformsdk "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	platformtypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"

@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	types "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/log"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	types "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"

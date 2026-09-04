@@ -9,7 +9,7 @@ import (
 
 	platformmodel "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 
-	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	platformsdk "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"

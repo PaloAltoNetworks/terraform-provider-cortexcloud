@@ -6,12 +6,12 @@ package appsec
 import (
 	"context"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	appsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/appsec"
 	appsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/appsec"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util/pagination"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/appsec"
+	appsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/appsec"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"

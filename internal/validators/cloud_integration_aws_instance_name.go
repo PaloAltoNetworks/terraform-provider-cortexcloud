@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"

@@ -44,3 +44,9 @@ scripts/
 # Go workspace (local SDK dev only — never committed; go.mod stays public-shape)
 go.work
 go.work.sum
+
+# Agent workspace (notes, scratch, clones) — never committed
+agent-space/
+
+# Legacy standalone SDK checkout (absorbed into sdk/; kept locally only)
+cortex-cloud-go/

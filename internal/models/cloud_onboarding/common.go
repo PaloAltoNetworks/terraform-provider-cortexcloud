@@ -4,7 +4,7 @@
 package models
 
 import (
-	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudonboarding"
 )
 
 type scopeModificationRegions struct {

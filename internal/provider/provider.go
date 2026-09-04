@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/version"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/appsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudonboarding"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cwp"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/log"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/version"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/vulnerability"
 
 	appsecDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/appsec"
 	cloudOnboardingDataSources "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/data_sources/cloud_onboarding"
@@ -68,8 +68,7 @@ func New(gitCommit string, providerVersion string) func() provider.Provider {
 
 	return func() provider.Provider {
 		return &CortexCloudProvider{
-			gitCommit:       gitCommit,
-			providerVersion: providerVersion,
+			gitCommit: gitCommit,
 		}
 	}
 }
@@ -78,10 +77,6 @@ func New(gitCommit string, providerVersion string) func() provider.Provider {
 type CortexCloudProvider struct {
 	// gitCommit is the git commit SHA used for build-info logging.
 	gitCommit string
-	// providerVersion is the semver release version (e.g. "0.7.0") used in
-	// the User-Agent header for analytics. Set via -ldflags at build time;
-	// defaults to "dev" for local builds.
-	providerVersion string
 }
 
 func (p *CortexCloudProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -388,55 +383,55 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	// clientOpts returns commonOpts with the Terraform User-Agent option
-	// appended for the given module, unless CORTEXCLOUD_AGENT is set (in
-	// which case the SDK's env-var-based agent string takes precedence).
-	clientOpts := func(moduleName string) []platform.Option {
+	// appended, unless CORTEXCLOUD_AGENT is set (in which case the SDK's
+	// env-var-based agent string takes precedence).
+	clientOpts := func() []platform.Option {
 		opts := make([]platform.Option, len(commonOpts))
 		copy(opts, commonOpts)
 		if os.Getenv(cortexCloudAgentEnvVar) == "" {
-			suffix := appendTerraformUserAgentSuffix(p.providerVersion, req.TerraformVersion)
-			opts = append(opts, platform.WithAgent(version.UserAgentWithCustom(moduleName, suffix)))
+			detail := terraformUserAgentDetail(req.TerraformVersion)
+			opts = append(opts, platform.WithAgent(version.UserAgentWithCustom(detail)))
 		}
 		return opts
 	}
 
 	tflog.Debug(ctx, "Initializing platform client")
-	platformClient, err := platform.NewClient(clientOpts(platform.ModuleName)...)
+	platformClient, err := platform.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing cloudonboarding client")
-	cloudOnboardingClient, err := cloudonboarding.NewClient(clientOpts(cloudonboarding.ModuleName)...)
+	cloudOnboardingClient, err := cloudonboarding.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing cloudsec client")
-	cloudSecClient, err := cloudsec.NewClient(clientOpts(cloudsec.ModuleName)...)
+	cloudSecClient, err := cloudsec.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing appsec client")
-	appsecClient, err := appsec.NewClient(clientOpts(appsec.ModuleName)...)
+	appsecClient, err := appsec.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing compliance client")
-	complianceClient, err := compliance.NewClient(clientOpts(compliance.ModuleName)...)
+	complianceClient, err := compliance.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
 	}
 
 	tflog.Debug(ctx, "Initializing vulnerability client")
-	vulnerabilityClient, err := vulnerability.NewClient(clientOpts(vulnerability.ModuleName)...)
+	vulnerabilityClient, err := vulnerability.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
@@ -445,7 +440,7 @@ func (p *CortexCloudProvider) Configure(ctx context.Context, req provider.Config
 	tflog.Debug(ctx, "Cortex Cloud API client setup complete")
 
 	tflog.Debug(ctx, "Initializing CWP client")
-	cwpClient, err := cwp.NewClient(clientOpts(cwp.ModuleName)...)
+	cwpClient, err := cwp.NewClient(clientOpts()...)
 	if err != nil {
 		resp.Diagnostics.AddError("Cortex Cloud API Setup Error", err.Error())
 		return
