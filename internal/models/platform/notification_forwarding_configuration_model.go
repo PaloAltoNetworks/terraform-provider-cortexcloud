@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
-	platformTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/platform"
 	sharedModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/shared"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
+	filterTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/filter"
+	platformTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 
 	"encoding/json"
 

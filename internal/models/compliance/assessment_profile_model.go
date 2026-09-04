@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	complianceTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/compliance"
+	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"

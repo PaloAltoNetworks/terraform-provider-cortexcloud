@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	sdkErrors "github.com/PaloAltoNetworks/cortex-cloud-go/errors"
+	sdkErrors "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/errors"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 

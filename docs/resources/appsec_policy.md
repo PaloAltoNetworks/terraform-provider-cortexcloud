@@ -90,7 +90,7 @@ resource "cortexcloud_appsec_policy" "critical_findings" {
 
 ### Optional
 
-- `asset_group_ids` (List of Number) List of asset groups to which the policy applies. If the array is empty, the policy applies to all asset groups. Mutually exclusive with scope.
+- `asset_group_ids` (List of Number) List of asset groups to which the policy applies. If the list is empty, the policy applies to all asset groups. Mutually exclusive with `scope`: removing this attribute while `scope` is configured clears the asset group association.
 - `ci_image_trigger` (Attributes) CI image scan trigger configuration. Defaults to disabled if this attribute is not configured. (see [below for nested schema](#nestedatt--ci_image_trigger))
 - `cicd_trigger` (Attributes) If true, the policy is evaluated on CI/CD pipeline events. Defaults to disabled if this attribute is not configured. (see [below for nested schema](#nestedatt--cicd_trigger))
 - `description` (String) Description of the policy.
@@ -98,7 +98,7 @@ resource "cortexcloud_appsec_policy" "critical_findings" {
 - `override_issue_severity` (String) Override severity for issues.
 - `periodic_trigger` (Attributes) If true, the policy is evaluated periodically (for example, daily or weekly). Defaults to disabled if this attribute is not configured. (see [below for nested schema](#nestedatt--periodic_trigger))
 - `pr_trigger` (Attributes) If true, the policy is evaluated on Pull Request (PR) events. Defaults to disabled if this attribute is not configured. (see [below for nested schema](#nestedatt--pr_trigger))
-- `scope` (String) Asset targeting scope as JSON-encoded string. Mutually exclusive with asset_group_ids.
+- `scope` (String) Asset targeting scope as JSON-encoded string. Mutually exclusive with `asset_group_ids`: configuring `scope` clears any existing asset group association.
 - `status` (String) Indicates whether the policy is enabled or disabled.
 
 ### Read-Only

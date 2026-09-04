@@ -6,8 +6,8 @@ package cloudonboarding
 import (
 	"context"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudonboarding"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"

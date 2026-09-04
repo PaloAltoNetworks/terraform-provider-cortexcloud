@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	sdkErrors "github.com/PaloAltoNetworks/cortex-cloud-go/errors"
-	appsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/appsec"
 	appsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/appsec"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/planmodifiers"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/appsec"
+	sdkErrors "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/errors"
+	appsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/appsec"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -91,7 +92,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Required:    true,
 			},
 			"scope": schema.StringAttribute{
-				Description: "Asset targeting scope as JSON-encoded string. Mutually exclusive with asset_group_ids.",
+				Description: "Asset targeting scope as JSON-encoded string. Mutually exclusive with `asset_group_ids`: configuring `scope` clears any existing asset group association.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
@@ -99,10 +100,25 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"asset_group_ids": schema.ListAttribute{
-				Description: "List of asset groups to which the policy applies. If the array is empty, the policy applies to all asset groups. Mutually exclusive with scope.",
+				Description: "List of asset groups to which the policy applies. If the list is empty, the policy applies to all asset groups. Mutually exclusive with `scope`: removing this attribute while `scope` is configured clears the asset group association.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.Int64Type,
+				PlanModifiers: []planmodifier.List{
+					// Because this attribute is Computed, removing it from the
+					// configuration leaves the plan unknown, and an unknown is
+					// dropped from the update request -- so the previously
+					// associated asset groups survive on the server and keep
+					// masking a newly configured scope. Planning an explicit empty
+					// list instead sends the cleared value through.
+					//
+					// Limitation: if scope is unknown at plan time (for example,
+					// interpolated from another resource) the modifier cannot tell
+					// whether it is set, so it stands down and the stale
+					// association persists for that apply. A later apply, where
+					// scope is known, corrects it.
+					planmodifiers.ListEmptyIfOtherConfigured(path.Root("scope"), types.Int64Type),
+				},
 			},
 			"periodic_trigger": schema.SingleNestedAttribute{
 				Description: "If true, the policy is evaluated periodically (for example, daily or weekly). Defaults to disabled if this attribute is not configured.",

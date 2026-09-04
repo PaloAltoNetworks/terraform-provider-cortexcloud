@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
-	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudonboarding"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudonboarding"
+	filterTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/filter"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloud_onboarding"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"

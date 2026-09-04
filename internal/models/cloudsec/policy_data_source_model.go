@@ -6,7 +6,7 @@ package models
 import (
 	"context"
 
-	cloudsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudsec"
+	cloudsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudsec"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )

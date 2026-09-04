@@ -12,7 +12,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	platformsdk "github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	platformsdk "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"

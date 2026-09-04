@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/log"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/appsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/log"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"

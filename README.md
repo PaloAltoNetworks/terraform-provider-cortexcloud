@@ -9,7 +9,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.10"
+      version = "1.0.11"
     }
   }
 }
@@ -107,6 +107,12 @@ provider "cortexcloud" {
 ```
 
 ## Release Notes
+
+### v1.0.11
+
+#### Maintenance
+* The Cortex Cloud Go SDK now lives in this repository under `sdk/` instead of being consumed as a separate module. This removes the release-ordering dependency between the two projects; there is no change to provider configuration or resource behavior
+* The `User-Agent` sent with each API request now reports the provider and its released version, as `terraform-provider-cortexcloud/<version> (terraform/<cli-version>; <os>/<arch>)`. It previously led with the SDK's name and a hand-maintained version that no longer tracked anything
 
 ### v1.0.10
 
