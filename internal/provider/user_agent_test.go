@@ -11,83 +11,68 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/version"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/version"
 	"github.com/stretchr/testify/require"
 )
 
-func TestAppendTerraformUserAgentSuffix(t *testing.T) {
-	t.Run("should format suffix with provider and terraform versions", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("0.7.0", "1.9.5")
+func TestTerraformUserAgentDetail(t *testing.T) {
+	t.Run("should format the terraform CLI version", func(t *testing.T) {
+		detail := terraformUserAgentDetail("1.9.5")
 
-		expected := "terraform-provider-cortexcloud/0.7.0 (terraform/1.9.5; " + runtime.GOOS + "_" + runtime.GOARCH + ")"
-		if suffix != expected {
-			t.Errorf("Expected %q, got %q", expected, suffix)
+		if detail != "terraform/1.9.5" {
+			t.Errorf("Expected %q, got %q", "terraform/1.9.5", detail)
 		}
 	})
 
-	t.Run("should handle dev version strings", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("dev", "1.10.0-beta1")
+	t.Run("should handle prerelease version strings", func(t *testing.T) {
+		detail := terraformUserAgentDetail("1.10.0-beta1")
 
-		if !strings.HasPrefix(suffix, "terraform-provider-cortexcloud/dev") {
-			t.Errorf("Expected prefix 'terraform-provider-cortexcloud/dev', got %q", suffix)
-		}
-		if !strings.Contains(suffix, "terraform/1.10.0-beta1") {
-			t.Errorf("Expected terraform version in suffix, got %q", suffix)
-		}
-	})
-
-	t.Run("should produce valid full User-Agent when combined with SDK", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("0.7.0", "1.9.5")
-		fullUA := version.UserAgentWithCustom("platform", suffix)
-
-		// Must contain the SDK base
-		if !strings.Contains(fullUA, "cortex-cloud-go/") {
-			t.Errorf("Expected SDK name in full User-Agent, got %q", fullUA)
-		}
-		if !strings.Contains(fullUA, "(platform;") {
-			t.Errorf("Expected module name in full User-Agent, got %q", fullUA)
-		}
-
-		// Must contain the Terraform suffix
-		if !strings.Contains(fullUA, "terraform-provider-cortexcloud/0.7.0") {
-			t.Errorf("Expected provider version in full User-Agent, got %q", fullUA)
-		}
-		if !strings.Contains(fullUA, "terraform/1.9.5") {
-			t.Errorf("Expected terraform CLI version in full User-Agent, got %q", fullUA)
-		}
-
-		// Must have exactly two space-separated product tokens
-		parts := strings.SplitN(fullUA, " terraform-provider-cortexcloud/", 2)
-		if len(parts) != 2 {
-			t.Errorf("Expected two product tokens separated by space, got %q", fullUA)
-		}
-	})
-
-	t.Run("should default empty provider version to unknown", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("", "1.9.5")
-
-		if !strings.Contains(suffix, "terraform-provider-cortexcloud/unknown") {
-			t.Errorf("Expected 'unknown' for empty provider version, got %q", suffix)
+		if detail != "terraform/1.10.0-beta1" {
+			t.Errorf("Expected %q, got %q", "terraform/1.10.0-beta1", detail)
 		}
 	})
 
 	t.Run("should default empty terraform version to unknown", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("0.7.0", "")
+		detail := terraformUserAgentDetail("")
 
-		if !strings.Contains(suffix, "terraform/unknown") {
-			t.Errorf("Expected 'unknown' for empty terraform version, got %q", suffix)
+		if detail != "terraform/unknown" {
+			t.Errorf("Expected %q, got %q", "terraform/unknown", detail)
+		}
+	})
+}
+
+func TestFullUserAgentComposition(t *testing.T) {
+	t.Run("should produce a single product token with terraform detail", func(t *testing.T) {
+		detail := terraformUserAgentDetail("1.9.5")
+		fullUA := version.UserAgentWithCustom(detail)
+
+		expected := "terraform-provider-cortexcloud/" + version.ProductVersion +
+			" (terraform/1.9.5; " + runtime.GOOS + "/" + runtime.GOARCH + ")"
+		if fullUA != expected {
+			t.Errorf("Expected %q, got %q", expected, fullUA)
 		}
 	})
 
-	t.Run("should default both empty versions to unknown", func(t *testing.T) {
-		suffix := appendTerraformUserAgentSuffix("", "")
+	t.Run("should not repeat the product token", func(t *testing.T) {
+		fullUA := version.UserAgentWithCustom(terraformUserAgentDetail("1.9.5"))
 
-		if !strings.Contains(suffix, "terraform-provider-cortexcloud/unknown") {
-			t.Errorf("Expected 'unknown' for empty provider version, got %q", suffix)
+		if n := strings.Count(fullUA, version.ProductName); n != 1 {
+			t.Errorf("Expected product name exactly once, found %d times in %q", n, fullUA)
 		}
-		if !strings.Contains(suffix, "terraform/unknown") {
-			t.Errorf("Expected 'unknown' for empty terraform version, got %q", suffix)
+	})
+
+	t.Run("should not carry the retired SDK or module tokens", func(t *testing.T) {
+		fullUA := version.UserAgentWithCustom(terraformUserAgentDetail("1.9.5"))
+
+		if strings.Contains(fullUA, "cortex-cloud-go") {
+			t.Errorf("Retired SDK token present in %q", fullUA)
+		}
+		if strings.Contains(fullUA, "(platform;") {
+			t.Errorf("Redundant module token present in %q", fullUA)
+		}
+		if strings.Contains(fullUA, "go"+strings.TrimPrefix(runtime.Version(), "go")) {
+			t.Errorf("Retired go version token present in %q", fullUA)
 		}
 	})
 }
@@ -101,20 +86,21 @@ func TestUserAgentHeaderOnWire(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	suffix := appendTerraformUserAgentSuffix("0.7.0", "1.9.5")
+	detail := terraformUserAgentDetail("1.9.5")
 	client, err := platform.NewClient(
 		platform.WithCortexAPIURL(srv.URL),
 		platform.WithCortexAPIKey("dummy"),
 		platform.WithCortexAPIKeyID(1),
 		platform.WithCortexAPIKeyType("standard"),
-		platform.WithAgent(version.UserAgentWithCustom(platform.ModuleName, suffix)),
+		platform.WithAgent(version.UserAgentWithCustom(detail)),
 	)
 	require.NoError(t, err)
 
 	_, _ = client.ValidateAPIKey(context.Background())
 
-	require.Contains(t, capturedUA, "cortex-cloud-go/")
-	require.Contains(t, capturedUA, "(platform;")
-	require.Contains(t, capturedUA, "terraform-provider-cortexcloud/0.7.0")
+	require.Contains(t, capturedUA, "terraform-provider-cortexcloud/")
 	require.Contains(t, capturedUA, "terraform/1.9.5")
+	require.NotContains(t, capturedUA, "cortex-cloud-go")
+	require.Equal(t, 1, strings.Count(capturedUA, version.ProductName),
+		"product token must appear exactly once: %q", capturedUA)
 }

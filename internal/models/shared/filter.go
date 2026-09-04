@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	filterTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/filter"
+	filterTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/filter"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"

@@ -10,14 +10,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/appsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/compliance"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/appsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudonboarding"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cloudsec"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cwp"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/vulnerability"
 
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 

@@ -48,14 +48,30 @@ jobs:
       - name: Export GOVERSION
         run: echo "GOVERSION=$(go env GOVERSION)" >> $GITHUB_ENV
 
-      - name: Verify GH_PAT is present
+      - name: Verify the release token can actually publish
         shell: bash
+        env:
+          TOKEN: ${{ secrets.GH_PAT_RELEASE }}
         run: |
-          if [ -z "${{ secrets.GH_PAT }}" ]; then
-            echo "ERROR: secrets.GH_PAT is empty or not available to this workflow run."
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: secrets.GH_PAT_RELEASE is empty or not available to this workflow run."
             exit 1
           fi
-          echo "GH_PAT is present."
+          code=$(curl -s -o /tmp/repo.json -w '%{http_code}' \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}")
+          if [ "$code" \!= "200" ]; then
+            echo "ERROR: release token cannot read the repo (HTTP $code)."; exit 1
+          fi
+          python3 -c "
+          import json
+          p = (json.load(open('/tmp/repo.json')).get('permissions') or {})
+          print('token permissions:', p)
+          if not p.get('push'):
+              raise SystemExit('ERROR: release token lacks write access -> cannot publish a release.')
+          print('OK - release token has write access.')
+          "
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a #v6.4
@@ -64,6 +80,6 @@ jobs:
           args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_RELEASE }}
           GOVERSION: ${{ env.GOVERSION }}
           CORTEX_PAPI_VERSION: v1.3

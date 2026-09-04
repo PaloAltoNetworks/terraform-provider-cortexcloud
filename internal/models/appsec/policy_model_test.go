@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	appsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/appsec"
+	appsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/appsec"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
