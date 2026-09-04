@@ -5,9 +5,12 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 
-	appsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/appsec"
+	appsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/appsec"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -272,5 +275,121 @@ func TestPolicyModel_ToCreateRequest_OmittedTriggersGetCanonicalDefaults(t *test
 		if cfg.IsEnabled {
 			t.Errorf("%s default IsEnabled should be false", name)
 		}
+	}
+}
+
+// An empty asset_group_ids list must convert to a non-nil, zero-length slice.
+//
+// This is the load-bearing property behind clearing asset-group targeting. The
+// resource's mergeServerFields back-fills AssetGroupIds only when the field is
+// nil; a non-nil empty slice makes it skip itself, and encoding/json then drops
+// the key via omitempty. Because the API's PUT is a full replacement, an absent
+// key clears the association.
+//
+// If this ever regressed to nil, the back-fill would restore the previous asset
+// groups and the request would silently carry both scoping mechanisms.
+func TestPolicyModel_ToUpdateRequest_EmptyAssetGroupIdsIsNonNilEmptySlice(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := newPolicyModelForAssetGroupTests(types.ListValueMust(types.Int64Type, []attr.Value{}))
+
+	req := model.ToUpdateRequest(ctx, &diags)
+	if diags.HasError() {
+		t.Fatalf("ToUpdateRequest() errors: %v", diags.Errors())
+	}
+
+	if req.AssetGroupIds == nil {
+		t.Fatal("AssetGroupIds is nil; must be a non-nil empty slice so mergeServerFields does not back-fill it")
+	}
+	if len(req.AssetGroupIds) != 0 {
+		t.Errorf("AssetGroupIds = %v, want zero length", req.AssetGroupIds)
+	}
+}
+
+// Negative control for the test above: a populated list must still be carried
+// through. Without this, an implementation that always returned an empty slice
+// would pass the suite while silently discarding the user's asset groups.
+func TestPolicyModel_ToUpdateRequest_PopulatedAssetGroupIdsArePreserved(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := newPolicyModelForAssetGroupTests(types.ListValueMust(types.Int64Type, []attr.Value{
+		types.Int64Value(56),
+		types.Int64Value(57),
+	}))
+
+	req := model.ToUpdateRequest(ctx, &diags)
+	if diags.HasError() {
+		t.Fatalf("ToUpdateRequest() errors: %v", diags.Errors())
+	}
+
+	want := []int{56, 57}
+	if len(req.AssetGroupIds) != len(want) {
+		t.Fatalf("AssetGroupIds = %v, want %v", req.AssetGroupIds, want)
+	}
+	for i, id := range want {
+		if req.AssetGroupIds[i] != id {
+			t.Errorf("AssetGroupIds[%d] = %d, want %d", i, req.AssetGroupIds[i], id)
+		}
+	}
+}
+
+// A null asset_group_ids must leave the field nil, preserving the existing
+// back-fill behaviour for users who never manage asset groups in Terraform.
+func TestPolicyModel_ToUpdateRequest_NullAssetGroupIdsStaysNil(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := newPolicyModelForAssetGroupTests(types.ListNull(types.Int64Type))
+
+	req := model.ToUpdateRequest(ctx, &diags)
+	if diags.HasError() {
+		t.Fatalf("ToUpdateRequest() errors: %v", diags.Errors())
+	}
+
+	if req.AssetGroupIds != nil {
+		t.Errorf("AssetGroupIds = %v, want nil so mergeServerFields still back-fills", req.AssetGroupIds)
+	}
+}
+
+// An empty asset_group_ids must not reach the wire at all. omitempty cannot
+// distinguish an empty slice from an absent one, which is precisely what lets
+// the full-replacement PUT clear the association.
+func TestPolicyModel_ToUpdateRequest_EmptyAssetGroupIdsOmittedFromJSON(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := newPolicyModelForAssetGroupTests(types.ListValueMust(types.Int64Type, []attr.Value{}))
+
+	req := model.ToUpdateRequest(ctx, &diags)
+	if diags.HasError() {
+		t.Fatalf("ToUpdateRequest() errors: %v", diags.Errors())
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	if strings.Contains(string(body), "assetGroupIds") {
+		t.Errorf("request body contains assetGroupIds, want it omitted: %s", body)
+	}
+}
+
+// newPolicyModelForAssetGroupTests builds a minimal valid model, varying only
+// asset_group_ids, so these tests exercise one dimension at a time.
+func newPolicyModelForAssetGroupTests(assetGroupIds types.List) PolicyModel {
+	return PolicyModel{
+		Name:                 types.StringValue("p"),
+		Description:          types.StringValue(""),
+		Status:               types.StringValue("enabled"),
+		Conditions:           types.StringValue(`{"SEARCH_FIELD":"x","SEARCH_TYPE":"EQ","SEARCH_VALUE":"y"}`),
+		Scope:                types.StringValue(`{"AND":[{"SEARCH_FIELD":"repository_name","SEARCH_TYPE":"EQ","SEARCH_VALUE":"example/repo"}]}`),
+		AssetGroupIds:        assetGroupIds,
+		PeriodicTrigger:      types.ObjectNull(PeriodicTriggerAttrTypes),
+		PRTrigger:            types.ObjectNull(PRTriggerAttrTypes),
+		CICDTrigger:          types.ObjectNull(CICDTriggerAttrTypes),
+		CIImageTrigger:       types.ObjectNull(CIImageTriggerAttrTypes),
+		ImageRegistryTrigger: types.ObjectNull(ImageRegistryTriggerAttrTypes),
 	}
 }

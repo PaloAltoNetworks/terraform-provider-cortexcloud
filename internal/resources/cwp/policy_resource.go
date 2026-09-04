@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/cwp"
-	"github.com/PaloAltoNetworks/cortex-cloud-go/enums"
 	cwpModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cwp"
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/cwp"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

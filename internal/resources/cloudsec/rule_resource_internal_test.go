@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	cloudsecTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudsec"
 	cloudsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloudsec"
+	cloudsecTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudsec"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"

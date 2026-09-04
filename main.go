@@ -25,12 +25,13 @@ var (
 func logBuildInfo() {
 	log.Printf("{ "+
 		"\"GitCommit\": \"%s\""+
+		", \"ProviderVersion\": \"%s\""+
 		", \"CortexServerVersion\": \"%s\""+
-		", \"CortexServerVersion\": \"%s\""+
+		", \"CortexPAPIVersion\": \"%s\""+
 		", \"GoVersion\": \"%s\""+
 		", \"BuildDate\": \"%s\""+
 		"}",
-		GitCommit, CortexServerVersion, CortexPAPIVersion, GoVersion, BuildDate)
+		GitCommit, ProviderVersion, CortexServerVersion, CortexPAPIVersion, GoVersion, BuildDate)
 }
 
 func main() {

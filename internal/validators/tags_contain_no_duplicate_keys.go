@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	cloudOnboardingTypes "github.com/PaloAltoNetworks/cortex-cloud-go/types/cloudonboarding"
+	cloudOnboardingTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/cloudonboarding"
 
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )

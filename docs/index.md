@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.10"
+      version = "1.0.11"
     }
   }
 }
@@ -195,6 +195,15 @@ provider "cortexcloud" {
 
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
+
+### v1.0.11
+
+#### Bug Fixes
+* Fixed an AppSec policy's `scope` not taking effect when `asset_group_ids` is removed from the configuration in the same change. The policy kept its original asset group targeting, so the new scope appeared to be ignored even though the apply reported success. Removing `asset_group_ids` while `scope` is configured now clears the asset group association. A policy already left targeting both can be corrected by setting `asset_group_ids = []` explicitly
+
+#### Maintenance
+* The Cortex Cloud Go SDK now lives in this repository under `sdk/` instead of being consumed as a separate module. This removes the release-ordering dependency between the two projects; there is no change to provider configuration or resource behavior
+* The `User-Agent` sent with each API request now reports the provider and its released version, as `terraform-provider-cortexcloud/<version> (terraform/<cli-version>; <os>/<arch>)`. It previously led with the SDK's name and a hand-maintained version that no longer tracked anything
 
 ### v1.0.10
 

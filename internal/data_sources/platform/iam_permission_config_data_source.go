@@ -11,7 +11,7 @@ import (
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 
-	"github.com/PaloAltoNetworks/cortex-cloud-go/platform"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/platform"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
