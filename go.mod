@@ -66,3 +66,25 @@ require (
 	google.golang.org/grpc v1.79.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+// TEMPORARY: local SDK pin for indicator (IOC) work. The Indicator types
+// and platform.Client methods this provider depends on live in
+// PaloAltoNetworks/cortex-cloud-go PR #32, not yet released. Once the SDK
+// release that contains PR #32 is published, bump each cortex-cloud-go
+// submodule `require` directive to that version and delete this block.
+replace (
+	github.com/PaloAltoNetworks/cortex-cloud-go/appsec => ../cortex-cloud-go/appsec
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudonboarding => ../cortex-cloud-go/cloudonboarding
+	github.com/PaloAltoNetworks/cortex-cloud-go/cloudsec => ../cortex-cloud-go/cloudsec
+	github.com/PaloAltoNetworks/cortex-cloud-go/compliance => ../cortex-cloud-go/compliance
+	github.com/PaloAltoNetworks/cortex-cloud-go/cwp => ../cortex-cloud-go/cwp
+	github.com/PaloAltoNetworks/cortex-cloud-go/enums => ../cortex-cloud-go/enums
+	github.com/PaloAltoNetworks/cortex-cloud-go/errors => ../cortex-cloud-go/errors
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/client => ../cortex-cloud-go/internal/client
+	github.com/PaloAltoNetworks/cortex-cloud-go/internal/config => ../cortex-cloud-go/internal/config
+	github.com/PaloAltoNetworks/cortex-cloud-go/log => ../cortex-cloud-go/log
+	github.com/PaloAltoNetworks/cortex-cloud-go/platform => ../cortex-cloud-go/platform
+	github.com/PaloAltoNetworks/cortex-cloud-go/types => ../cortex-cloud-go/types
+	github.com/PaloAltoNetworks/cortex-cloud-go/version => ../cortex-cloud-go/version
+	github.com/PaloAltoNetworks/cortex-cloud-go/vulnerability => ../cortex-cloud-go/vulnerability
+)
