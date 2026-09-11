@@ -14,13 +14,17 @@ import (
 )
 
 // CreateStandard creates a new compliance standard.
-func (c *Client) CreateStandard(ctx context.Context, req types.CreateStandardRequest) (bool, error) {
-	var resp commontypes.SuccessResponse
+// Returns the created standard's ID and success status.
+func (c *Client) CreateStandard(ctx context.Context, req types.CreateStandardRequest) (*types.CreateStandardResponse, error) {
+	var resp types.CreateStandardResponse
 	_, err := c.internalClient.Do(ctx, http.MethodPost, CreateStandardEndpoint, nil, nil, req, &resp, &client.DoOptions{
 		RequestWrapperKeys:  []string{"request_data"},
 		ResponseWrapperKeys: []string{"reply"},
 	})
-	return resp.Success, err
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }
 
 // GetStandard retrieves a specific standard by ID.

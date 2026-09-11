@@ -27,9 +27,33 @@ const (
 	testRequestMaxRetryDelay int32 = 333
 )
 
+// clearProviderEnvVars ensures tests are isolated from any CORTEXCLOUD_*
+// environment variables that may be set in the ambient shell (e.g. via a
+// developer's .env/.envrc for running acceptance tests). t.Setenv restores
+// the previous value (or absence) automatically once the test completes.
+func clearProviderEnvVars(t *testing.T) {
+	t.Helper()
+	for _, envVar := range []string{
+		APIURLEnvVar,
+		APIKeyEnvVar,
+		APIKeyIDEnvVar,
+		APIKeyTypeEnvVar,
+		SDKLogLevelEnvVar,
+		SkipSSLVerifyEnvVar,
+		RequestTimeoutEnvVar,
+		RequestMaxRetriesEnvVar,
+		RequestMaxRetryDelayEnvVar,
+		CrashStackDirEnvVar,
+	} {
+		t.Setenv(envVar, "")
+	}
+}
+
 // TestProviderBlockConfiguration verifies that the provider is able to be
 // fully configured using the values passed in the provider block
 func TestProviderBlockConfiguration(t *testing.T) {
+	clearProviderEnvVars(t)
+
 	const (
 		providerBlockAPIURL        = "https://api-provider.block"
 		providerBlockAPIKey        = "key-from-provider-block"
@@ -98,6 +122,8 @@ func TestProviderBlockConfiguration(t *testing.T) {
 // configured using only the specified JSON file in the `config_file`
 // attribute
 func TestConfigFileConfiguration(t *testing.T) {
+	clearProviderEnvVars(t)
+
 	const (
 		configFileAPIURL        = "https://api-config.file"
 		configFileAPIKey        = "key-from-config-file"
@@ -203,6 +229,8 @@ func TestEnvVarConfiguration(t *testing.T) {
 // TestConfigurationPrecedence verifies that configuration values are applied in the
 // correct order of precedence: Environment Variables > Config File > Provider Block
 func TestConfigurationPrecedence(t *testing.T) {
+	clearProviderEnvVars(t)
+
 	// Expected final values
 	const (
 		providerBlockAPIURL         = "https://api-provider.block"

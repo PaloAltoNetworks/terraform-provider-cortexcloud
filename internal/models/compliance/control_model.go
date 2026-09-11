@@ -78,12 +78,12 @@ func (m *ControlModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagno
 		m.Severity = types.StringValue(remote.Severity)
 	}
 
-	m.Supported = types.BoolValue(remote.Supported)
+	m.Supported = types.BoolValue(remote.Supported.Bool())
 	m.InsertionTime = types.Int64Value(remote.InsertionTime)
 	m.ModificationTime = types.Int64Value(remote.ModificationTime)
 	m.CreatedBy = types.StringValue(remote.CreatedBy)
-	m.Enabled = types.BoolValue(remote.Enabled)
-	m.IsCustom = types.BoolValue(remote.IsCustom)
+	m.Enabled = types.BoolValue(remote.Enabled.Bool())
+	m.IsCustom = types.BoolValue(remote.IsCustom.Bool())
 
 	// Handle optional ModifiedBy field
 	if remote.ModifiedBy != nil {

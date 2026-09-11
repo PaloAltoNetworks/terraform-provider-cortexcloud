@@ -367,7 +367,31 @@ const (
 	SearchTypeJSONOverlaps         SearchType = "JSON_OVERLAPS"
 	SearchTypeJSONArrayContainedIn SearchType = "JSON_ARRAY_CONTAINED_IN"
 	SearchTypeJSONIsNotEmpty       SearchType = "JSON_IS_NOT_EMPTY"
+	SearchTypeJSONWildcard         SearchType = "JSON_WILDCARD"
+	SearchTypeJSONWildcardNot      SearchType = "JSON_WILDCARD_NOT"
 )
+
+// jsonValuedSearchTypes holds the SearchType values whose SEARCH_VALUE is a
+// native JSON value (object or array) rather than a plain string. Filters using
+// these search types must be constructed with NewSearchFilterRawJSON (instead of NewSearchFilter method) so that the
+// value is serialized as native JSON instead of a JSON-encoded string.
+var jsonValuedSearchTypes = []SearchType{
+	SearchTypeJSONWildcard,
+	SearchTypeJSONWildcardNot,
+	SearchTypeJSONOverlaps,
+	SearchTypeJSONArrayContainedIn,
+}
+
+// IsJSONValuedSearchType reports whether the given search type expects its
+// SEARCH_VALUE to be a native JSON value (object or array) rather than a string.
+func IsJSONValuedSearchType(s string) bool {
+	for _, st := range jsonValuedSearchTypes {
+		if string(st) == s {
+			return true
+		}
+	}
+	return false
+}
 
 // allSearchTypes holds all valid SearchType values.
 var allSearchTypes = []SearchType{
@@ -406,6 +430,8 @@ var allSearchTypes = []SearchType{
 	SearchTypeJSONOverlaps,
 	SearchTypeJSONArrayContainedIn,
 	SearchTypeJSONIsNotEmpty,
+	SearchTypeJSONWildcard,
+	SearchTypeJSONWildcardNot,
 }
 
 // String returns the string representation of a SearchType.

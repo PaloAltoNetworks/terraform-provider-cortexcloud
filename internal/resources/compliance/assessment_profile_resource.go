@@ -157,40 +157,40 @@ func (r *assessmentProfileResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	// Create the assessment profile
-	success, err := r.client.CreateAssessmentProfile(ctx, createReq)
+	result, err := r.client.CreateAssessmentProfile(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Compliance Assessment Profile", err.Error())
 		return
 	}
-	if !success {
+	if !result.Success {
 		resp.Diagnostics.AddError("Error Creating Compliance Assessment Profile", "API call was not successful")
 		return
 	}
-
-	// The API doesn't return the ID, so we need to list profiles to find it
-	listReq := complianceTypes.ListAssessmentProfilesRequest{
-		Filters: []complianceTypes.Filter{
-			{
-				Field:    "NAME",
-				Operator: "eq",
-				Value:    plan.Name.ValueString(),
-			},
-		},
+	if result.AssessmentProfileID == "" {
+		resp.Diagnostics.AddError(
+			"Error Creating Compliance Assessment Profile",
+			"The API reported success but did not return an assessment profile ID. "+
+				"Cannot reliably identify the created assessment profile.",
+		)
+		return
 	}
 
-	listResp, err := r.client.ListAssessmentProfiles(ctx, listReq)
+	// Read back the created profile using the returned ID.
+	//
+	// Do not resolve the profile by listing and filtering on name: profile
+	// names are not unique (the API only rejects a duplicate standard and
+	// asset group pair), so a name filter can match several profiles and the
+	// first entry is not necessarily the one just created. Addressing the
+	// profile by its ID is exact.
+	getReq := complianceTypes.GetAssessmentProfileRequest{
+		ID: result.AssessmentProfileID,
+	}
+
+	remote, err := r.client.GetAssessmentProfile(ctx, getReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading Compliance Assessment Profile After Create", err.Error())
 		return
 	}
-
-	if len(listResp.AssessmentProfiles) == 0 {
-		resp.Diagnostics.AddError("Error Creating Compliance Assessment Profile", "Could not find the assessment profile after creation.")
-		return
-	}
-
-	// Get the most recently created profile
-	remote := &listResp.AssessmentProfiles[0]
 
 	// If the user set enabled = false, we need to update the profile after creation
 	// because the create API does not support the enabled field.
@@ -201,7 +201,7 @@ func (r *assessmentProfileResource) Create(ctx context.Context, req resource.Cre
 			return
 		}
 
-		success, err = r.client.UpdateAssessmentProfile(ctx, updateReq)
+		success, err := r.client.UpdateAssessmentProfile(ctx, updateReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error Disabling Compliance Assessment Profile After Create",
 				"The profile was created but could not be disabled: "+err.Error())
@@ -214,9 +214,6 @@ func (r *assessmentProfileResource) Create(ctx context.Context, req resource.Cre
 		}
 
 		// Re-read the profile after the update
-		getReq := complianceTypes.GetAssessmentProfileRequest{
-			ID: remote.ID,
-		}
 		updatedRemote, err := r.client.GetAssessmentProfile(ctx, getReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error Reading Compliance Assessment Profile After Disable", err.Error())

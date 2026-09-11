@@ -16,13 +16,17 @@ import (
 )
 
 // CreateAssessmentProfile creates a new compliance assessment profile.
-func (c *Client) CreateAssessmentProfile(ctx context.Context, req types.CreateAssessmentProfileRequest) (bool, error) {
-	var resp commontypes.SuccessResponse
+// Returns the created profile's ID and success status.
+func (c *Client) CreateAssessmentProfile(ctx context.Context, req types.CreateAssessmentProfileRequest) (*types.CreateAssessmentProfileResponse, error) {
+	var resp types.CreateAssessmentProfileResponse
 	_, err := c.internalClient.Do(ctx, http.MethodPost, CreateAssessmentProfileEndpoint, nil, nil, req, &resp, &client.DoOptions{
 		RequestWrapperKeys:  []string{"request_data"},
 		ResponseWrapperKeys: []string{"reply"},
 	})
-	return resp.Success, err
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }
 
 // GetAssessmentProfile retrieves a specific assessment profile by ID.

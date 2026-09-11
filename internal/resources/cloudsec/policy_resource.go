@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	cloudsecModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/cloudsec"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
@@ -294,11 +295,25 @@ func (r *CloudSecPolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	// Call SDK Get method
-	policyResp, err := r.client.GetPolicy(ctx, state.ID.ValueString())
-	if err != nil {
-		// Check if policy not found
+	// Call SDK Get method with retries on 404 to handle backend eventual consistency
+	var policyResp cloudsecTypes.PolicyResponse
+	var err error
+
+	backoffs := []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second}
+	for attempt := 0; attempt <= len(backoffs); attempt++ {
+		policyResp, err = r.client.GetPolicy(ctx, state.ID.ValueString())
+		if err == nil {
+			break
+		}
+
 		errMsg := err.Error()
+		if (strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "404")) && attempt < len(backoffs) {
+			tflog.Debug(ctx, "Policy not found on read, retrying for eventual consistency",
+				map[string]interface{}{"policy_id": state.ID.ValueString(), "attempt": attempt + 1})
+			time.Sleep(backoffs[attempt])
+			continue
+		}
+
 		if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "404") {
 			resp.Diagnostics.AddWarning(
 				"CloudSec Policy Not Found",
@@ -307,6 +322,7 @@ func (r *CloudSecPolicyResource) Read(ctx context.Context, req resource.ReadRequ
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError(
 			"Error Reading CloudSec Policy",
 			fmt.Sprintf("Could not read policy %s: %s", state.ID.ValueString(), err.Error()),

@@ -166,40 +166,39 @@ func (r *standardResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// Create the standard
-	success, err := r.client.CreateStandard(ctx, createReq)
+	result, err := r.client.CreateStandard(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating Compliance Standard", err.Error())
 		return
 	}
-	if !success {
+	if !result.Success {
 		resp.Diagnostics.AddError("Error Creating Compliance Standard", "API call was not successful")
 		return
 	}
-
-	// The API doesn't return the ID, so we need to list standards to find it
-	listReq := complianceTypes.ListStandardsRequest{
-		Filters: []complianceTypes.Filter{
-			{
-				Field:    "name",
-				Operator: "eq",
-				Value:    plan.Name.ValueString(),
-			},
-		},
+	if result.StandardID == "" {
+		resp.Diagnostics.AddError(
+			"Error Creating Compliance Standard",
+			"The API reported success but did not return a standard ID. "+
+				"Cannot reliably identify the created standard.",
+		)
+		return
 	}
 
-	listResp, err := r.client.ListStandards(ctx, listReq)
+	// Read back the created standard using the returned ID.
+	//
+	// Do not resolve the standard by listing and filtering on name: the
+	// get_standards endpoint has been observed ignoring the name filter and
+	// returning the full catalogue, which caused an unrelated standard to be
+	// written into state. Addressing the resource by its ID is exact.
+	getReq := complianceTypes.GetStandardRequest{
+		ID: result.StandardID,
+	}
+
+	remote, err := r.client.GetStandard(ctx, getReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading Compliance Standard After Create", err.Error())
 		return
 	}
-
-	if len(listResp.Standards) == 0 {
-		resp.Diagnostics.AddError("Error Creating Compliance Standard", "Could not find the standard after creation.")
-		return
-	}
-
-	// Get the most recently created standard
-	remote := &listResp.Standards[0]
 
 	// Update plan with remote data
 	plan.RefreshFromRemote(ctx, &resp.Diagnostics, remote)

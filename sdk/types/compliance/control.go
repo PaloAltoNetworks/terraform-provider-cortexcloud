@@ -18,7 +18,7 @@ type Control struct {
 	SubcategoryDescription string   `json:"SUBCATEGORY_DESCRIPTION"`
 	Standards              []string `json:"STANDARDS"`
 	Severity               string   `json:"SEVERITY"`
-	Supported              bool     `json:"SUPPORTED"`
+	Supported              FlexBool `json:"SUPPORTED"`
 	InsertionTime          int64    `json:"INSERTION_TIME"`
 	ModificationTime       int64    `json:"MODIFICATION_TIME"`
 	ModifiedBy             *string  `json:"MODIFIED_BY"`
@@ -31,8 +31,8 @@ type Control struct {
 	Impact                 *string  `json:"IMPACT"`
 	AutomationStatus       string   `json:"AUTOMATION_STATUS"`
 	AuditProcedure         *string  `json:"AUDIT_PROCEDURE"`
-	Enabled                bool     `json:"ENABLED"`
-	IsCustom               bool     `json:"IS_CUSTOM"`
+	Enabled                FlexBool `json:"ENABLED"`
+	IsCustom               FlexBool `json:"IS_CUSTOM"`
 	Status                 string   `json:"STATUS"`
 }
 

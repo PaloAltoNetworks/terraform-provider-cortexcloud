@@ -79,7 +79,7 @@ func TestAccControlLifecycle(t *testing.T) {
 	assert.Equal(t, controlDescription, control.Description)
 	assert.Equal(t, category, control.Category)
 	assert.Equal(t, subcategory, control.Subcategory)
-	assert.True(t, control.IsCustom, "custom control should have IsCustom=true")
+	assert.True(t, control.IsCustom.Bool(), "custom control should have IsCustom=true")
 	assert.NotZero(t, control.InsertionTime)
 	assert.NotZero(t, control.ModificationTime)
 
@@ -140,7 +140,7 @@ func TestAccControlLifecycle(t *testing.T) {
 		if c.ID == controlID {
 			foundControl = true
 			assert.Equal(t, updatedControlName, c.Name)
-			assert.True(t, c.IsCustom)
+			assert.True(t, c.IsCustom.Bool())
 			break
 		}
 	}
@@ -272,6 +272,6 @@ func TestAccControlFilterByCustom(t *testing.T) {
 
 	// Verify all returned controls are not custom
 	for _, control := range listResp.Controls {
-		assert.False(t, control.IsCustom, "control %s should not be custom", control.ID)
+		assert.False(t, control.IsCustom.Bool(), "control %s should not be custom", control.ID)
 	}
 }

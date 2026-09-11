@@ -40,3 +40,28 @@ resource "cortexcloud_asset_group" "example" {
     ]
   }
 }
+
+# Dynamic asset group scoped by asset tags.
+#
+# The JSON-valued search types (JSON_WILDCARD and JSON_WILDCARD_NOT) expect
+# search_value to be a JSON object rather than a plain string, so it must be
+# supplied with jsonencode(...).
+resource "cortexcloud_asset_group" "tag_based" {
+  name        = "Databricks Managed Assets"
+  type        = "Dynamic"
+  description = "Assets tagged as belonging to the Databricks application."
+  membership_predicate = {
+    and = [
+      {
+        search_field = "xdm.asset.tags"
+        search_type  = "JSON_WILDCARD"
+        search_value = jsonencode({ key = "application", value = "databricks" })
+      },
+      {
+        search_field = "xdm.asset.tags"
+        search_type  = "JSON_WILDCARD"
+        search_value = jsonencode({ key = "managed by", value = "Palo Alto Networks" })
+      },
+    ]
+  }
+}

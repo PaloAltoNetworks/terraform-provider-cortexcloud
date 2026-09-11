@@ -196,6 +196,12 @@ provider "cortexcloud" {
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
 
+### v1.0.12
+
+#### Bug Fixes
+* Fixed issues in `cortexcloud_compliance_standard`, `cortexcloud_compliance_assessment_profile` and `cortexcloud_compliance_control` resources.
+* Fixed JSON encoding for `search_value` in filter predicates (`cortexcloud_asset_group` membership predicates and `cortexcloud_notification_forwarding_config_agent_audit_logs`, `cortexcloud_notification_forwarding_config_cases`, `cortexcloud_notification_forwarding_config_issues` and `cortexcloud_notification_forwarding_config_mgmt_audit_logs` scope configurations). When configuring JSON-valued search types (`JSON_WILDCARD`, `JSON_WILDCARD_NOT`), `search_value` supplied with `jsonencode(...)` was previously sent as an escaped JSON string rather than a native JSON object or array, causing API requests to fail with HTTP 500 errors. The provider now transmits JSON-valued predicates as native JSON, compares JSON-valued search values semantically to avoid spurious drift on plan/refresh, and validates `search_type` values at plan time.
+
 ### v1.0.11
 
 #### Bug Fixes

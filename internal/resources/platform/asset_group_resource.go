@@ -18,6 +18,7 @@ import (
 	filterTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/filter"
 	platformTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -28,7 +29,8 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource = &AssetGroupResource{}
+	_ resource.Resource                = &AssetGroupResource{}
+	_ resource.ResourceWithImportState = &AssetGroupResource{}
 )
 
 // NewAssetGroupResource is a helper function to simplify the provider implementation.
@@ -299,4 +301,21 @@ func (r *AssetGroupResource) Delete(ctx context.Context, req resource.DeleteRequ
 		resp.Diagnostics.AddError("Error Deleting Asset Group", "API call was not successful")
 		return
 	}
+}
+
+// ImportState imports the resource into Terraform state.
+// The import ID must be the numeric asset group ID (the "id" attribute).
+func (r *AssetGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
+	id, err := strconv.ParseInt(req.ID, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Importing Asset Group",
+			fmt.Sprintf("Expected the import identifier to be a numeric asset group ID, got: %q. Error: %s", req.ID, err),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 }

@@ -35,7 +35,7 @@ func TestClient_CreateStandard(t *testing.T) {
 			assert.Len(t, req.RequestData.ControlsIDs, 2)
 
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"reply":{"success":true}}`)
+			fmt.Fprint(w, `{"reply":{"success":true,"standard_id":"8be2695e34834527a8f1efa341b645e6"}}`)
 		})
 		client, server := setupTest(t, handler)
 		defer server.Close()
@@ -50,9 +50,28 @@ func TestClient_CreateStandard(t *testing.T) {
 			},
 		}
 
-		success, err := client.CreateStandard(context.Background(), createReq)
-		assert.NoError(t, err)
-		assert.True(t, success)
+		result, err := client.CreateStandard(context.Background(), createReq)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.Success)
+		assert.Equal(t, "8be2695e34834527a8f1efa341b645e6", result.StandardID)
+	})
+
+	t.Run("should return empty standard id when the API omits it", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"reply":{"success":true}}`)
+		})
+		client, server := setupTest(t, handler)
+		defer server.Close()
+
+		result, err := client.CreateStandard(context.Background(), types.CreateStandardRequest{
+			StandardName: "Standard Without Returned ID",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.Success)
+		assert.Empty(t, result.StandardID, "callers must be able to detect a missing standard ID")
 	})
 }
 

@@ -34,6 +34,17 @@ type CreateStandardRequest struct {
 	ControlsIDs  []string `json:"controls_ids,omitempty"`
 }
 
+// CreateStandardResponse is the response for creating a standard.
+//
+// The add_standard endpoint returns the new standard's ID alongside the
+// success flag. This is not reflected in the published OpenAPI document,
+// which documents only {"success": bool}, but the field is present on the
+// wire and is required to identify the created standard reliably.
+type CreateStandardResponse struct {
+	Success    bool   `json:"success"`
+	StandardID string `json:"standard_id"`
+}
+
 // UpdateStandardRequest is the request for updating a standard.
 type UpdateStandardRequest struct {
 	ID           string   `json:"id"`
