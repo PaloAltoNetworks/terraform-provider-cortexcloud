@@ -37,7 +37,7 @@ func TestClient_CreateAssessmentProfile(t *testing.T) {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"reply":{"success":true}}`)
+			fmt.Fprint(w, `{"reply":{"success":true,"assessment_profile_id":"9acd3f3a30654f02894b7c09c81368f6"}}`)
 		})
 		client, server := setupTest(t, handler)
 		defer server.Close()
@@ -51,9 +51,28 @@ func TestClient_CreateAssessmentProfile(t *testing.T) {
 			EvaluationFrequency: "0 0 * * *", // Daily at midnight
 		}
 
-		success, err := client.CreateAssessmentProfile(context.Background(), createReq)
-		assert.NoError(t, err)
-		assert.True(t, success)
+		result, err := client.CreateAssessmentProfile(context.Background(), createReq)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.Success)
+		assert.Equal(t, "9acd3f3a30654f02894b7c09c81368f6", result.AssessmentProfileID)
+	})
+
+	t.Run("should return empty assessment profile id when the API omits it", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"reply":{"success":true}}`)
+		})
+		client, server := setupTest(t, handler)
+		defer server.Close()
+
+		result, err := client.CreateAssessmentProfile(context.Background(), types.CreateAssessmentProfileRequest{
+			ProfileName: "Profile Without Returned ID",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.Success)
+		assert.Empty(t, result.AssessmentProfileID, "callers must be able to detect a missing assessment profile ID")
 	})
 }
 

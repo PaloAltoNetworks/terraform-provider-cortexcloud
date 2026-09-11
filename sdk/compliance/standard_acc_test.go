@@ -34,30 +34,23 @@ func TestAccStandardLifecycle(t *testing.T) {
 		Labels:       labels,
 	}
 
-	createSuccess, err := client.CreateStandard(ctx, createReq)
+	createResp, err := client.CreateStandard(ctx, createReq)
 	require.NoError(t, err, "failed to create standard")
-	require.True(t, createSuccess, "standard creation unsuccessful")
+	require.NotNil(t, createResp, "create response is nil")
+	require.True(t, createResp.Success, "standard creation unsuccessful")
+	require.NotEmpty(t, createResp.StandardID, "create did not return a standard ID")
 
 	t.Logf("Created standard: %s", standardName)
 
-	// List to get the created standard ID
-	listReq := types.ListStandardsRequest{
-		Filters: []types.Filter{
-			{
-				Field:    "name",
-				Operator: "contains",
-				Value:    standardName,
-			},
-		},
-	}
+	// Address the standard by the ID returned from create. Resolving it by
+	// listing and filtering on name is unreliable, because get_standards has
+	// been observed ignoring the name filter and returning every standard.
+	standardID := createResp.StandardID
 
-	listResp, err := client.ListStandards(ctx, listReq)
-	require.NoError(t, err, "failed to list standards")
-	require.NotNil(t, listResp, "list response is nil")
-	require.Greater(t, len(listResp.Standards), 0, "created standard not found in list")
-
-	createdStandard := listResp.Standards[0]
-	standardID := createdStandard.ID
+	createdStandard, err := client.GetStandard(ctx, types.GetStandardRequest{ID: standardID})
+	require.NoError(t, err, "failed to read standard after create")
+	require.NotNil(t, createdStandard, "standard not found after create")
+	require.Equal(t, standardName, createdStandard.Name, "create returned the ID of a different standard")
 
 	t.Logf("Found created standard with ID: %s", standardID)
 

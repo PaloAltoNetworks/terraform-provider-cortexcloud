@@ -1,8 +1,11 @@
 package models
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -19,6 +22,41 @@ func eqTFString(a, b types.String) bool {
 		return false
 	}
 	return strings.EqualFold(a.ValueString(), b.ValueString())
+}
+
+// eqTFJSONOrString compares two types.String search_value fields, taking into
+// account whether searchType expects a native JSON value (see
+// enums.IsJSONValuedSearchType).
+//
+// For JSON-valued search types, both sides are parsed as JSON and compared
+// semantically, so that differences in key order or insignificant whitespace
+// between the configured value (produced by jsonencode) and the value
+// returned by the API do not surface as a permanent diff. For every other
+// search type the comparison always falls back to the case-insensitive
+// string comparison used for ordinary search values, regardless of whether
+// the value happens to look like JSON — a quoted value like "PROD" must
+// still compare case-insensitively against "prod", and numeric strings must
+// not be compared as float64.
+func eqTFJSONOrString(searchType, a, b types.String) bool {
+	aNullish := a.IsNull() || a.IsUnknown()
+	bNullish := b.IsNull() || b.IsUnknown()
+	if aNullish && bNullish {
+		return true
+	}
+	if aNullish != bNullish {
+		return false
+	}
+
+	aRaw, bRaw := a.ValueString(), b.ValueString()
+
+	if enums.IsJSONValuedSearchType(searchType.ValueString()) {
+		var aVal, bVal any
+		if json.Unmarshal([]byte(aRaw), &aVal) == nil && json.Unmarshal([]byte(bRaw), &bVal) == nil {
+			return reflect.DeepEqual(aVal, bVal)
+		}
+	}
+
+	return strings.EqualFold(aRaw, bRaw)
 }
 
 // eqTFInt64 compares two types.Int64 values.
@@ -70,7 +108,7 @@ func (m NestedFilterModel) Equals(other NestedFilterModel) bool {
 	if !eqTFString(m.SearchType, other.SearchType) {
 		return false
 	}
-	if !eqTFString(m.SearchValue, other.SearchValue) {
+	if !eqTFJSONOrString(m.SearchType, m.SearchValue, other.SearchValue) {
 		return false
 	}
 	if !nestedFilterSliceEquals(m.And, other.And) {

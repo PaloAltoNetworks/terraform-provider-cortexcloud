@@ -1,13 +1,17 @@
 package models
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/enums"
 	filterTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/filter"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -41,13 +45,37 @@ type FilterGreaterOrLessThanInt64Model struct {
 	Value     types.Int64  `tfsdk:"value"`
 }
 
+// searchValueToString converts a raw SEARCH_VALUE payload into the string form
+// held in Terraform state.
+//
+// A JSON string is unquoted and stored verbatim, preserving the behaviour for
+// ordinary search types. Any other JSON value (object, array, number, bool) is
+// stored as compacted JSON text so that it matches what jsonencode() produces
+// in configuration for search types such as JSON_WILDCARD and JSON_WILDCARD_NOT.
+func searchValueToString(raw json.RawMessage) (string, error) {
+	if len(raw) == 0 {
+		return "", nil
+	}
+
+	var asString string
+	if err := json.Unmarshal(raw, &asString); err == nil {
+		return asString, nil
+	}
+
+	var compacted bytes.Buffer
+	if err := json.Compact(&compacted, raw); err != nil {
+		return "", err
+	}
+	return compacted.String(), nil
+}
+
 func (m *NestedFilterModel) UnmarshalJSON(data []byte) error {
 	var temp struct {
 		And         []NestedFilterModel `json:"AND,omitempty"`
 		Or          []NestedFilterModel `json:"OR,omitempty"`
 		SearchField string              `json:"SEARCH_FIELD,omitempty"`
 		SearchType  string              `json:"SEARCH_TYPE,omitempty"`
-		SearchValue string              `json:"SEARCH_VALUE,omitempty"`
+		SearchValue json.RawMessage     `json:"SEARCH_VALUE,omitempty"`
 	}
 
 	if err := json.Unmarshal(data, &temp); err != nil {
@@ -67,8 +95,13 @@ func (m *NestedFilterModel) UnmarshalJSON(data []byte) error {
 	} else {
 		m.SearchType = types.StringNull()
 	}
-	if temp.SearchValue != "" {
-		m.SearchValue = types.StringValue(temp.SearchValue)
+
+	searchValue, err := searchValueToString(temp.SearchValue)
+	if err != nil {
+		return err
+	}
+	if searchValue != "" {
+		m.SearchValue = types.StringValue(searchValue)
 	} else {
 		m.SearchValue = types.StringNull()
 	}
@@ -143,12 +176,23 @@ var (
 func GetRecursiveFilterSchema(depth, maxDepth int) map[string]schema.Attribute {
 	attrs := map[string]schema.Attribute{
 		"search_field": schema.StringAttribute{
-			Optional: true,
+			Description: "The field to match on, for example `xdm.asset.name`.",
+			Optional:    true,
 		},
 		"search_type": schema.StringAttribute{
-			Optional: true,
+			Description: "The comparison to apply, for example `EQ`, `CONTAINS`, `JSON_WILDCARD` or `JSON_WILDCARD_NOT`.",
+			Optional:    true,
+			Validators: []validator.String{
+				stringvalidator.OneOf(enums.AllSearchTypes()...),
+			},
 		},
 		"search_value": schema.StringAttribute{
+			Description: "The value to compare against.\n\n" +
+				"For most search types this is a plain string. The JSON-valued search types " +
+				"(`JSON_WILDCARD` and `JSON_WILDCARD_NOT`) instead expect a " +
+				"JSON object, which must be supplied using `jsonencode(...)`; the encoded " +
+				"value is sent to the API as native JSON rather than as a quoted string. For example, " +
+				"to match a tag: `search_value = jsonencode({ key = \"application\", value = \"databricks\" })`.",
 			Optional: true,
 		},
 	}
@@ -287,11 +331,24 @@ func NestedModelToSDKFilter(ctx context.Context, model *NestedFilterModel) filte
 	}
 
 	if isSearch {
-		return filterTypes.NewSearchFilter(
-			model.SearchField.ValueString(),
-			model.SearchType.ValueString(),
-			model.SearchValue.ValueString(),
-		)
+		searchField := model.SearchField.ValueString()
+		searchType := model.SearchType.ValueString()
+		searchValue := model.SearchValue.ValueString()
+
+		// Search types such as JSON_WILDCARD and JSON_WILDCARD_NOT require SEARCH_VALUE to be sent as
+		// a native JSON object rather than a JSON-encoded string. Practitioners
+		// express these with jsonencode(...) in configuration, so the encoded
+		// text is forwarded verbatim as raw JSON.
+		if enums.IsJSONValuedSearchType(searchType) {
+			raw := json.RawMessage(searchValue)
+			if filter, err := filterTypes.NewSearchFilterRawJSON(searchField, searchType, raw); err == nil {
+				return filter
+			} else {
+				tflog.Error(ctx, "search_value is not valid JSON for a JSON-valued search type; sending it as a string", map[string]any{"error": err})
+			}
+		}
+
+		return filterTypes.NewSearchFilter(searchField, searchType, searchValue)
 	}
 
 	return nil

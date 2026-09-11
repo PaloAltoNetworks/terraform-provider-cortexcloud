@@ -74,16 +74,16 @@ func TestAccAssessmentProfileLifecycle(t *testing.T) {
 			Labels:       []string{},
 			ControlsIDs:  []string{},
 		}
-		createSuccess, err := client.CreateStandard(ctx, createStandardReq)
+		createStandardResp, err := client.CreateStandard(ctx, createStandardReq)
 		require.NoError(t, err, "failed to create standard")
-		require.True(t, createSuccess, "standard creation unsuccessful")
+		require.NotNil(t, createStandardResp, "create response is nil")
+		require.True(t, createStandardResp.Success, "standard creation unsuccessful")
+		require.NotEmpty(t, createStandardResp.StandardID, "create did not return a standard ID")
 
-		// List again to get the created standard's ID
-		standardsResp, err = client.ListStandards(ctx, listStandardsReq)
-		require.NoError(t, err, "failed to list standards after creation")
-		require.Greater(t, len(standardsResp.Standards), 0, "created standard not found")
-
-		standardID = standardsResp.Standards[0].ID
+		// Use the ID returned by create rather than listing again: the
+		// get_standards endpoint has been observed ignoring filters, so the
+		// first entry it returns is not necessarily the standard just created.
+		standardID = createStandardResp.StandardID
 		createdStandard = true
 		t.Logf("Created and using standard ID: %s", standardID)
 	} else {
@@ -125,32 +125,18 @@ func TestAccAssessmentProfileLifecycle(t *testing.T) {
 		ReportTargets: []string{},
 	}
 
-	createSuccess, err := client.CreateAssessmentProfile(ctx, createReq)
+	createResp, err := client.CreateAssessmentProfile(ctx, createReq)
 	require.NoError(t, err, "failed to create assessment profile")
-	require.True(t, createSuccess, "assessment profile creation unsuccessful")
+	require.NotNil(t, createResp, "create response is nil")
+	require.True(t, createResp.Success, "assessment profile creation unsuccessful")
+	require.NotEmpty(t, createResp.AssessmentProfileID, "create did not return an assessment profile ID")
 
-	t.Logf("Created assessment profile: %s", profileName)
+	// Use the ID returned by create rather than listing by name: profile names
+	// are not unique, so a name filter can match several profiles and the first
+	// entry is not necessarily the one just created.
+	profileID := createResp.AssessmentProfileID
 
-	// List to get the created profile ID
-	listReq := types.ListAssessmentProfilesRequest{
-		Filters: []types.Filter{
-			{
-				Field:    "name",
-				Operator: "contains",
-				Value:    profileName,
-			},
-		},
-	}
-
-	listResp, err := client.ListAssessmentProfiles(ctx, listReq)
-	require.NoError(t, err, "failed to list assessment profiles")
-	require.NotNil(t, listResp, "list response is nil")
-	require.Greater(t, len(listResp.AssessmentProfiles), 0, "created profile not found in list")
-
-	createdProfile := listResp.AssessmentProfiles[0]
-	profileID := createdProfile.ID
-
-	t.Logf("Found created profile with ID: %s", profileID)
+	t.Logf("Created assessment profile %s with ID: %s", profileName, profileID)
 
 	// Defer cleanup
 	defer func() {

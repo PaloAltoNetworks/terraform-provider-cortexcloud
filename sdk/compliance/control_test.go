@@ -118,9 +118,9 @@ func TestClient_GetControl(t *testing.T) {
 		assert.Equal(t, "Access Control", control.Category)
 		assert.Equal(t, "AC-3", control.Subcategory)
 		assert.Equal(t, "HIGH", control.Severity)
-		assert.True(t, control.Supported)
-		assert.True(t, control.Enabled)
-		assert.False(t, control.IsCustom)
+		assert.True(t, control.Supported.Bool())
+		assert.True(t, control.Enabled.Bool())
+		assert.False(t, control.IsCustom.Bool())
 		assert.Equal(t, 5, control.Rules)
 	})
 }
@@ -274,14 +274,14 @@ func TestClient_ListControls(t *testing.T) {
 		assert.Equal(t, "ctrl-001", resp.Controls[0].ID)
 		assert.Equal(t, "Access Control Policy", resp.Controls[0].Name)
 		assert.Equal(t, "HIGH", resp.Controls[0].Severity)
-		assert.False(t, resp.Controls[0].IsCustom)
+		assert.False(t, resp.Controls[0].IsCustom.Bool())
 		assert.Equal(t, 3, resp.Controls[0].Rules)
 
 		// Verify second control
 		assert.Equal(t, "ctrl-002", resp.Controls[1].ID)
 		assert.Equal(t, "Custom Security Control", resp.Controls[1].Name)
 		assert.Equal(t, "MEDIUM", resp.Controls[1].Severity)
-		assert.True(t, resp.Controls[1].IsCustom)
+		assert.True(t, resp.Controls[1].IsCustom.Bool())
 		assert.Equal(t, 2, resp.Controls[1].Rules)
 	})
 

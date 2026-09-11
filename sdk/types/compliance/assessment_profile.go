@@ -37,6 +37,17 @@ type CreateAssessmentProfileRequest struct {
 	EvaluationFrequency string   `json:"evaluation_frequency,omitempty"`
 }
 
+// CreateAssessmentProfileResponse is the response for creating an assessment profile.
+//
+// The add_assessment_profile endpoint returns the new profile's ID alongside
+// the success flag. This is not reflected in the published OpenAPI document,
+// which documents only {"success": bool}, but the field is present on the wire
+// and is required to identify the created profile reliably.
+type CreateAssessmentProfileResponse struct {
+	Success             bool   `json:"success"`
+	AssessmentProfileID string `json:"assessment_profile_id"`
+}
+
 // UpdateAssessmentProfileRequest is the request for updating an assessment profile.
 type UpdateAssessmentProfileRequest struct {
 	ID                  string   `json:"id"`
