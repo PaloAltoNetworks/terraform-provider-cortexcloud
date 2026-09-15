@@ -27,6 +27,11 @@ const (
 	EditIntegrationInstanceEndpoint             = "public_api/v1/cloud_onboarding/edit_instance"
 	EnableOrDisableIntegrationInstancesEndpoint = "public_api/v1/cloud_onboarding/enable_disable_instance"
 	DeleteIntegrationInstancesEndpoint          = "public_api/v1/cloud_onboarding/delete_instance"
+	// Manual Cloud Integration Instance Management
+	CreateManualInstanceEndpoint   = "public_api/v1/cloud_onboarding/create_instance"
+	EditManualInstanceEndpoint     = "public_api/v1/cloud_onboarding/edit_manual_instance"
+	GetEditInstanceDetailsEndpoint = "public_api/v1/cloud_onboarding/get_edit_instance_details"
+	DeleteInstanceTemplateEndpoint = "public_api/v1/cloud_onboarding/delete_instance_template"
 	// General
 	GetAzureApprovedTenantsEndpoint = "public_api/v1/cloud_onboarding/get_azure_approved_tenants"
 	// Outpost Management

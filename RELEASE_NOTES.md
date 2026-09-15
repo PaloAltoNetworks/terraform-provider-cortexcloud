@@ -1,5 +1,17 @@
 ## Release Notes
 
+### v1.0.13
+
+#### Enhancements
+* Added a new `cortexcloud_cloud_manual_integration_instance` resource that onboards a cloud account whose cloud-side identities were created outside Cortex Cloud. Use it when the roles, external IDs, or service accounts already exist — created by your own CloudFormation, Terraform, or by hand — and you are supplying them to Cortex Cloud, rather than deploying them from a Cortex Cloud template. AWS and Azure are supported, each with its own set of `manual_details` attributes; GCP is not supported for manual onboarding and a configuration naming it is refused during `terraform plan`. Capability toggles, scope modifications, audit log collection, and custom resource tags are all managed in place through the platform's edit API. An existing connector is adopted into Terraform with `terraform import` using its instance identifier. `external_id` is marked sensitive and is redacted from plan output, since it is the value that guards the assumed AWS role; the ARNs and account identifiers alongside it are shown in full. Importing a connector that was not onboarded manually is refused with an error naming the resource type that does manage it, rather than being adopted into a resource whose destroy would delete it
+
+#### Known Issues
+
+* **Destroying a `cortexcloud_cloud_manual_integration_instance` leaves one record behind.** Creating a connector produces two records on the platform: the connector itself, and a separate onboarding template record. Only the connector's identifier is returned to the caller, so Terraform never learns the template's identifier and cannot remove it. After a destroy the connector is gone, but a template record in the `PENDING` state remains and is visible when listing cloud integrations. Remove it in the Cortex Cloud console, or call the `delete_instance_template` API with the template's identifier under the key `template_id`; find that identifier by listing the connectors and looking for the `PENDING` record whose name matches the connector you destroyed. This is a platform API behaviour
+* **Importing a `cortexcloud_cloud_manual_integration_instance` does not recover `manual_details`.** The platform reports the cloud-side identities in a different shape from the one it accepts, and does not report `cloudtrail_role`, `sqs_url`, or `subscription_id` at all. Re-declare `manual_details` after importing; the first plan after an import is an in-place update rather than an empty plan, and it converges in a single apply
+* **`managed_by` is reserved as a `custom_resources_tags` key.** Cortex Cloud stamps its own `managed_by` tag onto every connector it manages. Onboarding is rejected if you declare that key with any other value. Use a different key, such as `provisioned_by`, to record your own provisioning metadata
+* **Clearing an attribute inside `manual_details` is reported during apply rather than at plan time.** The platform's edit API applies a partial update, so an attribute removed from the configuration is not sent and its previous value survives. Rather than record a change that did not happen, the provider refuses the apply and names the attributes involved. Set the attribute to its new value instead of removing it
+
 ### v1.0.12
 
 #### Bug Fixes
