@@ -1,0 +1,287 @@
+[
+  {
+    "source": "evidence/postman-verification/stage1/raw/C00-ident-GCP-ACCOUNT-MANAGED-capsEmpty-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C01-ident-GCP-ACCOUNT-MANAGED-capsEmpty-auditTrue.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C02-ident-GCP-ACCOUNT-MANAGED-cap_agentless_disk_scanning-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "agentless_disk_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C03-ident-GCP-ACCOUNT-MANAGED-cap_data_security_posture_management-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "data_security_posture_management"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C04-ident-GCP-ACCOUNT-MANAGED-cap_registry_scanning-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "registry_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C05-ident-GCP-ACCOUNT-MANAGED-cap_serverless_scanning-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "serverless_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C06-ident-GCP-ACCOUNT-MANAGED-cap_automation-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "automation"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C07-ident-GCP-ACCOUNT-MANAGED-cap_kubernetes_security-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "kubernetes_security"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C08-ident-GCP-ACCOUNT-MANAGED-capsAllTrue-auditFalse.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "agentless_disk_scanning",
+      "automation",
+      "data_security_posture_management",
+      "kubernetes_security",
+      "registry_scanning",
+      "serverless_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C09-ident-GCP-ACCOUNT-MANAGED-capsAllTrue-auditTrue.json",
+    "scope": "ACCOUNT",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [
+      "agentless_disk_scanning",
+      "automation",
+      "data_security_posture_management",
+      "kubernetes_security",
+      "registry_scanning",
+      "serverless_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C11-ident-GCP-ACCOUNT_GROUP-MANAGED-capsEmpty-auditFalse.json",
+    "scope": "ACCOUNT_GROUP",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "account_group": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C11-ident-GCP-ORGANIZATION-MANAGED-capsEmpty-auditFalse.json",
+    "scope": "ORGANIZATION",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C12-ident-GCP-ACCOUNT_GROUP-MANAGED-capsAllTrue-auditTrue.json",
+    "scope": "ACCOUNT_GROUP",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [
+      "agentless_disk_scanning",
+      "automation",
+      "data_security_posture_management",
+      "kubernetes_security",
+      "registry_scanning",
+      "serverless_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "account_group": "",
+      "outpost_scanner_service_account_email": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/C12-ident-GCP-ORGANIZATION-MANAGED-capsAllTrue-auditTrue.json",
+    "scope": "ORGANIZATION",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [
+      "agentless_disk_scanning",
+      "automation",
+      "data_security_posture_management",
+      "kubernetes_security",
+      "registry_scanning",
+      "serverless_scanning"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/J00-ident-GCP-ACCOUNT_GROUP-MANAGED-capsEmpty-auditTrue.json",
+    "scope": "ACCOUNT_GROUP",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "account_group": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/J00-ident-GCP-ORGANIZATION-MANAGED-capsEmpty-auditTrue.json",
+    "scope": "ORGANIZATION",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": true,
+    "capabilities_enabled": [],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "audit_service_account_email": "",
+      "audit_pubsub_subscription_id": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/J01-ident-GCP-ACCOUNT_GROUP-MANAGED-cap_dspm-auditFalse.json",
+    "scope": "ACCOUNT_GROUP",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "data_security_posture_management"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "account_group": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  },
+  {
+    "source": "evidence/postman-verification/stage1/raw/J01-ident-GCP-ORGANIZATION-MANAGED-cap_dspm-auditFalse.json",
+    "scope": "ORGANIZATION",
+    "scan_mode": "MANAGED",
+    "audit_logs_enabled": false,
+    "capabilities_enabled": [
+      "data_security_posture_management"
+    ],
+    "manual_details": {
+      "organization_id": "",
+      "account_id": "",
+      "service_account_email": "",
+      "outpost_scanner_service_account_email": ""
+    }
+  }
+]
