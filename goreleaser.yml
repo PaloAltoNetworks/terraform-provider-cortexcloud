@@ -60,6 +60,10 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
+  # Mark tags carrying a pre-release suffix (e.g. -rc.1, -beta.1) as GitHub
+  # pre-releases so they are NOT labelled "Latest" above the current stable
+  # release. Final tags (e.g. v1.0.13) are unaffected and publish as normal.
+  prerelease: auto
 # If you want to manually examine the release before its live, uncomment this line:
 # draft: true
 changelog:
