@@ -1,5 +1,17 @@
 ## Release Notes
 
+### v1.0.13
+
+#### Enhancements
+* Added a new `cortexcloud_cloud_manual_integration_instance` resource that onboards an AWS or Azure account whose roles, external IDs and service accounts were created outside Cortex Cloud. Existing connectors are adopted with `terraform import`. GCP is not supported, and manual onboarding is behind a feature flag: contact Palo Alto Networks support to enable it on your tenant
+* `additional_capabilities`, `collection_configuration` and `scope_modifications` are now required on `cortexcloud_cloud_manual_integration_instance`, matching the onboarding API contract
+
+#### Known Issues
+
+* **Importing a `cortexcloud_cloud_manual_integration_instance` does not recover `manual_details`.** Re-declare it after importing; the first plan is an in-place update that converges in a single apply
+* **`managed_by` is reserved as a `custom_resources_tags` key.** Cortex Cloud stamps its own value on every connector it manages. Use another key, such as `provisioned_by`
+* **Clearing an attribute inside `manual_details` is reported during apply rather than at plan time.** The platform applies a partial update, so a removed attribute keeps its previous value. Set it to its new value instead of removing it
+
 ### v1.0.12
 
 #### Bug Fixes
