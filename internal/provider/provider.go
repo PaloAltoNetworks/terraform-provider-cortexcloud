@@ -190,6 +190,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 		cloudOnboardingResources.NewCloudIntegrationTemplateAzureResource,
 		cloudOnboardingResources.NewCloudIntegrationTemplateGcpResource,
 		cloudOnboardingResources.NewCloudIntegrationInstanceResource,
+		cloudOnboardingResources.NewCloudManualIntegrationInstanceResource,
 		cloudOnboardingResources.NewOutpostTemplateResource,
 	)
 
