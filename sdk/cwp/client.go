@@ -20,6 +20,9 @@ const (
 
 	// SBOM
 	SBOMEndpoint = "public_api/v1/assets"
+
+	// Registry Onboarding
+	RegistryOnboardingInstancesEndpoint = "public_api/v1/cwp/registry_onboarding/instances"
 )
 
 // Option is a functional option for configuring the client.

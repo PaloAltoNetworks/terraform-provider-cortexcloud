@@ -119,3 +119,21 @@ If set to `true`, users will be able to log in using additional authentication m
 - `relay_state` (String) The URL that users will be directed to after they've been authenticated by your organization's IdP and log into Cortex.
 - `service_provider_private_key` (String) The syslog server's private key in PEM format for signing SAML responses. This is most relevant for the integration of Azure Directory Federation Services (ADFS).
 - `service_provider_public_cert` (String) The syslog server's public X.509 certificate in PEM format for IdP validation.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Authentication settings are imported using the SSO integration name and its
+# email domain, separated by a comma: "<name>,<domain>".
+terraform import cortexcloud_authentication_settings.example "corporate-sso,example.com"
+
+# The default SSO integration has an empty domain; keep the trailing comma.
+terraform import cortexcloud_authentication_settings.default "default-sso,"
+
+# Names may contain commas; the last comma is always treated as the separator.
+terraform import cortexcloud_authentication_settings.acme "Acme, Inc SSO,acme.com"
+```

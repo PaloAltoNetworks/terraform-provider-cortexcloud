@@ -6,6 +6,7 @@ package platform
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	models "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/platform"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
@@ -15,6 +16,7 @@ import (
 	platformTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/platform"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -27,7 +29,8 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource = &AuthenticationSettingsResource{}
+	_ resource.Resource                = &AuthenticationSettingsResource{}
+	_ resource.ResourceWithImportState = &AuthenticationSettingsResource{}
 )
 
 // NewAuthenticationSettingsResource is a helper function to simplify the provider implementation.
@@ -517,4 +520,30 @@ func (r *AuthenticationSettingsResource) Delete(ctx context.Context, req resourc
 		)
 		return
 	}
+}
+
+// ImportState imports the resource into the Terraform state.
+//
+// Authentication settings are identified by the combination of their name and
+// email domain, so the import identifier must use the format "name,domain".
+// The domain may be empty (e.g. "my-sso,") to import the default SSO
+// integration. Only the last comma is treated as the separator: email domains
+// can never contain a comma, but names are free text and may (e.g.
+// "Acme, Inc SSO,example.com"), so no escaping is ever required. The
+// subsequent Read populates all remaining attributes.
+func (r *AuthenticationSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer util.PanicHandler(&resp.Diagnostics)
+
+	idx := strings.LastIndex(req.ID, ",")
+	if idx <= 0 { // -1 = no separator, 0 = empty name
+		resp.Diagnostics.AddError(
+			"Invalid Import Identifier",
+			fmt.Sprintf(`Expected the import identifier in the format "name,domain" (the domain may be empty for the default SSO), got: %q`, req.ID),
+		)
+		return
+	}
+	name, domain := req.ID[:idx], req.ID[idx+1:]
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain"), domain)...)
 }

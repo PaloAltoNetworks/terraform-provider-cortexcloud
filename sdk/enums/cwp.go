@@ -222,3 +222,136 @@ func ContainsPolicySeverity(s string) bool {
 	}
 	return false
 }
+
+// ==============================================================================
+// Registry Onboarding Enums
+// ==============================================================================
+//
+// The initial scan configuration mode (ALL / LATEST_TAG / TAGS_MODIFIED_DAYS)
+// is shared with cloud onboarding and lives in RegistryScanningType.
+
+// RegistryVendor is the vendor of a third-party container registry connector.
+type RegistryVendor string
+
+const (
+	RegistryVendorDocker                  RegistryVendor = "DOCKER"
+	RegistryVendorJFrog                   RegistryVendor = "JFROG"
+	RegistryVendorSonatype                RegistryVendor = "SONATYPE"
+	RegistryVendorDockerHub               RegistryVendor = "DOCKER_HUB"
+	RegistryVendorHarbor                  RegistryVendor = "HARBOR"
+	RegistryVendorGitLabContainerRegistry RegistryVendor = "GITLAB_CONTAINER_REGISTRY"
+	RegistryVendorOpenShift               RegistryVendor = "OPENSHIFT"
+)
+
+func (v RegistryVendor) String() string { return string(v) }
+
+// AllRegistryVendors returns all valid RegistryVendor values.
+func AllRegistryVendors() []string {
+	return []string{
+		RegistryVendorDocker.String(),
+		RegistryVendorJFrog.String(),
+		RegistryVendorSonatype.String(),
+		RegistryVendorDockerHub.String(),
+		RegistryVendorHarbor.String(),
+		RegistryVendorGitLabContainerRegistry.String(),
+		RegistryVendorOpenShift.String(),
+	}
+}
+
+// RegistryScanningMode is where registry scanning is executed.
+type RegistryScanningMode string
+
+const (
+	RegistryScanningModeCloud         RegistryScanningMode = "CLOUD"
+	RegistryScanningModeOutpost       RegistryScanningMode = "OUTPOST"
+	RegistryScanningModeBroker        RegistryScanningMode = "BROKER"
+	RegistryScanningModeNotApplicable RegistryScanningMode = "NOT_APPLICABLE"
+	RegistryScanningModeKAPI          RegistryScanningMode = "KAPI"
+)
+
+func (m RegistryScanningMode) String() string { return string(m) }
+
+// AllRegistryScanningModes returns all valid RegistryScanningMode values.
+func AllRegistryScanningModes() []string {
+	return []string{
+		RegistryScanningModeCloud.String(),
+		RegistryScanningModeOutpost.String(),
+		RegistryScanningModeBroker.String(),
+		RegistryScanningModeNotApplicable.String(),
+		RegistryScanningModeKAPI.String(),
+	}
+}
+
+// RegistryCloudProvider is the Cortex cloud environment used for CLOUD scanning.
+type RegistryCloudProvider string
+
+const (
+	RegistryCloudProviderAWS   RegistryCloudProvider = "AWS"
+	RegistryCloudProviderGCP   RegistryCloudProvider = "GCP"
+	RegistryCloudProviderAzure RegistryCloudProvider = "AZURE"
+)
+
+func (p RegistryCloudProvider) String() string { return string(p) }
+
+// AllRegistryCloudProviders returns all valid RegistryCloudProvider values.
+func AllRegistryCloudProviders() []string {
+	return []string{
+		RegistryCloudProviderAWS.String(),
+		RegistryCloudProviderGCP.String(),
+		RegistryCloudProviderAzure.String(),
+	}
+}
+
+// RegistryHostingType is whether a registry is cloud hosted or self hosted.
+type RegistryHostingType string
+
+const (
+	RegistryHostingTypeCloudHosted RegistryHostingType = "CLOUD_HOSTED"
+	RegistryHostingTypeSelfHosted  RegistryHostingType = "SELF_HOSTED"
+)
+
+func (t RegistryHostingType) String() string { return string(t) }
+
+// AllRegistryHostingTypes returns all valid RegistryHostingType values.
+func AllRegistryHostingTypes() []string {
+	return []string{
+		RegistryHostingTypeCloudHosted.String(),
+		RegistryHostingTypeSelfHosted.String(),
+	}
+}
+
+// RegistryBrokerType is the Broker VM type used for BROKER scanning.
+type RegistryBrokerType string
+
+const (
+	RegistryBrokerTypeVM      RegistryBrokerType = "BROKER_VM"
+	RegistryBrokerTypeCluster RegistryBrokerType = "BROKER_CLUSTER"
+)
+
+func (t RegistryBrokerType) String() string { return string(t) }
+
+// AllRegistryBrokerTypes returns all valid RegistryBrokerType values.
+func AllRegistryBrokerTypes() []string {
+	return []string{
+		RegistryBrokerTypeVM.String(),
+		RegistryBrokerTypeCluster.String(),
+	}
+}
+
+// RegistryFilterType controls whether asset scope filters include or exclude.
+type RegistryFilterType string
+
+const (
+	RegistryFilterTypeInclude RegistryFilterType = "INCLUDE"
+	RegistryFilterTypeExclude RegistryFilterType = "EXCLUDE"
+)
+
+func (t RegistryFilterType) String() string { return string(t) }
+
+// AllRegistryFilterTypes returns all valid RegistryFilterType values.
+func AllRegistryFilterTypes() []string {
+	return []string{
+		RegistryFilterTypeInclude.String(),
+		RegistryFilterTypeExclude.String(),
+	}
+}

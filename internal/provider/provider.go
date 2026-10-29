@@ -241,6 +241,7 @@ func (p *CortexCloudProvider) Resources(ctx context.Context) []func() resource.R
 	resources = append(
 		resources,
 		cwpResources.NewPolicyResource,
+		cwpResources.NewContainerRegistryResource,
 	)
 
 	tflog.Debug(ctx, "Resource registration complete")
@@ -305,6 +306,7 @@ func (p *CortexCloudProvider) DataSources(ctx context.Context) []func() datasour
 	datasources = append(datasources,
 		cwpDataSources.NewPolicyDataSource,
 		cwpDataSources.NewPoliciesDataSource,
+		cwpDataSources.NewContainerRegistryDataSource,
 	)
 
 	tflog.Debug(ctx, "Data Source registration complete")

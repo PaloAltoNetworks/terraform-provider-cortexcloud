@@ -609,8 +609,8 @@ func (r *CloudIntegrationTemplateAwsResource) Schema(ctx context.Context, req re
 				},
 			},
 			"cloudformation_template_url": schema.StringAttribute{
-				Description:         "The direct link to the CloudFormation template parsed from the \"manual_deployment_url\" attribute. This value may be supplied to the AWS Terraform Provider's \"aws_cloudformation_stack\" resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
-				MarkdownDescription: "The direct link to the CloudFormation template parsed from the `manual_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
+				Description:         "The direct link to the CloudFormation template parsed from the \"automated_deployment_url\" attribute. This value may be supplied to the AWS Terraform Provider's \"aws_cloudformation_stack\" resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
+				MarkdownDescription: "The direct link to the CloudFormation template parsed from the `automated_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

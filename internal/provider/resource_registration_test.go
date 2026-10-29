@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
@@ -36,5 +37,38 @@ func TestManualCloudIntegrationInstanceIsRegistered(t *testing.T) {
 	if !registered[wantTypeName] {
 		t.Fatalf("%s is not registered with the provider: a configuration referencing it "+
 			"would fail at plan time with an invalid resource type", wantTypeName)
+	}
+}
+
+// TestContainerRegistryResourceAndDataSourceAreRegistered verifies the CWP
+// registry onboarding resource and data source are both advertised by the
+// provider under their expected type names, for the same reason as above: an
+// implemented-but-unregistered resource/data source is invisible until a real
+// configuration fails at plan time.
+func TestContainerRegistryResourceAndDataSourceAreRegistered(t *testing.T) {
+	ctx := context.Background()
+	const (
+		providerTypeName = "cortexcloud"
+		wantTypeName     = "cortexcloud_container_registry"
+	)
+
+	registeredResources := map[string]bool{}
+	for _, newResource := range (&CortexCloudProvider{}).Resources(ctx) {
+		var metadata resource.MetadataResponse
+		newResource().Metadata(ctx, resource.MetadataRequest{ProviderTypeName: providerTypeName}, &metadata)
+		registeredResources[metadata.TypeName] = true
+	}
+	if !registeredResources[wantTypeName] {
+		t.Fatalf("resource %s is not registered with the provider", wantTypeName)
+	}
+
+	registeredDataSources := map[string]bool{}
+	for _, newDataSource := range (&CortexCloudProvider{}).DataSources(ctx) {
+		var metadata datasource.MetadataResponse
+		newDataSource().Metadata(ctx, datasource.MetadataRequest{ProviderTypeName: providerTypeName}, &metadata)
+		registeredDataSources[metadata.TypeName] = true
+	}
+	if !registeredDataSources[wantTypeName] {
+		t.Fatalf("data source %s is not registered with the provider", wantTypeName)
 	}
 }
