@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.13"
+      version = "1.0.14"
     }
   }
 }
@@ -195,6 +195,13 @@ provider "cortexcloud" {
 
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
+
+### v1.0.14
+
+#### Enhancements
+* Added import support to the `cortexcloud_authentication_settings` resource, so existing SSO integrations can be adopted into Terraform with `terraform import`. The import identifier is the integration's name and email domain separated by a comma, for example `"corporate-sso,example.com"`. The default SSO integration has an empty domain, so keep the trailing comma (`"default-sso,"`). Names may contain commas; only the last comma is treated as the separator
+* Added a new `cortexcloud_container_registry` resource that onboards a third-party container registry for image scanning. Supported vendors are `DOCKER`, `DOCKER_HUB`, `JFROG`, `SONATYPE`, `HARBOR`, `GITLAB_CONTAINER_REGISTRY` and `OPENSHIFT`. Scanning can run in a Cortex-managed cloud environment (`CLOUD`), through an Outpost (`OUTPOST`) or through a Broker VM (`BROKER`). You can narrow which assets are scanned with `asset_scope_filters` and `filter_type`. Existing connectors can be brought under Terraform with `terraform import`, using the connector ID
+* Added a new `cortexcloud_container_registry` data source that looks up a registry connector by its ID
 
 ### v1.0.13
 

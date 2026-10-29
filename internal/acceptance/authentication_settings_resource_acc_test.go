@@ -172,6 +172,20 @@ func TestAccAuthenticationSettingsResourceIDPSSO(t *testing.T) {
 					resource.TestCheckResourceAttr(authSettingsIDPSSOResourceNameFull, "metadata_url", ""),
 				),
 			},
+			// Import testing
+			{
+				PreConfig: func() {
+					t.Log("Executing Import test step")
+				},
+				ResourceName:      authSettingsIDPSSOResourceNameFull,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s,%s", authSettingsSSOName, authSettingsDomain),
+				ImportStateVerify: true,
+				// This resource has no "id" attribute; "name" identifies it.
+				ImportStateVerifyIdentifierAttribute: "name",
+				// The API may not return the service provider private key.
+				ImportStateVerifyIgnore: []string{"advanced_settings.service_provider_private_key"},
+			},
 			// Update and Read testing
 			{
 				PreConfig: func() {

@@ -362,7 +362,7 @@ Must be configured if `scan_mode` attribute is set to `OUTPOST`. If `scan_mode` 
 - `automated_deployment_url` (String) The full URL returned by Cortex Cloud when selecting the automated method of executing the template. Opening this URL in your browser will take you to the AWS CloudFormation stack creation wizard where you can deploy the stack to permit Cortex Cloud to scan your AWS resources.
 
 ~>**NOTE** This option requires you to already be logged into the AWS console.
-- `cloudformation_template_url` (String) The direct link to the CloudFormation template parsed from the `manual_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.
+- `cloudformation_template_url` (String) The direct link to the CloudFormation template parsed from the `automated_deployment_url` attribute. This value may be supplied to the AWS Terraform Provider's `aws_cloudformation_stack` resource for automatic execution. For more information, refer to the official AWS Terraform Provider's documentation and the examples listed in this page.
 - `manual_deployment_url` (String) The full URL returned by Cortex Cloud when selecting the manual method of executing the template. Opening this URL in your browser will begin a download of the created template as a CloudFormation stack, which you can then deploy to permit Cortex Cloud to scan your AWS resources.
 - `status` (String) Status of the template.
 - `tracking_guid` (String) The unique ID value assigned to this template after creation.

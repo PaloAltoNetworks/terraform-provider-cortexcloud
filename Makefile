@@ -122,7 +122,7 @@ copyright:
 # Generate provider documentation
 docs:
 	@echo "Generating provider documentation with tfplugindocs..."
-	@tfplugindocs generate --rendered-provider-name "Cortex Cloud Provider"
+	@tfplugindocs generate --provider-name cortexcloud --rendered-provider-name "Cortex Cloud Provider"
 	@echo "Applying documentation patches..."
 	@find docs/patch -name '*.patch' | sort | while read patchfile; do \
 		target="docs/$${patchfile#docs/patch/}"; \
