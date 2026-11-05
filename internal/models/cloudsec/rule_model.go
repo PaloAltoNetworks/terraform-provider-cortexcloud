@@ -401,8 +401,12 @@ func (m *CloudSecRuleResourceModel) FromSDKResponse(ctx context.Context, diags *
 
 	// Compliance Metadata
 	if len(remote.ComplianceMetadata) > 0 {
-		complianceElems := make([]attr.Value, 0, len(remote.ComplianceMetadata))
-		for _, cm := range remote.ComplianceMetadata {
+		// The API does not guarantee the order of compliance_metadata in the response.
+		// Align it with the prior plan/state order so Terraform's positional list
+		// comparison does not report a spurious change.
+		ordered := orderComplianceMetadataByPrior(m.ComplianceMetadata, remote.ComplianceMetadata)
+		complianceElems := make([]attr.Value, 0, len(ordered))
+		for _, cm := range ordered {
 			cmObj, d := types.ObjectValue(
 				GetComplianceMetadataAttrTypes(),
 				map[string]attr.Value{
@@ -476,4 +480,54 @@ func (m *CloudSecRuleResourceModel) FromSDKResponse(ctx context.Context, diags *
 			m.ComplianceMetadata = types.ListNull(types.ObjectType{AttrTypes: GetComplianceMetadataAttrTypes()})
 		}
 	}
+}
+
+// orderComplianceMetadataByPrior returns remote reordered to follow the
+// control_id order of prior (the plan or prior state). The API is the source
+// of truth for which controls exist; only their order is taken from prior:
+//   - controls present in both keep prior's order;
+//   - controls only in remote are appended in remote order (drift stays visible);
+//   - controls only in prior are dropped (drift stays visible).
+//
+// If prior is null, unknown, or empty, remote is returned unchanged. Each
+// remote entry is used at most once, so duplicate control IDs are handled.
+func orderComplianceMetadataByPrior(prior types.List, remote []cloudsecTypes.ComplianceMetadata) []cloudsecTypes.ComplianceMetadata {
+	if prior.IsNull() || prior.IsUnknown() || len(prior.Elements()) == 0 {
+		return remote
+	}
+
+	// control_id -> indices in remote not yet placed, in remote order.
+	pending := make(map[string][]int, len(remote))
+	for i, cm := range remote {
+		pending[cm.ControlID] = append(pending[cm.ControlID], i)
+	}
+
+	used := make([]bool, len(remote))
+	ordered := make([]cloudsecTypes.ComplianceMetadata, 0, len(remote))
+
+	for _, elem := range prior.Elements() {
+		obj, ok := elem.(types.Object)
+		if !ok {
+			continue
+		}
+		cid, ok := obj.Attributes()["control_id"].(types.String)
+		if !ok || cid.IsNull() || cid.IsUnknown() {
+			continue
+		}
+		idxs := pending[cid.ValueString()]
+		if len(idxs) == 0 {
+			continue
+		}
+		i := idxs[0]
+		pending[cid.ValueString()] = idxs[1:]
+		used[i] = true
+		ordered = append(ordered, remote[i])
+	}
+
+	for i, cm := range remote {
+		if !used[i] {
+			ordered = append(ordered, cm)
+		}
+	}
+	return ordered
 }
