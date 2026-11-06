@@ -1,5 +1,10 @@
 ## Release Notes
 
+### v1.0.15
+
+#### Bug Fixes
+* Fixed `terraform apply` failing with "Provider produced inconsistent result after apply" on `cortexcloud_cloudsec_rule` resources that have two or more `compliance_metadata` entries. The Cortex API can return the same compliance controls in a different order from the one configured, and the provider stored them in the API's order. The provider now keeps the configured order. A control added or removed outside Terraform is still reported as drift. If you reordered `compliance_metadata` in your configuration to work around this, you can keep or undo that change
+
 ### v1.0.14
 
 #### Enhancements

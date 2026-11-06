@@ -262,6 +262,296 @@ func TestFromSDKResponse_ComplianceMetadata_UsesRemoteWhenPopulated(t *testing.T
 	}
 }
 
+// complianceControlIDs extracts the control_id of each compliance_metadata
+// element, in list order.
+func complianceControlIDs(t *testing.T, list types.List) []string {
+	t.Helper()
+	ids := make([]string, 0, len(list.Elements()))
+	for i, elem := range list.Elements() {
+		obj, ok := elem.(types.Object)
+		if !ok {
+			t.Fatalf("element %d: expected types.Object, got %T", i, elem)
+		}
+		cid, ok := obj.Attributes()["control_id"].(types.String)
+		if !ok {
+			t.Fatalf("element %d: control_id is not types.String", i)
+		}
+		ids = append(ids, cid.ValueString())
+	}
+	return ids
+}
+
+func assertControlIDOrder(t *testing.T, list types.List, want []string) {
+	t.Helper()
+	got := complianceControlIDs(t, list)
+	if len(got) != len(want) {
+		t.Fatalf("expected control_ids %v, got %v", want, got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("expected control_ids %v, got %v", want, got)
+		}
+	}
+}
+
+// remoteControls builds API compliance metadata entries for the given IDs, in
+// the given order, with computed fields derived from the ID.
+func remoteControls(ids ...string) []cloudsecTypes.ComplianceMetadata {
+	out := make([]cloudsecTypes.ComplianceMetadata, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, cloudsecTypes.ComplianceMetadata{
+			ControlID:    id,
+			StandardID:   "std-" + id,
+			StandardName: "Standard " + id,
+			ControlName:  "Control " + id,
+		})
+	}
+	return out
+}
+
+// The API returns the same control IDs as the plan, but in a different order.
+// State must keep the plan order, otherwise Terraform fails with "Provider
+// produced inconsistent result after apply".
+func TestFromSDKResponse_ComplianceMetadata_PreservesPlanOrderWhenRemoteReordered(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: buildComplianceListWithUnknowns(t, []string{"icp-01", "icp-02", "icp-06"}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("icp-06", "icp-01", "icp-02")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	assertControlIDOrder(t, model.ComplianceMetadata, []string{"icp-01", "icp-02", "icp-06"})
+}
+
+func TestFromSDKResponse_ComplianceMetadata_ReorderedElementsKeepRemoteComputedFields(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: buildComplianceListWithUnknowns(t, []string{"a", "b"}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("b", "a")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	first, ok := model.ComplianceMetadata.Elements()[0].(types.Object)
+	if !ok {
+		t.Fatal("expected element to be types.Object")
+	}
+	attrs := first.Attributes()
+	if got := attrs["control_id"].(types.String).ValueString(); got != "a" {
+		t.Fatalf("expected first control_id='a', got %q", got)
+	}
+	if got := attrs["control_name"].(types.String).ValueString(); got != "Control a" {
+		t.Fatalf("expected computed fields to follow their control; control_name=%q", got)
+	}
+	if got := attrs["standard_id"].(types.String).ValueString(); got != "std-a" {
+		t.Fatalf("expected computed fields to follow their control; standard_id=%q", got)
+	}
+}
+
+func TestFromSDKResponse_ComplianceMetadata_ExtraRemoteControlsAppendedInRemoteOrder(t *testing.T) {
+	// Controls added out-of-band (not in prior state) go after the known
+	// controls, in the order the API returned them, so drift is still visible.
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: buildComplianceListWithUnknowns(t, []string{"a", "b"}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("z", "b", "y", "a")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	assertControlIDOrder(t, model.ComplianceMetadata, []string{"a", "b", "z", "y"})
+}
+
+func TestFromSDKResponse_ComplianceMetadata_ControlsMissingFromRemoteAreDropped(t *testing.T) {
+	// The API is the source of truth for which controls exist; a control in
+	// prior state but absent remotely must disappear so drift is detected.
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: buildComplianceListWithUnknowns(t, []string{"a", "b", "c"}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("c", "a")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	assertControlIDOrder(t, model.ComplianceMetadata, []string{"a", "c"})
+}
+
+func TestFromSDKResponse_ComplianceMetadata_DuplicateControlIDsNotLostOrDuplicated(t *testing.T) {
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: buildComplianceListWithUnknowns(t, []string{"a", "b", "a"}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("b", "a", "a")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	assertControlIDOrder(t, model.ComplianceMetadata, []string{"a", "b", "a"})
+}
+
+func TestFromSDKResponse_ComplianceMetadata_UsesRemoteOrderWithoutPriorState(t *testing.T) {
+	// Import / no prior value: there is no order to preserve, keep API order.
+	ctx := context.Background()
+	diags := diag.Diagnostics{}
+
+	model := &CloudSecRuleResourceModel{
+		ComplianceMetadata: types.ListNull(types.ObjectType{AttrTypes: GetComplianceMetadataAttrTypes()}),
+	}
+
+	remote := minimalRuleResponse()
+	remote.ComplianceMetadata = remoteControls("c", "a", "b")
+
+	model.FromSDKResponse(ctx, &diags, remote)
+
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %s", diags.Errors())
+	}
+	assertControlIDOrder(t, model.ComplianceMetadata, []string{"c", "a", "b"})
+}
+
+// priorComplianceListWithControlIDs builds a prior compliance_metadata list from
+// raw control_id values, so tests can include null and unknown control IDs that
+// buildComplianceList cannot express.
+func priorComplianceListWithControlIDs(t *testing.T, controlIDs ...types.String) types.List {
+	t.Helper()
+	elems := make([]attr.Value, 0, len(controlIDs))
+	for _, cid := range controlIDs {
+		obj, d := types.ObjectValue(
+			GetComplianceMetadataAttrTypes(),
+			map[string]attr.Value{
+				"control_id":    cid,
+				"standard_id":   types.StringUnknown(),
+				"standard_name": types.StringUnknown(),
+				"control_name":  types.StringUnknown(),
+			},
+		)
+		if d.HasError() {
+			t.Fatalf("building compliance object: %s", d.Errors())
+		}
+		elems = append(elems, obj)
+	}
+	list, d := types.ListValue(
+		types.ObjectType{AttrTypes: GetComplianceMetadataAttrTypes()},
+		elems,
+	)
+	if d.HasError() {
+		t.Fatalf("building compliance list: %s", d.Errors())
+	}
+	return list
+}
+
+// Calls orderComplianceMetadataByPrior directly to cover prior values that carry
+// no usable ordering information. Elements of the prior list that have a null or
+// unknown control_id are skipped, and every remote entry must still appear
+// exactly once: entries not placed by the prior list are appended in remote order.
+func TestOrderComplianceMetadataByPrior_UnusablePrior(t *testing.T) {
+	objType := types.ObjectType{AttrTypes: GetComplianceMetadataAttrTypes()}
+
+	tests := []struct {
+		name   string
+		prior  types.List
+		remote []string
+		want   []string
+	}{
+		{
+			name:   "null control_id element is skipped",
+			prior:  priorComplianceListWithControlIDs(t, types.StringValue("a"), types.StringNull(), types.StringValue("b")),
+			remote: []string{"b", "x", "a"},
+			want:   []string{"a", "b", "x"},
+		},
+		{
+			name:   "unknown control_id element is skipped",
+			prior:  priorComplianceListWithControlIDs(t, types.StringValue("a"), types.StringUnknown(), types.StringValue("b")),
+			remote: []string{"b", "x", "a"},
+			want:   []string{"a", "b", "x"},
+		},
+		{
+			name:   "only null and unknown control_ids keeps remote order",
+			prior:  priorComplianceListWithControlIDs(t, types.StringNull(), types.StringUnknown()),
+			remote: []string{"c", "a", "b"},
+			want:   []string{"c", "a", "b"},
+		},
+		{
+			name:   "null prior list keeps remote order",
+			prior:  types.ListNull(objType),
+			remote: []string{"c", "a", "b"},
+			want:   []string{"c", "a", "b"},
+		},
+		{
+			name:   "unknown prior list keeps remote order",
+			prior:  types.ListUnknown(objType),
+			remote: []string{"c", "a", "b"},
+			want:   []string{"c", "a", "b"},
+		},
+		{
+			name:   "empty prior list keeps remote order",
+			prior:  priorComplianceListWithControlIDs(t),
+			remote: []string{"c", "a", "b"},
+			want:   []string{"c", "a", "b"},
+		},
+		{
+			name:   "empty remote returns nothing",
+			prior:  priorComplianceListWithControlIDs(t, types.StringValue("a"), types.StringValue("b")),
+			remote: nil,
+			want:   []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := orderComplianceMetadataByPrior(tt.prior, remoteControls(tt.remote...))
+
+			gotIDs := make([]string, 0, len(got))
+			for _, cm := range got {
+				gotIDs = append(gotIDs, cm.ControlID)
+			}
+			if len(gotIDs) != len(tt.want) {
+				t.Fatalf("expected control_ids %v, got %v", tt.want, gotIDs)
+			}
+			for i := range tt.want {
+				if gotIDs[i] != tt.want[i] {
+					t.Fatalf("expected control_ids %v, got %v", tt.want, gotIDs)
+				}
+			}
+		})
+	}
+}
+
 // buildBaseModel creates a CloudSecRuleResourceModel with all fields populated
 // for use as a baseline in ToSDKUpdateRequest tests.
 func buildBaseModel(t *testing.T) CloudSecRuleResourceModel {
