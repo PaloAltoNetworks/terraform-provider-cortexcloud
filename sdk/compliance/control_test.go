@@ -158,6 +158,42 @@ func TestClient_UpdateControl(t *testing.T) {
 	})
 }
 
+// TestClient_UpdateControl_SendsEmptyFields guards that an explicit "" for any
+// field reaches the API. The edit API clears a field only when it is present
+// and empty; an omitted field leaves the stored value unchanged. None of the
+// request fields may therefore be dropped from the payload when empty.
+func TestClient_UpdateControl_SendsEmptyFields(t *testing.T) {
+	var body map[string]map[string]any
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{"reply":{"success":true}}`)
+	})
+	client, server := setupTest(t, handler)
+	defer server.Close()
+
+	success, err := client.UpdateControl(context.Background(), types.UpdateControlRequest{
+		ID:          "48e2f6a9fcc049579e9c6b8eda0bd123",
+		ControlName: "",
+		Description: "",
+		Category:    "",
+		Subcategory: "",
+	})
+	require.NoError(t, err)
+	assert.True(t, success)
+
+	data := body["request_data"]
+	require.NotNil(t, data, "request_data missing from payload: %v", body)
+
+	for _, field := range []string{"control_name", "description", "category", "subcategory"} {
+		value, present := data[field]
+		assert.True(t, present, "%s must be sent so the API sees the empty value", field)
+		assert.Equal(t, "", value, "%s must be sent as an empty string", field)
+	}
+}
+
 func TestClient_DeleteControl(t *testing.T) {
 	t.Run("should delete control successfully", func(t *testing.T) {
 		type requestWrapper struct {

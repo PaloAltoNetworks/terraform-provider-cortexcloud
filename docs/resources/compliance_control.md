@@ -14,8 +14,10 @@ Manages a compliance control.
 
 ```terraform
 # Custom compliance control
-# Valid category/subcategory values can be retrieved from:
-# /public_api/v1/compliance/get_control_categories_and_subcategories/
+# category and subcategory accept any free-text value. The API normalizes them
+# to Title Case before storing them (whitespace trimmed, each word capitalized,
+# remaining letters lowercased), e.g. "my custom category" is stored as
+# "My Custom Category". Write them in Title Case to avoid a plan-time warning.
 resource "cortexcloud_compliance_control" "access_control" {
   name        = "Custom Access Control Policy"
   category    = "01.0 - Access Control"
@@ -29,13 +31,13 @@ resource "cortexcloud_compliance_control" "access_control" {
 
 ### Required
 
-- `category` (String) The category of the compliance control.
+- `category` (String) The category of the compliance control. Any free-text value is accepted. The API normalizes it to Title Case before storing it (leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased), for example `my custom category` is stored as `My Custom Category`. The configured value is kept in state, and a warning is shown when it is not already in the normalized form. The recommendation is that the value for category should be specified as Title Case (leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased).
 - `name` (String) The name of the compliance control.
 
 ### Optional
 
-- `description` (String) The description of the compliance control.
-- `subcategory` (String) The subcategory of the compliance control. Defaults to an empty string if not specified.
+- `description` (String) The description of the compliance control. Removing it from the configuration clears the description.
+- `subcategory` (String) The subcategory of the compliance control. Any free-text value is accepted. The API normalizes it to Title Case before storing it (leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased), for example `my custom subcategory` is stored as `My Custom Subcategory`. The configured value is kept in state, and a warning is shown when it is not already in the normalized form. Removing it from the configuration clears the subcategory. The recommendation is that the value for subcategory should be specified as Title Case (leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased).
 
 ### Read-Only
 
