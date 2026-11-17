@@ -15,7 +15,7 @@ terraform {
   required_providers {
     cortexcloud = {
       source  = "paloaltonetworks/cortexcloud"
-      version = "1.0.15"
+      version = "1.0.16"
     }
   }
 }
@@ -195,6 +195,18 @@ provider "cortexcloud" {
 
 	Can also be configured using the `CORTEXCLOUD_SKIP_SSL_VERIFY` environment variable.
 ## Release Notes
+
+### v1.0.16
+
+#### Enhancements
+* `category` and `subcategory` on `cortexcloud_compliance_control` accept any free-text value, so you are no longer limited to the values returned by `get_control_categories_and_subcategories`. Cortex Cloud stores them in Title Case (leading and trailing whitespace is stripped, each word is capitalized and its remaining letters are lowercased), for example `my custom category` is stored as `My Custom Category`. The provider keeps the casing from your configuration, so applying a lowercase value does not fail or show a perpetual diff. The plan shows a warning when a value is not already in Title Case. The recommendation is that the values for category and subcategory should be specified as Title Case (leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased).
+
+#### Bug Fixes
+* Removing `description` or `subcategory` from a `cortexcloud_compliance_control` configuration now clears the value in Cortex Cloud. Previously the old value stayed on the control and the apply failed with "Provider produced inconsistent result after apply"
+
+#### Known Issues
+* **After `terraform import`, a `cortexcloud_compliance_control` whose `category` or `subcategory` is not written in Title Case shows a one-time in-place update.** Import reads the Title Case value stored by Cortex Cloud, so the first plan shows it changing to the casing in your configuration. Applying it leaves the control unchanged in Cortex Cloud, and later plans show no changes. Writing the values in Title Case avoids the update
+* **After upgrading, controls that do not set `subcategory` show a one-time in-place update.** The plan shows `subcategory = "" -> null` because earlier versions stored an omitted subcategory as an empty string. Applying it leaves the control's configured values unchanged, and later plans show no changes
 
 ### v1.0.15
 

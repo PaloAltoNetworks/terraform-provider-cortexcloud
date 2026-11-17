@@ -45,18 +45,24 @@ type CreateControlResponse struct {
 // CreateControlRequest is the request for creating a control.
 type CreateControlRequest struct {
 	ControlName string `json:"control_name"`
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	Category    string `json:"category"`
 	Subcategory string `json:"subcategory"`
 }
 
 // UpdateControlRequest is the request for updating a control.
+//
+// No field has omitempty, so the payload always carries exactly what the
+// caller set. The edit API clears a field only when it is present and empty,
+// whereas an omitted field leaves the stored value unchanged. With omitempty,
+// an explicit "" (for example a cleared description or subcategory) would be
+// silently dropped from the payload and the stored value would be kept.
 type UpdateControlRequest struct {
 	ID          string `json:"id"`
-	ControlName string `json:"control_name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Category    string `json:"category,omitempty"`
-	Subcategory string `json:"subcategory,omitempty"`
+	ControlName string `json:"control_name"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	Subcategory string `json:"subcategory"`
 }
 
 // DeleteControlRequest is the request for deleting a control.

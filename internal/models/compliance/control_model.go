@@ -6,6 +6,7 @@ package models
 import (
 	"context"
 
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
 	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -46,14 +47,16 @@ func (m *ControlModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagno
 	m.ID = types.StringValue(remote.ID)
 	m.Name = types.StringValue(remote.Name)
 
-	// Handle optional string fields - use null for empty strings
-	if remote.Description == "" {
-		m.Description = types.StringNull()
-	} else {
-		m.Description = types.StringValue(remote.Description)
-	}
+	// description and subcategory are Optional-only. An omitted attribute is
+	// null in plan/state and the backend returns "" for it, so keep null in
+	// that case to avoid an inconsistent-result error and a perpetual diff.
+	m.Description = optionalStringFromRemote(m.Description, remote.Description)
 
-	m.Category = types.StringValue(remote.Category)
+	// category and subcategory are normalized by the API (trimmed, Title
+	// Cased), so the stored value can differ in casing from the configured one.
+	// Keep the configured value when both are equal under normalization to
+	// avoid an inconsistent-result error and a perpetual diff.
+	m.Category = labelFromRemote(m.Category, remote.Category)
 
 	if remote.CategoryDescription == "" {
 		m.CategoryDescription = types.StringNull()
@@ -61,10 +64,7 @@ func (m *ControlModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagno
 		m.CategoryDescription = types.StringValue(remote.CategoryDescription)
 	}
 
-	// Always store subcategory as a string value (never null) since the schema
-	// uses Default: stringdefault.StaticString(""). Converting "" to null would
-	// cause state drift on every plan.
-	m.Subcategory = types.StringValue(remote.Subcategory)
+	m.Subcategory = optionalLabelFromRemote(m.Subcategory, remote.Subcategory)
 
 	if remote.SubcategoryDescription == "" {
 		m.SubcategoryDescription = types.StringNull()
@@ -109,6 +109,39 @@ func (m *ControlModel) RefreshFromRemote(ctx context.Context, diags *diag.Diagno
 	}
 }
 
+// labelFromRemote maps a remote category or subcategory onto a string
+// attribute. The API stores these normalized (see util.NormalizeControlLabel),
+// so a known, non-null current value is kept when it is equal to the remote
+// value under normalization. Otherwise the remote value wins, which keeps
+// real drift visible and populates the value on import.
+func labelFromRemote(current types.String, remote string) types.String {
+	if !current.IsNull() && !current.IsUnknown() && util.EqualControlLabel(current.ValueString(), remote) {
+		return current
+	}
+	return types.StringValue(remote)
+}
+
+// optionalLabelFromRemote is labelFromRemote for an Optional-only attribute:
+// an empty remote value keeps a null current value null (attribute omitted
+// from configuration).
+func optionalLabelFromRemote(current types.String, remote string) types.String {
+	if remote == "" && current.IsNull() {
+		return types.StringNull()
+	}
+	return labelFromRemote(current, remote)
+}
+
+// optionalStringFromRemote maps a remote value onto an Optional-only string
+// attribute. An empty remote value keeps the current value when it is null
+// (attribute omitted from configuration); otherwise the remote value wins, so
+// out-of-band changes still surface as drift.
+func optionalStringFromRemote(current types.String, remote string) types.String {
+	if remote == "" && current.IsNull() {
+		return types.StringNull()
+	}
+	return types.StringValue(remote)
+}
+
 // ToCreateRequest converts the Terraform model to an SDK create request.
 func (m *ControlModel) ToCreateRequest(ctx context.Context, diags *diag.Diagnostics) complianceTypes.CreateControlRequest {
 	tflog.Debug(ctx, "Converting control model to create request")
@@ -124,8 +157,26 @@ func (m *ControlModel) ToCreateRequest(ctx context.Context, diags *diag.Diagnost
 }
 
 // ToUpdateRequest converts the Terraform model to an SDK update request.
+//
+// Description and Subcategory are always sent (no omitempty). A null value,
+// meaning the attribute was removed from configuration, is sent as "" so the
+// edit API clears it on the backend. An unknown value is rejected rather than
+// silently sent as "", since both attributes are Optional-only and should
+// always be known at apply time.
 func (m *ControlModel) ToUpdateRequest(ctx context.Context, diags *diag.Diagnostics) complianceTypes.UpdateControlRequest {
 	tflog.Debug(ctx, "Converting control model to update request")
+
+	for name, value := range map[string]types.String{
+		"description": m.Description,
+		"subcategory": m.Subcategory,
+	} {
+		if value.IsUnknown() {
+			diags.AddError(
+				"Unknown Compliance Control "+name,
+				"The "+name+" is unknown at apply time. Sending it would clear the value on the backend, so the update was not sent. This is a provider bug; please report it.",
+			)
+		}
+	}
 
 	req := complianceTypes.UpdateControlRequest{
 		ID:          m.ID.ValueString(),

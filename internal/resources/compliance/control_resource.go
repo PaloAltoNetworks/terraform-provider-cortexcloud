@@ -10,6 +10,7 @@ import (
 	complianceModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/compliance"
 	providerModels "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/models/provider"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/util"
+	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/internal/validators"
 	"github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/compliance"
 	complianceTypes "github.com/PaloAltoNetworks/terraform-provider-cortexcloud/sdk/types/compliance"
 
@@ -19,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -63,22 +64,41 @@ func (r *controlResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "The description of the compliance control.",
+				// Optional only (not Computed): removing the attribute from the
+				// configuration plans it as null, which the update sends as ""
+				// to clear the value on the backend.
+				Description: "The description of the compliance control. Removing it from the configuration clears the description.",
 				Optional:    true,
 			},
 			"category": schema.StringAttribute{
-				Description: "The category of the compliance control.",
-				Required:    true,
+				Description: "The category of the compliance control. Any free-text value is accepted. The API normalizes it to Title Case before storing it " +
+					"(leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased), " +
+					"for example `my custom category` is stored as `My Custom Category`. " +
+					"The configured value is kept in state, and a warning is shown when it is not already in the normalized form. " +
+					"The recommendation is that the value for category should be specified as Title Case (leading and trailing whitespace is stripped " +
+					"and each word is capitalized with the remaining letters lowercased).",
+				Required: true,
+				Validators: []validator.String{
+					validators.ControlLabelTitleCase(),
+				},
 			},
 			"category_description": schema.StringAttribute{
 				Description: "The description of the category.",
 				Computed:    true,
 			},
 			"subcategory": schema.StringAttribute{
-				Description: "The subcategory of the compliance control. Defaults to an empty string if not specified.",
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString(""),
+				// See description: Optional only, so removing it clears it.
+				Description: "The subcategory of the compliance control. Any free-text value is accepted. The API normalizes it to Title Case before storing it " +
+					"(leading and trailing whitespace is stripped and each word is capitalized with the remaining letters lowercased), " +
+					"for example `my custom subcategory` is stored as `My Custom Subcategory`. " +
+					"The configured value is kept in state, and a warning is shown when it is not already in the normalized form. " +
+					"Removing it from the configuration clears the subcategory. " +
+					"The recommendation is that the value for subcategory should be specified as Title Case (leading and trailing whitespace is stripped " +
+					"and each word is capitalized with the remaining letters lowercased).",
+				Optional: true,
+				Validators: []validator.String{
+					validators.ControlLabelTitleCase(),
+				},
 			},
 			"subcategory_description": schema.StringAttribute{
 				Description: "The description of the subcategory.",

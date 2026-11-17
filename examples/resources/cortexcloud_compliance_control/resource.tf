@@ -1,6 +1,8 @@
 # Custom compliance control
-# Valid category/subcategory values can be retrieved from:
-# /public_api/v1/compliance/get_control_categories_and_subcategories/
+# category and subcategory accept any free-text value. The API normalizes them
+# to Title Case before storing them (whitespace trimmed, each word capitalized,
+# remaining letters lowercased), e.g. "my custom category" is stored as
+# "My Custom Category". Write them in Title Case to avoid a plan-time warning.
 resource "cortexcloud_compliance_control" "access_control" {
   name        = "Custom Access Control Policy"
   category    = "01.0 - Access Control"
